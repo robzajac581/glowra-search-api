@@ -1,13 +1,25 @@
-const { Pool } = require('pg');
+const sql = require('mssql');
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+const config = {
+  driver: '{ODBC Driver 17 for SQL Server}',
+  server: 'glowra.database.windows.net',
+  database: 'glowra',
+  user: 'glowra',
+  password: 'Bbldrizzy98!',
+  options: {
+    encrypt: true, // For Azure
+    trustServerCertificate: false // Change to true for local dev / self-signed certs
+  }
+};
+
+const poolPromise = new sql.ConnectionPool(config)
+  .connect()
+  .then(pool => {
+    console.log('Connected to MSSQL')
+    return pool
+  })
+  .catch(err => console.log('Database Connection Failed! Bad Config: ', err))
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
-};
+  sql, poolPromise
+}
