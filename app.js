@@ -1,7 +1,7 @@
-// server.js
+// app.js
 const express = require('express');
 const cors = require('cors');
-const { sql, poolPromise } = require('./db');
+const { sql, db } = require('./db');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -9,10 +9,16 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/procedures', async (req, res) => {
+  let pool;
   try {
     const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 10 } = req.query;
     
-    const pool = await poolPromise;
+    // Get database connection
+    pool = await db.getConnection();
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+
     let query = `
       SELECT 
         p.ProcedureID,
@@ -36,38 +42,43 @@ app.get('/api/procedures', async (req, res) => {
     `;
     
     const conditions = [];
-    const values = [];
+    const parameters = {};
 
     if (location) {
       conditions.push(`(l.City LIKE @location OR l.State LIKE @location)`);
-      values.push({ name: 'location', value: `%${location}%` });
+      parameters.location = `%${location}%`;
     }
 
     if (minPrice) {
       conditions.push(`p.AverageCost >= @minPrice`);
-      values.push({ name: 'minPrice', value: Number(minPrice) });
+      parameters.minPrice = Number(minPrice);
     }
 
     if (maxPrice) {
       conditions.push(`p.AverageCost <= @maxPrice`);
-      values.push({ name: 'maxPrice', value: Number(maxPrice) });
+      parameters.maxPrice = Number(maxPrice);
     }
 
     if (specialty) {
       conditions.push(`s.Specialty LIKE @specialty`);
-      values.push({ name: 'specialty', value: `%${specialty}%` });
+      parameters.specialty = `%${specialty}%`;
     }
 
     if (category) {
       conditions.push(`c.Category LIKE @category`);
-      values.push({ name: 'category', value: `%${category}%` });
+      parameters.category = `%${category}%`;
     }
 
     if (conditions.length > 0) {
       query += ' AND ' + conditions.join(' AND ');
     }
 
-    // Add total count query for pagination
+    // Add pagination parameters
+    const offset = (Number(page) - 1) * Number(limit);
+    parameters.offset = offset;
+    parameters.limit = Number(limit);
+
+    // Count query for pagination
     const countQuery = `
       SELECT COUNT(*) as total
       FROM Procedures p
@@ -84,17 +95,16 @@ app.get('/api/procedures', async (req, res) => {
       OFFSET @offset ROWS
       FETCH NEXT @limit ROWS ONLY
     `;
-    
-    const offset = (Number(page) - 1) * Number(limit);
-    values.push({ name: 'offset', value: offset });
-    values.push({ name: 'limit', value: Number(limit) });
 
+    // Create request and add parameters
     const request = pool.request();
-    values.forEach(param => request.input(param.name, param.value));
-    
-    // Log the constructed SQL query
-    console.log('Constructed SQL Query:', query);
-    console.log('Query Parameters:', values);
+    Object.entries(parameters).forEach(([key, value]) => {
+      request.input(key, value);
+    });
+
+    // Log queries for debugging
+    console.log('Query:', query);
+    console.log('Parameters:', parameters);
 
     // Execute both queries
     const [results, countResult] = await Promise.all([
@@ -116,10 +126,23 @@ app.get('/api/procedures', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /api/procedures:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
