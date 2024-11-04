@@ -8,6 +8,132 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Get specific clinic details
+app.get('/api/clinics/:clinicId', async (req, res) => {
+  let pool;
+  try {
+    const { clinicId } = req.params;
+    pool = await db.getConnection();
+
+    const request = pool.request();
+    request.input('clinicId', sql.Int, clinicId);
+
+    const result = await request.query(`
+      SELECT 
+        c.ClinicID,
+        c.ClinicName,
+        c.Address,
+        c.Website,
+        c.LocationID
+      FROM Clinics c
+      WHERE c.ClinicID = @clinicId;
+    `);
+
+    // TODO: Add review data when Reviews table is implemented
+    // TODO: Add operating hours when business hours are implemented
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Clinic not found' });
+    }
+
+    const clinic = result.recordset[0];
+    res.json({
+      ...clinic,
+      // Temporary hardcoded values until proper implementation
+      isOpen: true,
+      closeTime: '8pm',
+      reviewCount: 0,
+      rating: 0
+    });
+  } catch (error) {
+    console.error('Error in /api/clinics/:clinicId:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get providers/doctors for a specific clinic
+app.get('/api/clinics/:clinicId/providers', async (req, res) => {
+  let pool;
+  try {
+    const { clinicId } = req.params;
+    pool = await db.getConnection();
+
+    const request = pool.request();
+    request.input('clinicId', sql.Int, clinicId);
+
+    const result = await request.query(`
+      SELECT DISTINCT
+        p.ProviderID,
+        p.ProviderName,
+        s.Specialty
+      FROM Providers p
+      JOIN Procedures proc ON p.ProviderID = proc.ProviderID
+      JOIN Specialties s ON proc.SpecialtyID = s.SpecialtyID
+      WHERE p.ClinicID = @clinicId;
+    `);
+
+    // TODO: Add provider images when image storage is implemented
+    const providers = result.recordset.map(provider => ({
+      ...provider,
+      img: `/img/doctor/placeholder.png` // Temporary placeholder
+    }));
+
+    res.json(providers);
+  } catch (error) {
+    console.error('Error in /api/clinics/:clinicId/providers:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get procedures for a specific clinic
+app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
+  let pool;
+  try {
+    const { clinicId } = req.params;
+    pool = await db.getConnection();
+
+    const request = pool.request();
+    request.input('clinicId', sql.Int, clinicId);
+
+    const result = await request.query(`
+      SELECT 
+        p.ProcedureID,
+        p.ProcedureName,
+        p.AverageCost,
+        c.Category,
+        c.CategoryID
+      FROM Procedures p
+      JOIN Categories c ON p.CategoryID = c.CategoryID
+      JOIN Providers pr ON p.ProviderID = pr.ProviderID
+      WHERE pr.ClinicID = @clinicId
+      ORDER BY c.Category, p.ProcedureName;
+    `);
+
+    // TODO: Implement city average price calculations when location-based pricing is added
+
+    // Group procedures by category
+    const groupedProcedures = result.recordset.reduce((acc, proc) => {
+      if (!acc[proc.Category]) {
+        acc[proc.Category] = {
+          categoryId: proc.CategoryID,
+          procedures: []
+        };
+      }
+      acc[proc.Category].procedures.push({
+        id: proc.ProcedureID,
+        name: proc.ProcedureName,
+        price: proc.AverageCost
+      });
+      return acc;
+    }, {});
+
+    res.json(groupedProcedures);
+  } catch (error) {
+    console.error('Error in /api/clinics/:clinicId/procedures:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/procedures', async (req, res) => {
   let pool;
   try {
