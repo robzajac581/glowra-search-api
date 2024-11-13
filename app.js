@@ -155,6 +155,7 @@ app.get('/api/procedures', async (req, res) => {
         s.Specialty,
         c.Category,
         pr.ProviderName,
+        cl.ClinicID,
         cl.ClinicName,
         cl.Address,
         cl.Website
