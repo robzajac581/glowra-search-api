@@ -12,7 +12,7 @@ app.use(express.json());
 app.get('/api/procedures', async (req, res) => {
   let pool;
   try {
-    const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 10 } = req.query;
+    const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 100 } = req.query;
     
     // Get database connection
     pool = await db.getConnection();
@@ -30,6 +30,7 @@ app.get('/api/procedures', async (req, res) => {
         s.Specialty,
         c.Category,
         pr.ProviderName,
+        cl.ClinicID,
         cl.ClinicName,
         cl.Address,
         cl.Website
@@ -142,7 +143,7 @@ app.get('/api/procedures', async (req, res) => {
 app.get('/api/procedures', async (req, res) => {
   let pool;
   try {
-    const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 10 } = req.query;
+    const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 100 } = req.query;
     
     // Get database connection
     pool = await db.getConnection();
@@ -279,6 +280,7 @@ app.get('/api/procedures/search-index', async (req, res) => {
         s.Specialty,
         c.Category,
         pr.ProviderName,
+        cl.ClinicID,
         cl.ClinicName,
         cl.Address,
         cl.Website
