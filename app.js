@@ -377,7 +377,6 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
   }
 });
 
-// Get procedures for a specific clinic
 app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   let pool;
   try {
@@ -389,19 +388,27 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
 
     const result = await request.query(`
       SELECT 
-        p.ProcedureID,
-        p.ProcedureName,
-        p.AverageCost,
-        c.Category,
-        c.CategoryID
-      FROM Procedures p
-      JOIN Categories c ON p.CategoryID = c.CategoryID
-      JOIN Providers pr ON p.ProviderID = pr.ProviderID
-      WHERE pr.ClinicID = @clinicId
-      ORDER BY c.Category, p.ProcedureName;
+        ProcedureID,
+        ProcedureName,
+        AverageCost,
+        Category,
+        CategoryID
+      FROM (
+        SELECT 
+          p.ProcedureID,
+          p.ProcedureName,
+          p.AverageCost,
+          c.Category,
+          c.CategoryID,
+          ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
+        FROM Procedures p
+        JOIN Categories c ON p.CategoryID = c.CategoryID
+        JOIN Providers pr ON p.ProviderID = pr.ProviderID
+        WHERE pr.ClinicID = @clinicId
+      ) AS RankedProcedures
+      WHERE RowNum = 1
+      ORDER BY Category, ProcedureName;
     `);
-
-    // TODO: Implement city average price calculations when location-based pricing is added
 
     // Group procedures by category
     const groupedProcedures = result.recordset.reduce((acc, proc) => {
