@@ -12,9 +12,8 @@ app.use(express.json());
 app.get('/api/procedures', async (req, res) => {
   let pool;
   try {
-    const { location, minPrice, maxPrice, specialty, category, page = 1, limit = 100 } = req.query;
+    const { searchQuery, location, minPrice, maxPrice, specialty, category, page = 1, limit = 100 } = req.query;
     
-    // Get database connection
     pool = await db.getConnection();
     if (!pool) {
       throw new Error('Could not establish database connection');
@@ -42,13 +41,39 @@ app.get('/api/procedures', async (req, res) => {
       JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
       WHERE 1=1
     `;
-
-    // TODO: Add review data when Reviews table is implemented
-    // TODO: Add operating hours when business hours are implemented
     
     const conditions = [];
     const parameters = {};
 
+    // Add improved fuzzy matching for search query
+    if (searchQuery && searchQuery.trim()) {
+      // Break the search query into individual words
+      const terms = searchQuery.trim().split(/\s+/).filter(term => term.length > 1);
+      
+      if (terms.length > 0) {
+        // Create pattern for each word - search in multiple fields
+        const termConditions = terms.map((term, index) => {
+          // Create a parameter for this term
+          const paramName = `term${index}`;
+          parameters[paramName] = `%${term}%`;
+          
+          // Search across multiple fields
+          return `(
+            p.ProcedureName LIKE @${paramName} OR 
+            cl.ClinicName LIKE @${paramName} OR 
+            pr.ProviderName LIKE @${paramName} OR
+            c.Category LIKE @${paramName} OR
+            s.Specialty LIKE @${paramName}
+          )`;
+        });
+        
+        // Combine with OR - a result matches if any term is found
+        // You could use AND instead to require all terms to match
+        conditions.push(`(${termConditions.join(' OR ')})`);
+      }
+    }
+
+    // Add other filter conditions as before
     if (location) {
       conditions.push(`(l.City LIKE @location OR l.State LIKE @location)`);
       parameters.location = `%${location}%`;
@@ -79,13 +104,38 @@ app.get('/api/procedures', async (req, res) => {
     if (conditions.length > 0) {
       query += ' AND ' + conditions.join(' AND ');
     }
+    
 
-    // Add pagination parameters
+    // Add ORDER BY to prioritize exact matches first
+    if (searchQuery && searchQuery.trim()) {
+      // This ordering will prioritize exact matches in the name
+      query += `
+        ORDER BY 
+          CASE WHEN p.ProcedureName LIKE @exactMatch THEN 0
+               WHEN p.ProcedureName LIKE @startMatch THEN 1
+               WHEN p.ProcedureName LIKE @containsMatch THEN 2
+               ELSE 3
+          END,
+          p.ProcedureName
+      `;
+      parameters.exactMatch = searchQuery.trim();
+      parameters.startMatch = searchQuery.trim() + '%';
+      parameters.containsMatch = '%' + searchQuery.trim() + '%';
+    } else {
+      query += ` ORDER BY p.ProcedureID`;
+    }
+
+    // Add pagination
+    query += `
+      OFFSET @offset ROWS
+      FETCH NEXT @limit ROWS ONLY
+    `;
+    
     const offset = (Number(page) - 1) * Number(limit);
     parameters.offset = offset;
     parameters.limit = Number(limit);
 
-    // Count query for pagination
+    // Create count query
     const countQuery = `
       SELECT COUNT(*) as total
       FROM Procedures p
@@ -97,21 +147,11 @@ app.get('/api/procedures', async (req, res) => {
       WHERE ${conditions.length > 0 ? conditions.join(' AND ') : '1=1'}
     `;
 
-    query += `
-      ORDER BY p.ProcedureID
-      OFFSET @offset ROWS
-      FETCH NEXT @limit ROWS ONLY
-    `;
-
-    // Create request and add parameters
+    // Execute queries
     const request = pool.request();
     Object.entries(parameters).forEach(([key, value]) => {
       request.input(key, value);
     });
-
-    // Log queries for debugging
-    console.log('Query:', query);
-    console.log('Parameters:', parameters);
 
     // Execute both queries
     const [results, countResult] = await Promise.all([
