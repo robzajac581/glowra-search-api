@@ -2,8 +2,13 @@
 const express = require('express');
 const cors = require('cors');
 const { sql, db } = require('./db');
+const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
+const { initRatingRefreshJob } = require('./jobs/ratingRefresh');
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Load environment configuration
+require('dotenv').config();
 
 app.use(cors());
 app.use(express.json());
@@ -339,7 +344,9 @@ app.get('/api/procedures/search-index', async (req, res) => {
   }
 });
 
-// Get specific clinic details
+// Get specific clinic details with cached Google Places ratings
+// Note: This endpoint only reads from the database cache and never calls Google Places API
+// The scheduled job (runs daily at 2 AM) keeps the rating data fresh
 app.get('/api/clinics/:clinicId', async (req, res) => {
   let pool;
   try {
@@ -349,32 +356,52 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
 
+    // Query clinic with cached Google Places data
     const result = await request.query(`
       SELECT 
         c.ClinicID,
         c.ClinicName,
         c.Address,
         c.Website,
-        c.LocationID
+        c.LocationID,
+        c.PlaceID,
+        c.GoogleRating,
+        c.GoogleReviewCount,
+        c.GoogleReviewsJSON,
+        c.LastRatingUpdate
       FROM Clinics c
       WHERE c.ClinicID = @clinicId;
     `);
-
-    // TODO: Add review data when Reviews table is implemented
-    // TODO: Add operating hours when business hours are implemented
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Clinic not found' });
     }
 
     const clinic = result.recordset[0];
+    
+    // Parse stored reviews if available
+    let reviews = [];
+    if (clinic.GoogleReviewsJSON) {
+      try {
+        reviews = JSON.parse(clinic.GoogleReviewsJSON);
+      } catch (parseError) {
+        console.error('Error parsing reviews JSON:', parseError);
+      }
+    }
+
+    // Return clinic info with cached rating data from database
     res.json({
-      ...clinic,
-      // Temporary hardcoded values until proper implementation
-      isOpen: true,
-      closeTime: '8pm',
-      reviewCount: 0,
-      rating: 0
+      ClinicID: clinic.ClinicID,
+      ClinicName: clinic.ClinicName,
+      Address: clinic.Address,
+      Website: clinic.Website,
+      LocationID: clinic.LocationID,
+      PlaceID: clinic.PlaceID,
+      rating: clinic.GoogleRating || 0,
+      reviewCount: clinic.GoogleReviewCount || 0,
+      reviews: reviews,
+      isOpen: null, // Opening hours would require real-time API call, kept null for performance
+      lastRatingUpdate: clinic.LastRatingUpdate
     });
   } catch (error) {
     console.error('Error in /api/clinics/:clinicId:', error);
@@ -473,6 +500,154 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   }
 });
 
+// Admin endpoint to manually refresh ratings for one or all clinics
+// TODO: add auth to this (once we have auth)
+app.post('/api/admin/refresh-ratings', async (req, res) => {
+  let pool;
+  try {
+    const { clinicId } = req.body;
+    pool = await db.getConnection();
+
+    let clinicsToUpdate = [];
+
+    if (clinicId) {
+      // Refresh specific clinic
+      const request = pool.request();
+      request.input('clinicId', sql.Int, clinicId);
+      
+      const result = await request.query(`
+        SELECT ClinicID, ClinicName, PlaceID
+        FROM Clinics
+        WHERE ClinicID = @clinicId AND PlaceID IS NOT NULL;
+      `);
+
+      if (result.recordset.length === 0) {
+        return res.status(404).json({ 
+          error: 'Clinic not found or missing PlaceID' 
+        });
+      }
+
+      clinicsToUpdate = result.recordset;
+    } else {
+      // Refresh all clinics with PlaceIDs
+      const result = await pool.request().query(`
+        SELECT ClinicID, ClinicName, PlaceID
+        FROM Clinics
+        WHERE PlaceID IS NOT NULL;
+      `);
+
+      clinicsToUpdate = result.recordset;
+    }
+
+    if (clinicsToUpdate.length === 0) {
+      return res.json({
+        message: 'No clinics with PlaceIDs found to update',
+        updated: 0,
+        failed: 0
+      });
+    }
+
+    console.log(`Starting rating refresh for ${clinicsToUpdate.length} clinic(s)`);
+
+    // Extract place IDs
+    const placeIds = clinicsToUpdate.map(c => c.PlaceID);
+
+    // Batch fetch with rate limiting (5 concurrent, 200ms delay between batches)
+    const results = await batchFetchPlaceDetails(placeIds, 5, 200);
+
+    // Update database with results
+    const updatePromises = [];
+    let successCount = 0;
+    let failCount = 0;
+    const updateDetails = [];
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      const clinic = clinicsToUpdate[i];
+
+      console.log(`\n--- Processing clinic ${clinic.ClinicID} (${clinic.ClinicName}) ---`);
+      console.log('API Result:', JSON.stringify(result, null, 2));
+
+      if (result.data && !result.error) {
+        console.log(`✓ Has valid data - Rating: ${result.data.rating}, Reviews: ${result.data.reviewCount}`);
+        
+        const reviewsJSON = JSON.stringify(result.data.reviews);
+        
+        const updateRequest = pool.request();
+        updateRequest.input('clinicId', sql.Int, clinic.ClinicID);
+        updateRequest.input('rating', sql.Decimal(2, 1), result.data.rating);
+        updateRequest.input('reviewCount', sql.Int, result.data.reviewCount);
+        updateRequest.input('reviewsJSON', sql.NVarChar(sql.MAX), reviewsJSON);
+        updateRequest.input('lastUpdate', sql.DateTime, new Date());
+
+        console.log('About to update database with:', {
+          clinicId: clinic.ClinicID,
+          rating: result.data.rating,
+          reviewCount: result.data.reviewCount,
+          reviewsLength: result.data.reviews.length
+        });
+
+        updatePromises.push(
+          updateRequest.query(`
+            UPDATE Clinics 
+            SET GoogleRating = @rating,
+                GoogleReviewCount = @reviewCount,
+                GoogleReviewsJSON = @reviewsJSON,
+                LastRatingUpdate = @lastUpdate
+            WHERE ClinicID = @clinicId;
+          `).then(() => {
+            successCount++;
+            updateDetails.push({
+              clinicId: clinic.ClinicID,
+              clinicName: clinic.ClinicName,
+              status: 'success',
+              rating: result.data.rating,
+              reviewCount: result.data.reviewCount
+            });
+          }).catch(err => {
+            failCount++;
+            console.error(`Failed to update clinic ${clinic.ClinicID}:`, err);
+            updateDetails.push({
+              clinicId: clinic.ClinicID,
+              clinicName: clinic.ClinicName,
+              status: 'database_error',
+              error: err.message
+            });
+          })
+        );
+      } else {
+        failCount++;
+        updateDetails.push({
+          clinicId: clinic.ClinicID,
+          clinicName: clinic.ClinicName,
+          status: 'api_error',
+          error: result.error
+        });
+        console.error(`Failed to fetch data for clinic ${clinic.ClinicID}:`, result.error);
+      }
+    }
+
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
+
+    console.log(`Rating refresh completed: ${successCount} succeeded, ${failCount} failed`);
+
+    res.json({
+      message: 'Rating refresh completed',
+      total: clinicsToUpdate.length,
+      updated: successCount,
+      failed: failCount,
+      details: updateDetails
+    });
+  } catch (error) {
+    console.error('Error in /api/admin/refresh-ratings:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -481,6 +656,15 @@ app.use((err, req, res, next) => {
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
+
+// Initialize scheduled jobs
+try {
+  initRatingRefreshJob();
+  console.log('Scheduled jobs initialized');
+} catch (error) {
+  console.error('Failed to initialize scheduled jobs:', error);
+  // Continue without scheduled jobs rather than crashing
+}
 
 // Start server
 app.listen(port, () => {

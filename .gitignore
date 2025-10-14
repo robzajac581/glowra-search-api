@@ -23,3 +23,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Data files 
+scripts/data/*.xlsx
+scripts/data/*.csv
+scripts/data/*.xls
+# Keep the folder structure but not the files
+!scripts/data/.gitkeep
