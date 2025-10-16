@@ -344,7 +344,7 @@ app.get('/api/procedures/search-index', async (req, res) => {
   }
 });
 
-// Get specific clinic details with cached Google Places ratings
+// Get specific clinic details with cached Google Places ratings and rich metadata
 // Note: This endpoint only reads from the database cache and never calls Google Places API
 // The scheduled job (runs daily at 2 AM) keeps the rating data fresh
 app.get('/api/clinics/:clinicId', async (req, res) => {
@@ -356,20 +356,47 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
 
-    // Query clinic with cached Google Places data
+    // Query clinic with cached Google Places data + rich metadata from GooglePlacesData table
     const result = await request.query(`
       SELECT 
         c.ClinicID,
         c.ClinicName,
         c.Address,
+        c.Phone,
         c.Website,
+        c.Latitude,
+        c.Longitude,
         c.LocationID,
         c.PlaceID,
         c.GoogleRating,
         c.GoogleReviewCount,
         c.GoogleReviewsJSON,
-        c.LastRatingUpdate
+        c.LastRatingUpdate,
+        
+        -- Google Places Data fields (LEFT JOIN handles clinics without this data)
+        g.Photo,
+        g.Logo,
+        g.StreetView,
+        g.Description,
+        g.WorkingHours,
+        g.AboutJSON,
+        g.Verified,
+        g.Facebook,
+        g.Instagram,
+        g.LinkedIn,
+        g.Twitter,
+        g.YouTube,
+        g.GoogleProfileLink,
+        g.ReviewsLink,
+        g.BookingAppointmentLink,
+        g.MenuLink,
+        g.BusinessStatus,
+        g.Category,
+        g.Subtypes,
+        g.BusinessName,
+        g.Email
       FROM Clinics c
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       WHERE c.ClinicID = @clinicId;
     `);
 
@@ -389,19 +416,62 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
       }
     }
 
-    // Return clinic info with cached rating data from database
+    // Return complete clinic info with all Google Places data
+    // Note: WorkingHours and AboutJSON are kept as JSON strings - frontend will parse them
     res.json({
+      // Core clinic data
       ClinicID: clinic.ClinicID,
       ClinicName: clinic.ClinicName,
       Address: clinic.Address,
+      Phone: clinic.Phone,
       Website: clinic.Website,
+      Latitude: clinic.Latitude,
+      Longitude: clinic.Longitude,
       LocationID: clinic.LocationID,
       PlaceID: clinic.PlaceID,
+      
+      // Google ratings (from Clinics table)
+      GoogleRating: clinic.GoogleRating || 0,
+      GoogleReviewCount: clinic.GoogleReviewCount || 0,
+      
+      // Legacy fields for backward compatibility
       rating: clinic.GoogleRating || 0,
       reviewCount: clinic.GoogleReviewCount || 0,
       reviews: reviews,
-      isOpen: null, // Opening hours would require real-time API call, kept null for performance
-      lastRatingUpdate: clinic.LastRatingUpdate
+      GoogleReviewsJSON: clinic.GoogleReviewsJSON, // Raw JSON string if needed
+      lastRatingUpdate: clinic.LastRatingUpdate,
+      
+      // Rich Google Places data (may be null if not available)
+      Photo: clinic.Photo,
+      Logo: clinic.Logo,
+      StreetView: clinic.StreetView,
+      Description: clinic.Description,
+      WorkingHours: clinic.WorkingHours, // JSON string - parse on frontend
+      AboutJSON: clinic.AboutJSON, // JSON string - parse on frontend
+      Verified: clinic.Verified,
+      
+      // Social media links
+      Facebook: clinic.Facebook,
+      Instagram: clinic.Instagram,
+      LinkedIn: clinic.LinkedIn,
+      Twitter: clinic.Twitter,
+      YouTube: clinic.YouTube,
+      
+      // Google links
+      GoogleProfileLink: clinic.GoogleProfileLink,
+      ReviewsLink: clinic.ReviewsLink,
+      BookingAppointmentLink: clinic.BookingAppointmentLink,
+      MenuLink: clinic.MenuLink,
+      
+      // Business info
+      BusinessStatus: clinic.BusinessStatus,
+      Category: clinic.Category,
+      Subtypes: clinic.Subtypes,
+      BusinessName: clinic.BusinessName,
+      Email: clinic.Email,
+      
+      // Deprecated field (kept for backward compatibility)
+      isOpen: null // Opening hours would require real-time API call, kept null for performance
     });
   } catch (error) {
     console.error('Error in /api/clinics/:clinicId:', error);
