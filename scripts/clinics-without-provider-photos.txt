@@ -1,0 +1,296 @@
+# Clinics Without Provider Photos
+Generated: 2025-10-18T03:44:44.257Z
+Total: 42 clinics
+
+## Clinic List (for photo scraping)
+
+1.  EAU CLAIRE BODYCARE
+   Website: https://eauclairebodycare.com/?utm_source=google
+   Providers (1):
+   - Please Request Consult For More Info
+
+2. Augusta Plastic Surgery
+   Website: https://www.augplastic.com/about/pricing-payment/
+   Providers (2):
+   - Dr.Christopher J. Ewart
+   - Dr.Michael S. Tarakji
+
+3. Bella Cosmetic Surgery
+   Website: https://www.bellacosmeticsurgery.com/pricing/
+   Providers (2):
+   - DR. ANYA COSTELOE
+   - Dr. Michael F. Chiaramonte
+
+4. Blooming Beauty
+   Website: https://bloomingmedspa.com/
+   Providers (1):
+   - Please Request Consult For More Info
+
+5. Brigham and Women's Hospital
+   Website: https://www.brighamandwomens.org/surgery/plastic-surgery/cosmetic-procedures/pricing-and-policies
+   Providers (1):
+   - Please Request Consult For More Info
+
+6. Center for Plastic Surgery - Ann Arbor
+   Website: https://www.cpsaa.com/?utm_source=google
+   Providers (3):
+   - Dr. Amy Strong
+   - Dr. Daniel Sherick
+   - Dr. Richard Beil
+
+7. CG Cosmetic
+   Website: https://www.cgcosmetic.com/
+   Providers (8):
+   - Dr.Ary Krau
+   - Dr.DECIO CARVALHO
+   - Dr.DECIO CARVALHO
+   - Dr.Jacob Freiman
+   - Dr.JORGE HIDALGO
+   - Dr.Paul C. Dillon
+   - Dr.ROBERT HUNSAKER
+   - Dr.Scott Loessin
+
+8. Chicago Breast and Body Aesthetics
+   Website: https://chicagobreastandbody.com/chicago-plastic-surgery-prices/
+   Providers (3):
+   - Dr.Anh-Tuan Truong
+   - Dr.John D.Rachel
+   - Dr.Sue Kafali
+
+9. Cosmetic Surgery Affiliates
+   Website: https://csaok.com/cost-schedule
+   Providers (4):
+   - Dr. Courtney Caplin
+   - Dr. Erik J. Nuveen
+   - Dr. John Tedesco
+   - Dr. Trent Fogleman
+
+10. DeLuca Plastic Surgery 
+   Website: https://www.delucaplasticsurgery.com/prices/
+   Providers (2):
+   - Dr. David Tauber
+   - Dr.William DeLuca
+
+11. Dermatology + Plastic Surgery - For Your Best Self
+   Website: https://www.foryourbestself.com/
+   Providers (4):
+   - Dr.Anita Saluja
+   - Dr.Nancy Marchell
+   - Dr.Rebecca Novo
+   - Dr.Renee Gasgarth
+
+12. Dr. York Yates Plastic Surgery
+   Website: https://www.yorkyates.com/recovery/financing/costs/
+   Providers (1):
+   - Dr.York Yates
+
+13. ESANA
+   Website: https://esanamedspa.com/financing/
+   Providers (2):
+   - Dr.Deborah Pan
+   - Dr.Javier Davila
+
+14. Green Bay Plastic Surgical Associates, S.C.
+   Website: https://www.greenbayplasticsurgicalassociates.com/about/value/
+   Providers (2):
+   - Dr. Eugene Schmitt III
+   - Dr. James Lee
+
+15. Hacker Dermatology & Multi-Specialty Group
+   Website: https://www.hackerdermatology.com/pricing-self-pay-cosmetic-patients/
+   Providers (5):
+   - DR. DEBORAH M. SAFF
+   - Dr. Judith Hellman
+   - DR. MIGUEL VILLACORTA
+   - DR. RUSSEL S. GLAUN
+   - DR. STEVEN M. HACKER
+
+16. Heartland Dermatology Center
+   Website: https://heartland-derm.com/price-transparency/
+   Providers (9):
+   - Dr.Brandon Litzner
+   - Dr.Chelsea Lee
+   - Dr.Daren Fomin
+   - Dr.David Harden
+   - Dr.Jace Rickstrew
+   - Dr.Kevin Brough
+   - Dr.Matthew P. Shaffer
+   - Dr.Timothy Cornitius
+   - Dr.Vanessa Voge
+
+17. LA Skincare Center
+   Website: https://www.laskincarecenter.com/contents/pricing
+   Providers (2):
+   - Malia Ah Choy (Medical Aesthetician)
+   - NP Raisa Howard
+
+18. Loftus Plastic Surgery Center
+   Website: https://infoplasticsurgery.com/?cost-plastic-surgery/costloftus/
+   Providers (1):
+   - Dr.Loftus
+
+19. Medical Tourism Corporation
+   Website: https://www.medicaltourismco.com/
+   Providers (1):
+   - Please Request Consult For More Info
+
+20. MIAMI LIFE PLASTIC SURGERY
+   Website: https://miamilifeplasticsurgery.com/free-consultation/
+   Providers (8):
+   - Dr. Camille Chavez
+   - Dr. Daniel Kaufman
+   - Dr. Daniel Zeichner
+   - Dr. James S. McAdoo.DR. CONSTANTINE KITSOS
+   - Dr. Nassif Soueid
+   - Dr. Onyeka Nwokocha
+   - Dr. Robert S. Kagan
+   - Dr.Michael Lee Miller
+
+21. My Plastic Surgery Group- John Aker Aesthetics
+   Website: https://myplasticsurgerygroup.com/pricing/
+   Providers (2):
+   - Dr.John Aker
+   - Dr.Sahitya Reddy
+
+22. Nesmith Plastic Surgery Center
+   Website: https://www.drnesmith.com/pricing-list
+   Providers (2):
+   - Dr.Brad Nesmith
+   - Dr.Richard Nesmith
+
+23. New Face MD.Aesthietics wellness Medicine
+   Website: https://botox.newfacemd.com/prices/
+   Providers (3):
+   - Dr. Andreina Jativa DMD
+   - Dr. David Jativa MD
+   - Dr. Joan Alvarez MD
+
+24. New You Plastic Surgery
+   Website: https://www.thenewyouplasticsurgery.com/
+   Providers (2):
+   - Dr.Jeremy Nikfarjam
+   - Dr.Micheline Goulart
+
+25. Pacific Liposculpture
+   Website: https://www.pacificlipo.com/pricing.html
+   Providers (5):
+   - Dr. Heidi Regenass
+   - Dr. John Compoginis
+   - Dr. Joseph Bivens
+   - Dr. Rakhesh Guttikonda
+   - Dr. Sam Assassa
+
+26. Park & Rebowe Clinic
+   Website: https://www.parkrebowe.com/?utm_source=google
+   Providers (2):
+   - Dr. Christopher A. (Chris) Park
+   - Dr. Ryan Rebowe
+
+27. Plastic Surgery  Specialists 
+   Website: http://www.birminghamspecialists.com/?y_source=1_OTg4NzI3NC03MTUtbG9jYXRpb24ud2Vic2l0ZQ%3D%3D
+   Providers (3):
+   - Dr. Jason M. Jack
+   - Dr. Robert Oliver
+   - Jr.
+
+28. PURE DERMATOLOGY
+   Website: https://puredermnola.com/shop/
+   Providers (2):
+   - Dr. Kate Zibilich Holcomb
+   - Dr. Mara Haseltine
+
+29. Richmond Aesthetic Surgery
+   Website: https://www.richmondplasticsurgery.com/about/pricing/
+   Providers (1):
+   - Dr.Neil J. Zemmel
+
+30. Seattle Plastic Surgery Center
+   Website: https://www.seattleplasticsurgery.com/cosmetic-surgery-pricing/
+   Providers (2):
+   - DR. CRAIG JONOV
+   - DR. DAVID SANTOS
+
+31. Seduction Cosmetic 
+   Website: https://seductioncosmetic.com/miami-plastic-surgery-prices/
+   Providers (6):
+   - Dr. Abeer Sawwaf
+   - Dr. Alfred Sofer
+   - Dr. Humberto Palladino
+   - Dr. Keith Robertson
+   - Dr. Marco Amarante
+   - Dr. Paul Perales
+
+32. Sharper Plastic Surgery
+   Website: https://sharpersurgery.com/?utm_source=google
+   Providers (2):
+   - Dr.Jaime Harper
+   - Dr.Stanley Harper
+
+33. Skin By Lovely 
+   Website: https://www.skinbylovely.com/blog/cost-botox-portland-oregon/
+   Providers (2):
+   - Dr.Behrooz Torkian
+   - Dr.Michelle Lee
+
+34. SOUTH BAY PLASTIC SURGEONS
+   Website: https://www.plasticsurgerysource.com/resources/pricing/
+   Providers (5):
+   - Dr. Juan L. Rendon
+   - Dr. Lisa L. Jewell
+   - Dr. Michael K. Newman
+   - Dr. Ni-Jui James Liang
+   - Dr. Whitney A. Burrell
+
+35. Specialists in Plastic Surgery
+   Website: https://www.specialistsinplasticsurgery.com/plastic-surgery-pricing/
+   Providers (2):
+   - Dr.MATTHEW W. BLANTON
+   - Dr.SANJAY V. DALUVOY
+
+36. Surgical Arts On State
+   Website: https://surgicalartsonstate.com/pricing/
+   Providers (2):
+   - Dr.Howard Gross
+   - Dr.Neavin
+
+37. Sweetgrass Plastic Surgery & Spa
+   Website: https://www.sweetgrassplasticsurgery.com/
+   Providers (2):
+   - Dr. Dennis Schimpf
+   - Dr.Craig Blum
+
+38. The Aesthetic Center For Plastic Surgery
+   Website: https://www.mybeautifulbody.com/procedure-price-list/
+   Providers (7):
+   - Dr. Abigail Rodriguez
+   - Dr. Christopher Patronella
+   - Dr. German Newall
+   - Dr. Henry Mentz
+   - Dr. Kristi Hustak
+   - Dr. Paul Fortes
+   - Dr. Rolando Morales
+
+39. The Naderi Center for Plastic Surgery & Dermatology
+   Website: https://www.virginiafacialplasticsurgery.com/for-patients/surgery-fees
+   Providers (3):
+   - Dr. Alexandra Snodgrass
+   - Dr. Jessica Kulak
+   - Dr. Shervin Naderi
+
+40. The Naderi Center for Plastic Surgery & Dermatology
+   Website: https://www.virginiafacialplasticsurgery.com/for-patients/surgery-fees
+   Providers (3):
+   - Dr. Alexandra Snodgrass
+   - Dr. Jessica Kulak
+   - Dr. Shervin Naderi
+
+41. University of Utah Health 
+   Website: https://healthcare.utah.edu/
+   Providers (1):
+   - Please Request Consult For More Info
+
+42. Virtu Cosmetic Surgery
+   Website: https://www.virtucosmetic.com/pricing
+   Providers (2):
+   - Dr. Paul Diegidio
+   - Dr. Steven J. Hermiz

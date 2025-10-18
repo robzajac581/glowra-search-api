@@ -13,6 +13,14 @@ require('dotenv').config();
 app.use(cors());
 app.use(express.json());
 
+// Serve provider photos as static files
+// Photos accessible via: /api/provider-photos/[ClinicName]/[ProviderName].png
+app.use('/api/provider-photos', express.static('photos/Provider Pictures', {
+  maxAge: '7d', // Cache for 7 days for better performance
+  etag: true,
+  lastModified: true
+}));
+
 // Get specific clinic details
 app.get('/api/procedures', async (req, res) => {
   let pool;
@@ -280,10 +288,6 @@ app.get('/api/procedures', async (req, res) => {
       request.input(key, value);
     });
 
-    // Log queries for debugging
-    console.log('Query:', query);
-    console.log('Parameters:', parameters);
-
     // Execute both queries
     const [results, countResult] = await Promise.all([
       request.query(query),
@@ -479,6 +483,83 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
   }
 });
 
+// Get photos for a specific clinic
+app.get('/api/clinics/:clinicId/photos', async (req, res) => {
+  let pool;
+  try {
+    const { clinicId } = req.params;
+    const { limit, primary } = req.query;
+    
+    pool = await db.getConnection();
+    const request = pool.request();
+    request.input('clinicId', sql.Int, clinicId);
+    
+    let query = `
+      SELECT 
+        PhotoID,
+        PhotoReference,
+        PhotoURL,
+        Width,
+        Height,
+        AttributionText,
+        IsPrimary,
+        DisplayOrder,
+        LastUpdated
+      FROM ClinicPhotos
+      WHERE ClinicID = @clinicId
+    `;
+    
+    // Filter for primary photo only if requested
+    if (primary === 'true' || primary === '1') {
+      query += ' AND IsPrimary = 1';
+    }
+    
+    query += ' ORDER BY DisplayOrder ASC';
+    
+    // Apply limit if specified
+    if (limit && !isNaN(parseInt(limit))) {
+      const limitNum = parseInt(limit);
+      query = `SELECT TOP ${limitNum} * FROM (${query}) AS Photos`;
+    }
+    
+    const result = await request.query(query);
+    
+    // Transform data to include optimized URLs for different sizes
+    const photos = result.recordset.map(photo => {
+      // Extract the base photo reference from the URL
+      const photoRef = photo.PhotoReference;
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      const baseParams = `key=${apiKey}&photoreference=${photoRef}`;
+      
+      return {
+        photoId: photo.PhotoID,
+        url: photo.PhotoURL, // Full size (1600px)
+        urls: {
+          thumbnail: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=400`,
+          medium: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=800`,
+          large: photo.PhotoURL
+        },
+        width: photo.Width,
+        height: photo.Height,
+        attribution: photo.AttributionText,
+        isPrimary: photo.IsPrimary,
+        displayOrder: photo.DisplayOrder,
+        lastUpdated: photo.LastUpdated
+      };
+    });
+    
+    res.json({
+      clinicId: parseInt(clinicId),
+      count: photos.length,
+      photos: photos
+    });
+    
+  } catch (error) {
+    console.error('Error in /api/clinics/:clinicId/photos:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get providers/doctors for a specific clinic
 app.get('/api/clinics/:clinicId/providers', async (req, res) => {
   let pool;
@@ -489,11 +570,12 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
 
-    // Use a non-reserved word as alias with brackets for safety
+    // Query providers with photo URLs
     const result = await request.query(`
       SELECT DISTINCT
         p.ProviderID,
         p.ProviderName,
+        p.PhotoURL,
         s.Specialty
       FROM Providers p
       JOIN Procedures [procs] ON p.ProviderID = [procs].ProviderID
@@ -501,10 +583,13 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
       WHERE p.ClinicID = @clinicId;
     `);
 
-    // TODO: Add provider images when image storage is implemented
+    // Map providers with photo URLs, fallback to placeholder if no photo
     const providers = result.recordset.map(provider => ({
-      ...provider,
-      img: `/img/doctor/placeholder.png` // Temporary placeholder
+      ProviderID: provider.ProviderID,
+      ProviderName: provider.ProviderName,
+      Specialty: provider.Specialty,
+      PhotoURL: provider.PhotoURL || '/img/doctor/placeholder.png', // Fallback to placeholder
+      hasPhoto: !!provider.PhotoURL // Boolean flag for frontend convenience
     }));
 
     res.json(providers);
@@ -617,8 +702,6 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
       });
     }
 
-    console.log(`Starting rating refresh for ${clinicsToUpdate.length} clinic(s)`);
-
     // Extract place IDs
     const placeIds = clinicsToUpdate.map(c => c.PlaceID);
 
@@ -635,12 +718,7 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
       const result = results[i];
       const clinic = clinicsToUpdate[i];
 
-      console.log(`\n--- Processing clinic ${clinic.ClinicID} (${clinic.ClinicName}) ---`);
-      console.log('API Result:', JSON.stringify(result, null, 2));
-
       if (result.data && !result.error) {
-        console.log(`✓ Has valid data - Rating: ${result.data.rating}, Reviews: ${result.data.reviewCount}`);
-        
         const reviewsJSON = JSON.stringify(result.data.reviews);
         
         const updateRequest = pool.request();
@@ -649,13 +727,6 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
         updateRequest.input('reviewCount', sql.Int, result.data.reviewCount);
         updateRequest.input('reviewsJSON', sql.NVarChar(sql.MAX), reviewsJSON);
         updateRequest.input('lastUpdate', sql.DateTime, new Date());
-
-        console.log('About to update database with:', {
-          clinicId: clinic.ClinicID,
-          rating: result.data.rating,
-          reviewCount: result.data.reviewCount,
-          reviewsLength: result.data.reviews.length
-        });
 
         updatePromises.push(
           updateRequest.query(`
@@ -700,8 +771,6 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
     // Wait for all updates to complete
     await Promise.all(updatePromises);
 
-    console.log(`Rating refresh completed: ${successCount} succeeded, ${failCount} failed`);
-
     res.json({
       message: 'Rating refresh completed',
       total: clinicsToUpdate.length,
@@ -730,7 +799,6 @@ app.use((err, req, res, next) => {
 // Initialize scheduled jobs
 try {
   initRatingRefreshJob();
-  console.log('Scheduled jobs initialized');
 } catch (error) {
   console.error('Failed to initialize scheduled jobs:', error);
   // Continue without scheduled jobs rather than crashing

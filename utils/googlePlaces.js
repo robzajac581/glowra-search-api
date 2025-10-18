@@ -7,9 +7,10 @@ const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place/detail
 /**
  * Fetches place details from Google Places API
  * @param {string} placeId - Google Place ID
+ * @param {boolean} includePhotos - Whether to include photos in the request (default: false)
  * @returns {Promise<Object>} - Place details with rating, reviews, and opening hours
  */
-async function fetchGooglePlaceDetails(placeId) {
+async function fetchGooglePlaceDetails(placeId, includePhotos = false) {
   // Validation
   if (!placeId) {
     throw new Error('Place ID is required');
@@ -21,7 +22,12 @@ async function fetchGooglePlaceDetails(placeId) {
 
   try {
     // Request only the fields we need to minimize API costs
-    const fields = 'rating,user_ratings_total,reviews,opening_hours,business_status';
+    let fields = 'rating,user_ratings_total,reviews,opening_hours,business_status';
+    
+    // Add photos field if requested
+    if (includePhotos) {
+      fields += ',photos';
+    }
     
     const response = await axios.get(GOOGLE_PLACES_API_URL, {
       params: {
@@ -32,24 +38,12 @@ async function fetchGooglePlaceDetails(placeId) {
       timeout: 10000 // 10 second timeout
     });
 
-    // Detailed logging for diagnosis
-    console.log('=== Google API Response for', placeId, '===');
-    console.log('Status:', response.data.status);
-    console.log('Full result:', JSON.stringify(response.data.result, null, 2));
-    console.log('==========================================');
-
     // Check API response status
     if (response.data.status === 'OK') {
       const result = response.data.result;
       
-      // Log what data we received
-      console.log(`✓ Place ${placeId}:`);
-      console.log(`  - Rating: ${result.rating || 'NONE'}`);
-      console.log(`  - Review Count: ${result.user_ratings_total || 'NONE'}`);
-      console.log(`  - Reviews array length: ${result.reviews?.length || 0}`);
-      
       // Structure the response data with fallbacks for missing fields
-      return {
+      const responseData = {
         rating: result.rating || null,
         reviewCount: result.user_ratings_total || 0,
         reviews: parseReviews(result.reviews || []),
@@ -57,6 +51,13 @@ async function fetchGooglePlaceDetails(placeId) {
         openingHours: result.opening_hours?.weekday_text || [],
         businessStatus: result.business_status || 'OPERATIONAL'
       };
+      
+      // Add photos if they were requested and are available
+      if (includePhotos && result.photos) {
+        responseData.photos = parsePhotos(result.photos);
+      }
+      
+      return responseData;
     } else if (response.data.status === 'NOT_FOUND') {
       console.warn(`Place not found for Place ID: ${placeId}`);
       return null;
@@ -94,15 +95,15 @@ async function fetchGooglePlaceDetails(placeId) {
  * Fetches place details with retry logic
  * @param {string} placeId - Google Place ID
  * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
+ * @param {boolean} includePhotos - Whether to include photos in the request (default: false)
  * @returns {Promise<Object>} - Place details or null on failure
  */
-async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3) {
+async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3, includePhotos = false) {
   let lastError;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetching Google Places data for ${placeId} (attempt ${attempt}/${maxRetries})`);
-      return await fetchGooglePlaceDetails(placeId);
+      return await fetchGooglePlaceDetails(placeId, includePhotos);
     } catch (error) {
       lastError = error;
       console.error(`Attempt ${attempt} failed:`, error.message);
@@ -117,7 +118,6 @@ async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3) {
       // Wait before retrying (exponential backoff)
       if (attempt < maxRetries) {
         const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-        console.log(`Waiting ${waitTime}ms before retry...`);
         await sleep(waitTime);
       }
     }
@@ -125,6 +125,43 @@ async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3) {
   
   // All retries failed
   throw lastError;
+}
+
+/**
+ * Parse photos from Google Places API response
+ * @param {Array} photos - Raw photos array from API
+ * @returns {Array} - Structured photos array with URLs
+ */
+function parsePhotos(photos) {
+  if (!Array.isArray(photos)) {
+    return [];
+  }
+
+  return photos.map((photo, index) => {
+    // Photo reference for constructing URLs
+    const photoReference = photo.photo_reference;
+    
+    // Construct optimized photo URLs
+    // For web performance, we'll create multiple sizes
+    const baseParams = `key=${GOOGLE_PLACES_API_KEY}&photoreference=${photoReference}`;
+    
+    return {
+      reference: photoReference,
+      width: photo.width || null,
+      height: photo.height || null,
+      // Full size (max 1600px as per Google's limit)
+      url: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=1600`,
+      // Optimized sizes for different use cases
+      urls: {
+        thumbnail: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=400`,  // Cards/thumbnails
+        medium: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=800`,     // Gallery previews
+        large: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=1600`      // Full screen
+      },
+      // Attribution (required by Google Terms of Service)
+      attributions: photo.html_attributions || [],
+      isPrimary: index === 0  // First photo is the primary/featured image
+    };
+  });
 }
 
 /**
@@ -237,10 +274,27 @@ async function batchFetchPlaceDetails(placeIds, concurrency = 5, delayMs = 200) 
   return results;
 }
 
+/**
+ * Fetch photos for a specific place
+ * @param {string} placeId - Google Place ID
+ * @returns {Promise<Array>} - Array of photo objects
+ */
+async function fetchPlacePhotos(placeId) {
+  try {
+    const placeDetails = await fetchGooglePlaceDetails(placeId, true);
+    return placeDetails.photos || [];
+  } catch (error) {
+    console.error(`Failed to fetch photos for place ${placeId}:`, error.message);
+    return [];
+  }
+}
+
 module.exports = {
   fetchGooglePlaceDetails,
   fetchGooglePlaceDetailsWithRetry,
+  fetchPlacePhotos,
   parseReviews,
+  parsePhotos,
   isCacheFresh,
   batchFetchPlaceDetails
 };

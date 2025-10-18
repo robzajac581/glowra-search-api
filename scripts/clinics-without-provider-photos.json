@@ -1,0 +1,883 @@
+{
+  "timestamp": "2025-10-18T03:44:44.256Z",
+  "statistics": {
+    "totalClinics": 115,
+    "clinicsWithPhotos": 73,
+    "clinicsWithoutPhotos": 42,
+    "totalProviders": 205,
+    "providersWithPhotos": 82,
+    "providersWithoutPhotos": 123
+  },
+  "clinicsWithoutPhotos": [
+    {
+      "clinicId": 80,
+      "clinicName": " EAU CLAIRE BODYCARE",
+      "address": "2186 Eastridge Center, Eau Claire, WI 54701",
+      "website": "https://eauclairebodycare.com/?utm_source=google",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 153,
+          "providerName": "Please Request Consult For More Info"
+        }
+      ]
+    },
+    {
+      "clinicId": 97,
+      "clinicName": "Augusta Plastic Surgery",
+      "address": "569 Furys Ferry Road\nMartinez, GA 30907",
+      "website": "https://www.augplastic.com/about/pricing-payment/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 177,
+          "providerName": "Dr.Christopher J. Ewart"
+        },
+        {
+          "providerId": 178,
+          "providerName": "Dr.Michael S. Tarakji"
+        }
+      ]
+    },
+    {
+      "clinicId": 93,
+      "clinicName": "Bella Cosmetic Surgery",
+      "address": "120 Waterfront Street , Suite 400\nOxon Hill, MD 20745",
+      "website": "https://www.bellacosmeticsurgery.com/pricing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 171,
+          "providerName": "DR. ANYA COSTELOE"
+        },
+        {
+          "providerId": 170,
+          "providerName": "Dr. Michael F. Chiaramonte"
+        }
+      ]
+    },
+    {
+      "clinicId": 82,
+      "clinicName": "Blooming Beauty",
+      "address": "630 N Old Woodward Ave Suite 303 Office 3, Birmingham, MI 48009",
+      "website": "https://bloomingmedspa.com/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 155,
+          "providerName": "Please Request Consult For More Info"
+        }
+      ]
+    },
+    {
+      "clinicId": 52,
+      "clinicName": "Brigham and Women's Hospital",
+      "address": "75 FRANCIS STREET, BOSTON MA 02115",
+      "website": "https://www.brighamandwomens.org/surgery/plastic-surgery/cosmetic-procedures/pricing-and-policies",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 101,
+          "providerName": "Please Request Consult For More Info"
+        }
+      ]
+    },
+    {
+      "clinicId": 24,
+      "clinicName": "Center for Plastic Surgery - Ann Arbor",
+      "address": "5333 McAuley Dr #5001, Ypsilanti, MI 48197",
+      "website": "https://www.cpsaa.com/?utm_source=google",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 69,
+          "providerName": "Dr. Amy Strong"
+        },
+        {
+          "providerId": 68,
+          "providerName": "Dr. Daniel Sherick"
+        },
+        {
+          "providerId": 67,
+          "providerName": "Dr. Richard Beil"
+        }
+      ]
+    },
+    {
+      "clinicId": 9,
+      "clinicName": "CG Cosmetic",
+      "address": "2601 SW 37th Ave Ste 100, Miami, FL 33133",
+      "website": "https://www.cgcosmetic.com/",
+      "totalProviders": 8,
+      "providers": [
+        {
+          "providerId": 22,
+          "providerName": "Dr.Ary Krau"
+        },
+        {
+          "providerId": 27,
+          "providerName": "Dr.DECIO CARVALHO"
+        },
+        {
+          "providerId": 28,
+          "providerName": "Dr.DECIO CARVALHO"
+        },
+        {
+          "providerId": 23,
+          "providerName": "Dr.Jacob Freiman"
+        },
+        {
+          "providerId": 26,
+          "providerName": "Dr.JORGE HIDALGO"
+        },
+        {
+          "providerId": 29,
+          "providerName": "Dr.Paul C. Dillon"
+        },
+        {
+          "providerId": 25,
+          "providerName": "Dr.ROBERT HUNSAKER"
+        },
+        {
+          "providerId": 24,
+          "providerName": "Dr.Scott Loessin"
+        }
+      ]
+    },
+    {
+      "clinicId": 111,
+      "clinicName": "Chicago Breast and Body Aesthetics",
+      "address": "467 W ERIE STREET, CHICAGO ILLINOIS 60654.",
+      "website": "https://chicagobreastandbody.com/chicago-plastic-surgery-prices/",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 198,
+          "providerName": "Dr.Anh-Tuan Truong"
+        },
+        {
+          "providerId": 199,
+          "providerName": "Dr.John D.Rachel"
+        },
+        {
+          "providerId": 200,
+          "providerName": "Dr.Sue Kafali"
+        }
+      ]
+    },
+    {
+      "clinicId": 75,
+      "clinicName": "Cosmetic Surgery Affiliates",
+      "address": "2100 Northwest 63rd Street\nOklahoma City, OK 73116",
+      "website": "https://csaok.com/cost-schedule",
+      "totalProviders": 4,
+      "providers": [
+        {
+          "providerId": 145,
+          "providerName": "Dr. Courtney Caplin"
+        },
+        {
+          "providerId": 144,
+          "providerName": "Dr. Erik J. Nuveen"
+        },
+        {
+          "providerId": 146,
+          "providerName": "Dr. John Tedesco"
+        },
+        {
+          "providerId": 147,
+          "providerName": "Dr. Trent Fogleman"
+        }
+      ]
+    },
+    {
+      "clinicId": 26,
+      "clinicName": "DeLuca Plastic Surgery ",
+      "address": "5 Ulenski Dr, Albany, NY 12205",
+      "website": "https://www.delucaplasticsurgery.com/prices/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 71,
+          "providerName": "Dr. David Tauber"
+        },
+        {
+          "providerId": 72,
+          "providerName": "Dr.William DeLuca"
+        }
+      ]
+    },
+    {
+      "clinicId": 58,
+      "clinicName": "Dermatology + Plastic Surgery - For Your Best Self",
+      "address": "6545 N Wickham Rd Suite C-101, Melbourne, FL 32940",
+      "website": "https://www.foryourbestself.com/",
+      "totalProviders": 4,
+      "providers": [
+        {
+          "providerId": 108,
+          "providerName": "Dr.Anita Saluja"
+        },
+        {
+          "providerId": 111,
+          "providerName": "Dr.Nancy Marchell"
+        },
+        {
+          "providerId": 109,
+          "providerName": "Dr.Rebecca Novo"
+        },
+        {
+          "providerId": 110,
+          "providerName": "Dr.Renee Gasgarth"
+        }
+      ]
+    },
+    {
+      "clinicId": 70,
+      "clinicName": "Dr. York Yates Plastic Surgery",
+      "address": "2121 N 1700 W\nLayton, UT 84041",
+      "website": "https://www.yorkyates.com/recovery/financing/costs/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 139,
+          "providerName": "Dr.York Yates"
+        }
+      ]
+    },
+    {
+      "clinicId": 51,
+      "clinicName": "ESANA",
+      "address": "One Audubon Street, Suite 201\nNew Haven, CT 06511",
+      "website": "https://esanamedspa.com/financing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 99,
+          "providerName": "Dr.Deborah Pan"
+        },
+        {
+          "providerId": 100,
+          "providerName": "Dr.Javier Davila"
+        }
+      ]
+    },
+    {
+      "clinicId": 79,
+      "clinicName": "Green Bay Plastic Surgical Associates, S.C.",
+      "address": "704 S Webster Ave # 401, Green Bay, WI 54301",
+      "website": "https://www.greenbayplasticsurgicalassociates.com/about/value/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 151,
+          "providerName": "Dr. Eugene Schmitt III"
+        },
+        {
+          "providerId": 152,
+          "providerName": "Dr. James Lee"
+        }
+      ]
+    },
+    {
+      "clinicId": 64,
+      "clinicName": "Hacker Dermatology & Multi-Specialty Group",
+      "address": "230 George Bush Blvd\nSuite B\nDelray Beach, Fl. 33444",
+      "website": "https://www.hackerdermatology.com/pricing-self-pay-cosmetic-patients/",
+      "totalProviders": 5,
+      "providers": [
+        {
+          "providerId": 121,
+          "providerName": "DR. DEBORAH M. SAFF"
+        },
+        {
+          "providerId": 124,
+          "providerName": "Dr. Judith Hellman"
+        },
+        {
+          "providerId": 123,
+          "providerName": "DR. MIGUEL VILLACORTA"
+        },
+        {
+          "providerId": 122,
+          "providerName": "DR. RUSSEL S. GLAUN"
+        },
+        {
+          "providerId": 120,
+          "providerName": "DR. STEVEN M. HACKER"
+        }
+      ]
+    },
+    {
+      "clinicId": 66,
+      "clinicName": "Heartland Dermatology Center",
+      "address": "828 Elmhurst\nSalina, KS67401",
+      "website": "https://heartland-derm.com/price-transparency/",
+      "totalProviders": 9,
+      "providers": [
+        {
+          "providerId": 128,
+          "providerName": "Dr.Brandon Litzner"
+        },
+        {
+          "providerId": 134,
+          "providerName": "Dr.Chelsea Lee"
+        },
+        {
+          "providerId": 133,
+          "providerName": "Dr.Daren Fomin"
+        },
+        {
+          "providerId": 132,
+          "providerName": "Dr.David Harden"
+        },
+        {
+          "providerId": 131,
+          "providerName": "Dr.Jace Rickstrew"
+        },
+        {
+          "providerId": 129,
+          "providerName": "Dr.Kevin Brough"
+        },
+        {
+          "providerId": 126,
+          "providerName": "Dr.Matthew P. Shaffer"
+        },
+        {
+          "providerId": 127,
+          "providerName": "Dr.Timothy Cornitius"
+        },
+        {
+          "providerId": 130,
+          "providerName": "Dr.Vanessa Voge"
+        }
+      ]
+    },
+    {
+      "clinicId": 56,
+      "clinicName": "LA Skincare Center",
+      "address": "LA Skincare Center\n2284 East Maple Ave\nEl Segundo, CA 90245",
+      "website": "https://www.laskincarecenter.com/contents/pricing",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 106,
+          "providerName": "Malia Ah Choy (Medical Aesthetician)"
+        },
+        {
+          "providerId": 105,
+          "providerName": "NP Raisa Howard"
+        }
+      ]
+    },
+    {
+      "clinicId": 21,
+      "clinicName": "Loftus Plastic Surgery Center",
+      "address": "1881 Dixie Highway\nSuite 300\nFort Wright, KY 41011",
+      "website": "https://infoplasticsurgery.com/?cost-plastic-surgery/costloftus/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 64,
+          "providerName": "Dr.Loftus"
+        }
+      ]
+    },
+    {
+      "clinicId": 40,
+      "clinicName": "Medical Tourism Corporation",
+      "address": "10658 Shire View Dr, Frisco, TX 75035",
+      "website": "https://www.medicaltourismco.com/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 87,
+          "providerName": "Please Request Consult For More Info"
+        }
+      ]
+    },
+    {
+      "clinicId": 11,
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "address": "8686 Coral Way,Miami, FL 33155",
+      "website": "https://miamilifeplasticsurgery.com/free-consultation/",
+      "totalProviders": 8,
+      "providers": [
+        {
+          "providerId": 34,
+          "providerName": "Dr. Camille Chavez"
+        },
+        {
+          "providerId": 33,
+          "providerName": "Dr. Daniel Kaufman"
+        },
+        {
+          "providerId": 37,
+          "providerName": "Dr. Daniel Zeichner"
+        },
+        {
+          "providerId": 31,
+          "providerName": "Dr. James S. McAdoo.DR. CONSTANTINE KITSOS"
+        },
+        {
+          "providerId": 35,
+          "providerName": "Dr. Nassif Soueid"
+        },
+        {
+          "providerId": 38,
+          "providerName": "Dr. Onyeka Nwokocha"
+        },
+        {
+          "providerId": 36,
+          "providerName": "Dr. Robert S. Kagan"
+        },
+        {
+          "providerId": 32,
+          "providerName": "Dr.Michael Lee Miller"
+        }
+      ]
+    },
+    {
+      "clinicId": 108,
+      "clinicName": "My Plastic Surgery Group- John Aker Aesthetics",
+      "address": "11450 N. Meridian St. Suite 225 Carmel, IN 46032",
+      "website": "https://myplasticsurgerygroup.com/pricing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 193,
+          "providerName": "Dr.John Aker"
+        },
+        {
+          "providerId": 194,
+          "providerName": "Dr.Sahitya Reddy"
+        }
+      ]
+    },
+    {
+      "clinicId": 29,
+      "clinicName": "Nesmith Plastic Surgery Center",
+      "address": "6801 NW 9th Blvd.\nSuite 2\nGainesville, FL 32605",
+      "website": "https://www.drnesmith.com/pricing-list",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 76,
+          "providerName": "Dr.Brad Nesmith"
+        },
+        {
+          "providerId": 75,
+          "providerName": "Dr.Richard Nesmith"
+        }
+      ]
+    },
+    {
+      "clinicId": 61,
+      "clinicName": "New Face MD.Aesthietics wellness Medicine",
+      "address": "13550 Village Park Dr. Suite 145, Orlando, FL 32837",
+      "website": "https://botox.newfacemd.com/prices/",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 116,
+          "providerName": "Dr. Andreina Jativa DMD"
+        },
+        {
+          "providerId": 115,
+          "providerName": "Dr. David Jativa MD"
+        },
+        {
+          "providerId": 117,
+          "providerName": "Dr. Joan Alvarez MD"
+        }
+      ]
+    },
+    {
+      "clinicId": 114,
+      "clinicName": "New You Plastic Surgery",
+      "address": "461 Park Ave S 3rd floor, New York, NY 10016",
+      "website": "https://www.thenewyouplasticsurgery.com/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 203,
+          "providerName": "Dr.Jeremy Nikfarjam"
+        },
+        {
+          "providerId": 204,
+          "providerName": "Dr.Micheline Goulart"
+        }
+      ]
+    },
+    {
+      "clinicId": 12,
+      "clinicName": "Pacific Liposculpture",
+      "address": "8899 University Center Ln #250, San Diego, CA 92122",
+      "website": "https://www.pacificlipo.com/pricing.html",
+      "totalProviders": 5,
+      "providers": [
+        {
+          "providerId": 43,
+          "providerName": "Dr. Heidi Regenass"
+        },
+        {
+          "providerId": 40,
+          "providerName": "Dr. John Compoginis"
+        },
+        {
+          "providerId": 41,
+          "providerName": "Dr. Joseph Bivens"
+        },
+        {
+          "providerId": 42,
+          "providerName": "Dr. Rakhesh Guttikonda"
+        },
+        {
+          "providerId": 39,
+          "providerName": "Dr. Sam Assassa"
+        }
+      ]
+    },
+    {
+      "clinicId": 88,
+      "clinicName": "Park & Rebowe Clinic",
+      "address": "411 N Section St 3rd floor, Fairhope, AL 36532",
+      "website": "https://www.parkrebowe.com/?utm_source=google",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 163,
+          "providerName": "Dr. Christopher A. (Chris) Park"
+        },
+        {
+          "providerId": 164,
+          "providerName": "Dr. Ryan Rebowe"
+        }
+      ]
+    },
+    {
+      "clinicId": 87,
+      "clinicName": "Plastic Surgery  Specialists ",
+      "address": "2000 Stonegate Trail Suite 100, Vestavia Hills, AL 35242",
+      "website": "http://www.birminghamspecialists.com/?y_source=1_OTg4NzI3NC03MTUtbG9jYXRpb24ud2Vic2l0ZQ%3D%3D",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 160,
+          "providerName": "Dr. Jason M. Jack"
+        },
+        {
+          "providerId": 161,
+          "providerName": "Dr. Robert Oliver"
+        },
+        {
+          "providerId": 162,
+          "providerName": "Jr."
+        }
+      ]
+    },
+    {
+      "clinicId": 59,
+      "clinicName": "PURE DERMATOLOGY",
+      "address": "3100 Galleria #203, Metairie, LA 70001",
+      "website": "https://puredermnola.com/shop/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 112,
+          "providerName": "Dr. Kate Zibilich Holcomb"
+        },
+        {
+          "providerId": 113,
+          "providerName": "Dr. Mara Haseltine"
+        }
+      ]
+    },
+    {
+      "clinicId": 101,
+      "clinicName": "Richmond Aesthetic Surgery",
+      "address": "11934 W Broad Street , Suite 200\nRichmond, VA 23233\"",
+      "website": "https://www.richmondplasticsurgery.com/about/pricing/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 186,
+          "providerName": "Dr.Neil J. Zemmel"
+        }
+      ]
+    },
+    {
+      "clinicId": 48,
+      "clinicName": "Seattle Plastic Surgery Center",
+      "address": "600 Broadway Suite #320\n\nSeattle, WA 98122",
+      "website": "https://www.seattleplasticsurgery.com/cosmetic-surgery-pricing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 95,
+          "providerName": "DR. CRAIG JONOV"
+        },
+        {
+          "providerId": 96,
+          "providerName": "DR. DAVID SANTOS"
+        }
+      ]
+    },
+    {
+      "clinicId": 13,
+      "clinicName": "Seduction Cosmetic ",
+      "address": "4950 SW 8th St, Miami, FL 33134",
+      "website": "https://seductioncosmetic.com/miami-plastic-surgery-prices/",
+      "totalProviders": 6,
+      "providers": [
+        {
+          "providerId": 46,
+          "providerName": "Dr. Abeer Sawwaf"
+        },
+        {
+          "providerId": 49,
+          "providerName": "Dr. Alfred Sofer"
+        },
+        {
+          "providerId": 48,
+          "providerName": "Dr. Humberto Palladino"
+        },
+        {
+          "providerId": 45,
+          "providerName": "Dr. Keith Robertson"
+        },
+        {
+          "providerId": 44,
+          "providerName": "Dr. Marco Amarante"
+        },
+        {
+          "providerId": 47,
+          "providerName": "Dr. Paul Perales"
+        }
+      ]
+    },
+    {
+      "clinicId": 110,
+      "clinicName": "Sharper Plastic Surgery",
+      "address": "10090 E US Hwy 36 Suite D, Avon, IN 46123",
+      "website": "https://sharpersurgery.com/?utm_source=google",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 197,
+          "providerName": "Dr.Jaime Harper"
+        },
+        {
+          "providerId": 196,
+          "providerName": "Dr.Stanley Harper"
+        }
+      ]
+    },
+    {
+      "clinicId": 67,
+      "clinicName": "Skin By Lovely ",
+      "address": "2311 NW Northrup St #100\nPortland, OR 97210",
+      "website": "https://www.skinbylovely.com/blog/cost-botox-portland-oregon/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 135,
+          "providerName": "Dr.Behrooz Torkian"
+        },
+        {
+          "providerId": 136,
+          "providerName": "Dr.Michelle Lee"
+        }
+      ]
+    },
+    {
+      "clinicId": 7,
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "address": "3640 Lomita Boulevard #306\nTorrance, CA 90505",
+      "website": "https://www.plasticsurgerysource.com/resources/pricing/",
+      "totalProviders": 5,
+      "providers": [
+        {
+          "providerId": 20,
+          "providerName": "Dr. Juan L. Rendon"
+        },
+        {
+          "providerId": 16,
+          "providerName": "Dr. Lisa L. Jewell"
+        },
+        {
+          "providerId": 17,
+          "providerName": "Dr. Michael K. Newman"
+        },
+        {
+          "providerId": 19,
+          "providerName": "Dr. Ni-Jui James Liang"
+        },
+        {
+          "providerId": 18,
+          "providerName": "Dr. Whitney A. Burrell"
+        }
+      ]
+    },
+    {
+      "clinicId": 89,
+      "clinicName": "Specialists in Plastic Surgery",
+      "address": "3633 Harden Road #200\nRaleigh, NC 27607",
+      "website": "https://www.specialistsinplasticsurgery.com/plastic-surgery-pricing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 165,
+          "providerName": "Dr.MATTHEW W. BLANTON"
+        },
+        {
+          "providerId": 166,
+          "providerName": "Dr.SANJAY V. DALUVOY"
+        }
+      ]
+    },
+    {
+      "clinicId": 17,
+      "clinicName": "Surgical Arts On State",
+      "address": "1722 State Street\nSuite 201\nSanta Barbara, CA 93101",
+      "website": "https://surgicalartsonstate.com/pricing/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 59,
+          "providerName": "Dr.Howard Gross"
+        },
+        {
+          "providerId": 60,
+          "providerName": "Dr.Neavin"
+        }
+      ]
+    },
+    {
+      "clinicId": 96,
+      "clinicName": "Sweetgrass Plastic Surgery & Spa",
+      "address": "1930 Charlie Hall Blvd, Charleston, SC 29414",
+      "website": "https://www.sweetgrassplasticsurgery.com/",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 176,
+          "providerName": "Dr. Dennis Schimpf"
+        },
+        {
+          "providerId": 175,
+          "providerName": "Dr.Craig Blum"
+        }
+      ]
+    },
+    {
+      "clinicId": 16,
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "address": "4400 POST OAK PARKWAY\nSUITE 300\nHOUSTON, TX 77027",
+      "website": "https://www.mybeautifulbody.com/procedure-price-list/",
+      "totalProviders": 7,
+      "providers": [
+        {
+          "providerId": 58,
+          "providerName": "Dr. Abigail Rodriguez"
+        },
+        {
+          "providerId": 52,
+          "providerName": "Dr. Christopher Patronella"
+        },
+        {
+          "providerId": 54,
+          "providerName": "Dr. German Newall"
+        },
+        {
+          "providerId": 53,
+          "providerName": "Dr. Henry Mentz"
+        },
+        {
+          "providerId": 57,
+          "providerName": "Dr. Kristi Hustak"
+        },
+        {
+          "providerId": 55,
+          "providerName": "Dr. Paul Fortes"
+        },
+        {
+          "providerId": 56,
+          "providerName": "Dr. Rolando Morales"
+        }
+      ]
+    },
+    {
+      "clinicId": 98,
+      "clinicName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "address": "5454 Wisconsin Ave, Suite 1655,\nChevy Chase, MD 20815",
+      "website": "https://www.virginiafacialplasticsurgery.com/for-patients/surgery-fees",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 181,
+          "providerName": "Dr. Alexandra Snodgrass"
+        },
+        {
+          "providerId": 179,
+          "providerName": "Dr. Jessica Kulak"
+        },
+        {
+          "providerId": 180,
+          "providerName": "Dr. Shervin Naderi"
+        }
+      ]
+    },
+    {
+      "clinicId": 99,
+      "clinicName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "address": "1850 Town Center Parkway, Pavillion II, Suite 551\nReston, VA 20190",
+      "website": "https://www.virginiafacialplasticsurgery.com/for-patients/surgery-fees",
+      "totalProviders": 3,
+      "providers": [
+        {
+          "providerId": 184,
+          "providerName": "Dr. Alexandra Snodgrass"
+        },
+        {
+          "providerId": 182,
+          "providerName": "Dr. Jessica Kulak"
+        },
+        {
+          "providerId": 183,
+          "providerName": "Dr. Shervin Naderi"
+        }
+      ]
+    },
+    {
+      "clinicId": 71,
+      "clinicName": "University of Utah Health ",
+      "address": "127 S 500 E, Salt Lake City, UT 84102",
+      "website": "https://healthcare.utah.edu/",
+      "totalProviders": 1,
+      "providers": [
+        {
+          "providerId": 140,
+          "providerName": "Please Request Consult For More Info"
+        }
+      ]
+    },
+    {
+      "clinicId": 95,
+      "clinicName": "Virtu Cosmetic Surgery",
+      "address": "700 Gervais St, STE 150, Columbia SC 29201",
+      "website": "https://www.virtucosmetic.com/pricing",
+      "totalProviders": 2,
+      "providers": [
+        {
+          "providerId": 173,
+          "providerName": "Dr. Paul Diegidio"
+        },
+        {
+          "providerId": 174,
+          "providerName": "Dr. Steven J. Hermiz"
+        }
+      ]
+    }
+  ]
+}
