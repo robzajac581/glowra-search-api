@@ -119,6 +119,38 @@ GET /api/clinics/:clinicId/procedures
 
 Returns procedures offered by the clinic, grouped by category.
 
+#### Get Clinic Photo (Proxy)
+```
+GET /api/photos/clinic/:clinicId
+```
+
+**NEW:** Proxies Google Places photos with server-side caching to prevent rate limiting. This endpoint resolves the 429 (Too Many Requests) errors that occur when loading photos directly from Google Places API.
+
+**Response:**
+- Returns actual image binary data (`image/jpeg` or `image/png`)
+- Includes caching headers for 7-day browser caching
+- `X-Cache: HIT` header indicates cached image
+- `X-Cache: MISS` header indicates freshly fetched from Google
+
+**Error Handling:**
+- `404`: Clinic not found or no photo available
+- `503`: Rate limited (includes `Retry-After` header)
+- `500`: Server error
+
+**Documentation:** See `docs/FE communications/PHOTO_PROXY_ENDPOINT_GUIDE.md` for complete frontend integration guide.
+
+**Usage:**
+```html
+<!-- Instead of using photoURL directly: -->
+<img src="https://your-api.com/api/photos/clinic/42" alt="Clinic Photo" />
+```
+
+**Benefits:**
+- ✅ No more 429 rate limit errors
+- ✅ Fast performance with 7-day cache
+- ✅ Reduced Google API costs
+- ✅ Proper authentication and error handling
+
 ### Admin Endpoints
 
 #### Manual Rating Refresh
@@ -148,12 +180,52 @@ Manually trigger a rating refresh for one or all clinics.
 
 ### Search Endpoints
 
-#### Search Procedures
+#### Clinic Search Index (NEW - Recommended)
+```
+GET /api/clinics/search-index
+```
+
+Returns all clinics with their complete procedure lists for client-side search. This is the recommended endpoint for the search page.
+
+**Response:**
+```json
+{
+  "clinics": [
+    {
+      "clinicId": 1,
+      "clinicName": "Chicago Cosmetic Surgery",
+      "address": "123 N Michigan Ave",
+      "city": "Chicago",
+      "state": "IL",
+      "rating": 4.8,
+      "reviewCount": 245,
+      "clinicCategory": "Plastic Surgery",
+      "photoURL": "https://lh3.googleusercontent.com/places/ANXAkqF...",
+      "procedures": [
+        {
+          "procedureId": 101,
+          "procedureName": "Breast Augmentation",
+          "price": 6500,
+          "category": "Breast"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "totalClinics": 150,
+    "timestamp": "2025-10-23T14:32:10.123Z"
+  }
+}
+```
+
+**Documentation:** See `docs/FE communications/CLINIC_SEARCH_API_GUIDE.md` for complete implementation guide.
+
+#### Search Procedures (Legacy)
 ```
 GET /api/procedures?searchQuery=botox&location=Miami&minPrice=100&maxPrice=500
 ```
 
-Search for procedures with optional filters.
+Search for procedures with optional filters. *Note: This endpoint is maintained for backwards compatibility. New implementations should use `/api/clinics/search-index`.*
 
 **Query Parameters:**
 - `searchQuery`: Search term (searches across procedure name, clinic, provider, specialty, category)
@@ -164,6 +236,13 @@ Search for procedures with optional filters.
 - `category`: Procedure category
 - `page`: Page number (default: 1)
 - `limit`: Results per page (default: 100)
+
+#### Procedure Search Index (Legacy)
+```
+GET /api/procedures/search-index
+```
+
+Returns all procedures in a flat structure. *Note: Use `/api/clinics/search-index` for new implementations.*
 
 ## Scheduled Jobs
 
@@ -249,14 +328,19 @@ glowra-search-api/
 ├── db.js                       # Database connection manager
 ├── package.json                # Dependencies
 ├── .env                        # Environment variables (not in git)
+├── .photo-cache/               # Photo cache directory (auto-created, not in git)
 ├── schema/
 │   └── add_google_ratings.sql  # Database schema updates
 ├── utils/
 │   └── googlePlaces.js         # Google Places API integration
 ├── jobs/
 │   └── ratingRefresh.js        # Scheduled rating refresh job
-└── services/
-    └── clinicSearchService.js  # Clinic search service
+├── services/
+│   └── clinicSearchService.js  # Clinic search service
+└── docs/
+    └── FE communications/
+        ├── CLINIC_SEARCH_API_GUIDE.md
+        └── PHOTO_PROXY_ENDPOINT_GUIDE.md  # Photo proxy documentation
 ```
 
 ### Adding New Features

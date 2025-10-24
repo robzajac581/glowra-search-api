@@ -30,3 +30,6 @@ scripts/data/*.csv
 scripts/data/*.xls
 # Keep the folder structure but not the files
 !scripts/data/.gitkeep
+
+# Photo cache
+.photo-cache/

@@ -1,0 +1,1405 @@
+{
+  "timestamp": "2025-10-20T13:18:49.198Z",
+  "version": 2,
+  "summary": {
+    "totalPhotos": 177,
+    "matched": 169,
+    "unmatched": 8,
+    "updated": 169,
+    "failed": 0
+  },
+  "matches": [
+    {
+      "providerID": 158,
+      "providerName": "Dr.Shannon S.Joseph",
+      "clinicName": " JOSEPH Advanced Oculofacial Plastic Surgery",
+      "photoFile": "Dr.Shannon S.Joseph.png",
+      "photoURL": "/api/provider-photos/%20JOSEPH%20Advanced%20Oculofacial%20Plastic%20Surgery/Dr.Shannon%20S.Joseph.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 50,
+      "providerName": "Dr.Armen Vartany",
+      "clinicName": "ARMEN VARTANY, M.D., FACS  PLASTIC SURGERY AND LASER CENTER",
+      "photoFile": "Dr.Armen Vartany.png",
+      "photoURL": "/api/provider-photos/ARMEN%20VARTANY%2C%20M.D.%2C%20FACS%20%20PLASTIC%20SURGERY%20AND%20LASER%20CENTER/Dr.Armen%20Vartany.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 80,
+      "providerName": "Dr.Armando Soto",
+      "clinicName": "Aesthetic Enhancements Plastic Surgery",
+      "photoFile": "Dr.Armando Soto.png",
+      "photoURL": "/api/provider-photos/Aesthetic%20Enhancements%20Plastic%20Surgery/Dr.Armando%20Soto.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 97,
+      "providerName": "Dr. Javad Sajan",
+      "clinicName": "Allure Esthetic Plastic Surgery",
+      "photoFile": "Dr. Javad Sajan.png",
+      "photoURL": "/api/provider-photos/Allure%20Esthetic%20Plastic%20Surgery/Dr.%20Javad%20Sajan.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 154,
+      "providerName": "DR. LISA ALLEN",
+      "clinicName": "Ambiance MD Medical SPA",
+      "photoFile": "DR. LISA ALLEN.png",
+      "photoURL": "/api/provider-photos/Ambiance%20MD%20Medical%20SPA/DR.%20LISA%20ALLEN.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 150,
+      "providerName": "Dr.Brian Kiesnowski",
+      "clinicName": "Appleton Plastic Surgery Center",
+      "photoFile": "Dr.Brian Kiesnowski.png",
+      "photoURL": "/api/provider-photos/Appleton%20Plastic%20Surgery%20Center/Dr.Brian%20Kiesnowski.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 177,
+      "providerName": "Dr.Christopher J. Ewart",
+      "clinicName": "Augusta Plastic Surgery",
+      "photoFile": "Dr.Christopher J. Ewart.png",
+      "photoURL": "/api/provider-photos/Augusta%20Plastic%20Surgery/Dr.Christopher%20J.%20Ewart.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 178,
+      "providerName": "Dr.Michael S. Tarakji",
+      "clinicName": "Augusta Plastic Surgery",
+      "photoFile": "Dr.Michael S. Tarakji.png",
+      "photoURL": "/api/provider-photos/Augusta%20Plastic%20Surgery/Dr.Michael%20S.%20Tarakji.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 107,
+      "providerName": "DR. JOHN KAHEN",
+      "clinicName": "BEVERLY HILLS MED SPA",
+      "photoFile": "DR. JOHN KAHEN.png",
+      "photoURL": "/api/provider-photos/BEVERLY%20HILLS%20MED%20SPA/DR.%20JOHN%20KAHEN.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 205,
+      "providerName": "Dr.Brad M Gandolfi",
+      "clinicName": "BRAD M GANDOLFI MD FACS",
+      "photoFile": "Dr.Brad M Gandolfi.png",
+      "photoURL": "/api/provider-photos/BRAD%20M%20GANDOLFI%20MD%20FACS/Dr.Brad%20M%20Gandolfi.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 171,
+      "providerName": "DR. ANYA COSTELOE",
+      "clinicName": "Bella Cosmetic Surgery",
+      "photoFile": "DR. ANYA COSTELOE.png",
+      "photoURL": "/api/provider-photos/Bella%20Cosmetic%20Surgery/DR.%20ANYA%20COSTELOE.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 170,
+      "providerName": "Dr. Michael F. Chiaramonte",
+      "clinicName": "Bella Cosmetic Surgery",
+      "photoFile": "Dr. Michael F. Chiaramonte.png",
+      "photoURL": "/api/provider-photos/Bella%20Cosmetic%20Surgery/Dr.%20Michael%20F.%20Chiaramonte.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 30,
+      "providerName": "Dr.Carlos Spera",
+      "clinicName": "CARLOS SPERA PLASTIC SURGERY ",
+      "photoFile": "Dr.Carlos Spera.png",
+      "photoURL": "/api/provider-photos/CARLOS%20SPERA%20PLASTIC%20SURGERY/Dr.Carlos%20Spera.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 191,
+      "providerName": "Dr. Nicholas Adams",
+      "clinicName": "CENTER FOR PLASTIC SURGERY",
+      "photoFile": "Dr. Nicholas Adams.png",
+      "photoURL": "/api/provider-photos/CENTER%20FOR%20PLASTIC%20SURGERY/Dr.%20Nicholas%20Adams.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 22,
+      "providerName": "Dr.Ary Krau",
+      "clinicName": "CG Cosmetic",
+      "photoFile": "Dr.Ary Krau.png",
+      "photoURL": "/api/provider-photos/CG%20Cosmetic/Dr.Ary%20Krau.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 27,
+      "providerName": "Dr.DECIO CARVALHO",
+      "clinicName": "CG Cosmetic",
+      "photoFile": "Dr.DECIO CARVALHO.png",
+      "photoURL": "/api/provider-photos/CG%20Cosmetic/Dr.DECIO%20CARVALHO.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 23,
+      "providerName": "Dr.Jacob Freiman",
+      "clinicName": "CG Cosmetic",
+      "photoFile": "Dr.Jacob Freiman.png",
+      "photoURL": "/api/provider-photos/CG%20Cosmetic/Dr.Jacob%20Freiman.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 25,
+      "providerName": "Dr.ROBERT HUNSAKER",
+      "clinicName": "CG Cosmetic",
+      "photoFile": "Dr.ROBERT HUNSAKER.png",
+      "photoURL": "/api/provider-photos/CG%20Cosmetic/Dr.ROBERT%20HUNSAKER.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 24,
+      "providerName": "Dr.Scott Loessin",
+      "clinicName": "CG Cosmetic",
+      "photoFile": "Dr.Scott Loessin.png",
+      "photoURL": "/api/provider-photos/CG%20Cosmetic/Dr.Scott%20Loessin.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 68,
+      "providerName": "Dr. Daniel Sherick",
+      "clinicName": "Center for Plastic Surgery - Ann Arbor",
+      "photoFile": "Dr. Daniel Sherick.png",
+      "photoURL": "/api/provider-photos/Center%20for%20Plastic%20Surgery%20-%20Ann%20Arbor/Dr.%20Daniel%20Sherick.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 119,
+      "providerName": "Dr.Sergio Gaitan",
+      "clinicName": "Certified Cosmetics and Skin Care With Dr.Sergio Gaitan",
+      "photoFile": "Dr.Sergio Gaitan.png",
+      "photoURL": "/api/provider-photos/Certified%20Cosmetics%20and%20Skin%20Care%20With%20Dr.Sergio%20Gaitan/Dr.Sergio%20Gaitan.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 198,
+      "providerName": "Dr.Anh-Tuan Truong",
+      "clinicName": "Chicago Breast and Body Aesthetics",
+      "photoFile": "Dr.Anh-Tuan Truong.png",
+      "photoURL": "/api/provider-photos/Chicago%20Breast%20and%20Body%20Aesthetics/Dr.Anh-Tuan%20Truong.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 199,
+      "providerName": "Dr.John D.Rachel",
+      "clinicName": "Chicago Breast and Body Aesthetics",
+      "photoFile": "Dr.John D.Rachel.png",
+      "photoURL": "/api/provider-photos/Chicago%20Breast%20and%20Body%20Aesthetics/Dr.John%20D.Rachel.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 200,
+      "providerName": "Dr.Sue Kafali",
+      "clinicName": "Chicago Breast and Body Aesthetics",
+      "photoFile": "Dr.Sue Kafali.png",
+      "photoURL": "/api/provider-photos/Chicago%20Breast%20and%20Body%20Aesthetics/Dr.Sue%20Kafali.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 61,
+      "providerName": "Dr. Charles Perry",
+      "clinicName": "Chrysalis Cosmetics",
+      "photoFile": "Dr. Charles Perry.png",
+      "photoURL": "/api/provider-photos/Chrysalis%20Cosmetics/Dr.%20Charles%20Perry.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 98,
+      "providerName": "Dr. Nick Slenkovich",
+      "clinicName": "Colorado Plastic Surgery Center",
+      "photoFile": "Dr. Nick Slenkovich.png",
+      "photoURL": "/api/provider-photos/Colorado%20Plastic%20Surgery%20Center/Dr.%20Nick%20Slenkovich.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 159,
+      "providerName": "Dr. Lee Corbett",
+      "clinicName": "Corbett Cosmetic Surgery and Medi Spa",
+      "photoFile": "Dr. Lee Corbett.png",
+      "photoURL": "/api/provider-photos/Corbett%20Cosmetic%20Surgery%20and%20Medi%20Spa/Dr.%20Lee%20Corbett.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 74,
+      "providerName": "Dr. Theodore Foley",
+      "clinicName": "Cosmetic & Plastic Surgery of Central Pennsylvania",
+      "photoFile": "Dr. Theodore Foley.png",
+      "photoURL": "/api/provider-photos/Cosmetic%20%26%20Plastic%20Surgery%20of%20Central%20Pennsylvania/Dr.%20Theodore%20Foley.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 145,
+      "providerName": "Dr. Courtney Caplin",
+      "clinicName": "Cosmetic Surgery Affiliates",
+      "photoFile": "Dr. Courtney Caplin.png",
+      "photoURL": "/api/provider-photos/Cosmetic%20Surgery%20Affiliates/Dr.%20Courtney%20Caplin.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 144,
+      "providerName": "Dr. Erik J. Nuveen",
+      "clinicName": "Cosmetic Surgery Affiliates",
+      "photoFile": "Dr. Erik J. Nuveen.png",
+      "photoURL": "/api/provider-photos/Cosmetic%20Surgery%20Affiliates/Dr.%20Erik%20J.%20Nuveen.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 65,
+      "providerName": "Dr.Marcus Crawford",
+      "clinicName": "Crawaford plastic Surgery",
+      "photoFile": "Dr.Marcus Crawford.png",
+      "photoURL": "/api/provider-photos/Crawaford%20plastic%20Surgery/Dr.Marcus%20Crawford.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 114,
+      "providerName": "Danielle Smith NP",
+      "clinicName": "Danielle Smith NP",
+      "photoFile": "Danielle Smith NP.png",
+      "photoURL": "/api/provider-photos/Danielle%20Smith%20NP/Danielle%20Smith%20NP.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 82,
+      "providerName": "Dr. David Bogue",
+      "clinicName": "David Bogue, MD- Plastic Surgery",
+      "photoFile": "Dr. David Bogue.png",
+      "photoURL": "/api/provider-photos/David%20Bogue%2C%20MD-%20Plastic%20Surgery/Dr.%20David%20Bogue.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 71,
+      "providerName": "Dr. David Tauber",
+      "clinicName": "DeLuca Plastic Surgery ",
+      "photoFile": "Dr. David Tauber.png",
+      "photoURL": "/api/provider-photos/DeLuca%20Plastic%20Surgery/Dr.%20David%20Tauber.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 72,
+      "providerName": "Dr.William DeLuca",
+      "clinicName": "DeLuca Plastic Surgery ",
+      "photoFile": "Dr.William DeLuca.png",
+      "photoURL": "/api/provider-photos/DeLuca%20Plastic%20Surgery/Dr.William%20DeLuca.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 108,
+      "providerName": "Dr.Anita Saluja",
+      "clinicName": "Dermatology + Plastic Surgery - For Your Best Self",
+      "photoFile": "Dr.Anita Saluja.png",
+      "photoURL": "/api/provider-photos/Dermatology%20%2B%20Plastic%20Surgery%20-%20For%20Your%20Best%20Self/Dr.Anita%20Saluja.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 109,
+      "providerName": "Dr.Rebecca Novo",
+      "clinicName": "Dermatology + Plastic Surgery - For Your Best Self",
+      "photoFile": "Dr.Rebecca Novo.png",
+      "photoURL": "/api/provider-photos/Dermatology%20%2B%20Plastic%20Surgery%20-%20For%20Your%20Best%20Self/Dr.Rebecca%20Novo.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 92,
+      "providerName": "Dr.Lisa DiFrancesco",
+      "clinicName": "DiFrancesco Plastic Surgery",
+      "photoFile": "Dr.Lisa DiFrancesco.png",
+      "photoURL": "/api/provider-photos/DiFrancesco%20Plastic%20Surgery/Dr.Lisa%20DiFrancesco.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 79,
+      "providerName": "Dr.Zoran",
+      "clinicName": "Dr.Zoran Cosmetic & Plastic Surgery",
+      "photoFile": "Dr.Zoran.png",
+      "photoURL": "/api/provider-photos/Dr.Zoran%20Cosmetic%20%26%20Plastic%20Surgery/Dr.Zoran.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 99,
+      "providerName": "Dr.Deborah Pan",
+      "clinicName": "ESANA",
+      "photoFile": "Dr.Deborah Pan.png",
+      "photoURL": "/api/provider-photos/ESANA/Dr.Deborah%20Pan.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 100,
+      "providerName": "Dr.Javier Davila",
+      "clinicName": "ESANA",
+      "photoFile": "Dr.Javier Davila.png",
+      "photoURL": "/api/provider-photos/ESANA/Dr.Javier%20Davila.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 77,
+      "providerName": "Dr. Thomas Fiala",
+      "clinicName": "FIALA AESTHETICS",
+      "photoFile": "Dr. Thomas Fiala.png",
+      "photoURL": "/api/provider-photos/FIALA%20AESTHETICS/Dr.%20Thomas%20Fiala.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 1,
+      "providerName": "Dr. Zachary Farris",
+      "clinicName": "Farris Plastic Surgery",
+      "photoFile": "Dr. Zachary Farris.webp",
+      "photoURL": "/api/provider-photos/Farris%20Plastic%20Surgery/Dr.%20Zachary%20Farris.webp",
+      "matchScore": 1
+    },
+    {
+      "providerID": 91,
+      "providerName": "Dr. Stanley Okoro",
+      "clinicName": "Georgia Plastic & Reconstructive Surgery",
+      "photoFile": "Dr. Stanley Okoro.png",
+      "photoURL": "/api/provider-photos/Georgia%20Plastic%20%26%20Reconstructive%20Surgery/Dr.%20Stanley%20Okoro.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 192,
+      "providerName": "Dr.Kimberly Short",
+      "clinicName": "Gillian INSTITUTE",
+      "photoFile": "Dr.Kimberly Short.png",
+      "photoURL": "/api/provider-photos/Gillian%20INSTITUTE/Dr.Kimberly%20Short.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 151,
+      "providerName": "Dr. Eugene Schmitt III",
+      "clinicName": "Green Bay Plastic Surgical Associates, S.C.",
+      "photoFile": "Dr. Eugene Schmitt III.png",
+      "photoURL": "/api/provider-photos/Green%20Bay%20Plastic%20Surgical%20Associates%2C%20S.C./Dr.%20Eugene%20Schmitt%20III.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 152,
+      "providerName": "Dr. James Lee",
+      "clinicName": "Green Bay Plastic Surgical Associates, S.C.",
+      "photoFile": "Dr. James Lee.png",
+      "photoURL": "/api/provider-photos/Green%20Bay%20Plastic%20Surgical%20Associates%2C%20S.C./Dr.%20James%20Lee.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 103,
+      "providerName": "Dr.Hugo Higa",
+      "clinicName": "HUGO HIGA,M.D. Eyelid and Facial Surgery",
+      "photoFile": "Dr.Hugo Higa.png",
+      "photoURL": "/api/provider-photos/HUGO%20HIGA%2CM.D.%20Eyelid%20and%20Facial%20Surgery/Dr.Hugo%20Higa.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 121,
+      "providerName": "DR. DEBORAH M. SAFF",
+      "clinicName": "Hacker Dermatology & Multi-Specialty Group",
+      "photoFile": "DR. DEBORAH M. SAFF.png",
+      "photoURL": "/api/provider-photos/Hacker%20Dermatology%20%26%20Multi-Specialty%20Group/DR.%20DEBORAH%20M.%20SAFF.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 122,
+      "providerName": "DR. RUSSEL S. GLAUN",
+      "clinicName": "Hacker Dermatology & Multi-Specialty Group",
+      "photoFile": "DR. RUSSEL S. GLAUN.jpg",
+      "photoURL": "/api/provider-photos/Hacker%20Dermatology%20%26%20Multi-Specialty%20Group/DR.%20RUSSEL%20S.%20GLAUN.jpg",
+      "matchScore": 1
+    },
+    {
+      "providerID": 120,
+      "providerName": "DR. STEVEN M. HACKER",
+      "clinicName": "Hacker Dermatology & Multi-Specialty Group",
+      "photoFile": "DR. STEVEN M. HACKER.png",
+      "photoURL": "/api/provider-photos/Hacker%20Dermatology%20%26%20Multi-Specialty%20Group/DR.%20STEVEN%20M.%20HACKER.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 124,
+      "providerName": "Dr. Judith Hellman",
+      "clinicName": "Hacker Dermatology & Multi-Specialty Group",
+      "photoFile": "Dr. Judith Hellman.png",
+      "photoURL": "/api/provider-photos/Hacker%20Dermatology%20%26%20Multi-Specialty%20Group/Dr.%20Judith%20Hellman.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 128,
+      "providerName": "Dr.Brandon Litzner",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Brandon Litzner.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Brandon%20Litzner.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 134,
+      "providerName": "Dr.Chelsea Lee",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Chelsea Lee.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Chelsea%20Lee.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 132,
+      "providerName": "Dr.David Harden",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.David Harden.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.David%20Harden.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 131,
+      "providerName": "Dr.Jace Rickstrew",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Jace Rickstrew.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Jace%20Rickstrew.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 129,
+      "providerName": "Dr.Kevin Brough",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Kevin Brough.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Kevin%20Brough.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 126,
+      "providerName": "Dr.Matthew P. Shaffer",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Matthew P. Shaffer.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Matthew%20P.%20Shaffer.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 130,
+      "providerName": "Dr.Vanessa Voge",
+      "clinicName": "Heartland Dermatology Center",
+      "photoFile": "Dr.Vanessa Voge.png",
+      "photoURL": "/api/provider-photos/Heartland%20Dermatology%20Center/Dr.Vanessa%20Voge.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 143,
+      "providerName": "Dr. Miguel Gallegos",
+      "clinicName": "Hermosa Plastic Surgery",
+      "photoFile": "Dr. Miguel Gallegos.png",
+      "photoURL": "/api/provider-photos/Hermosa%20Plastic%20Surgery/Dr.%20Miguel%20Gallegos.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 187,
+      "providerName": "Dr.Christopher L.Hess",
+      "clinicName": "Hess Plastic Surgery",
+      "photoFile": "Dr.Christopher L.Hess.png",
+      "photoURL": "/api/provider-photos/Hess%20Plastic%20Surgery/Dr.Christopher%20L.Hess.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 15,
+      "providerName": "Dr. Kenneth Hughes",
+      "clinicName": "Hughes Plastic Surgery",
+      "photoFile": "Dr. Kenneth Hughes.png",
+      "photoURL": "/api/provider-photos/Hughes%20Plastic%20Surgery/Dr.%20Kenneth%20Hughes.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 142,
+      "providerName": "Dr. Krishna S. Dash",
+      "clinicName": "Institute of Plastic Surgery",
+      "photoFile": "Dr. Krishna S. Dash.png",
+      "photoURL": "/api/provider-photos/Institute%20of%20Plastic%20Surgery/Dr.%20Krishna%20S.%20Dash.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 102,
+      "providerName": "Dr. Jeffrey Lee",
+      "clinicName": "JL Plastic Surgery",
+      "photoFile": "Dr. Jeffrey Lee.png",
+      "photoURL": "/api/provider-photos/JL%20Plastic%20Surgery/Dr.%20Jeffrey%20Lee.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 106,
+      "providerName": "Malia Ah Choy (Medical Aesthetician)",
+      "clinicName": "LA Skincare Center",
+      "photoFile": "Malia Ah Choy (Medical Aesthetician).png",
+      "photoURL": "/api/provider-photos/LA%20Skincare%20Center/Malia%20Ah%20Choy%20(Medical%20Aesthetician).png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 105,
+      "providerName": "NP Raisa Howard",
+      "clinicName": "LA Skincare Center",
+      "photoFile": "NP Raisa Howard.png",
+      "photoURL": "/api/provider-photos/LA%20Skincare%20Center/NP%20Raisa%20Howard.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 168,
+      "providerName": "Dr.Glenn Lyle",
+      "clinicName": "LYLE PLASTIC SURGERY & AESTHETICS CENTER",
+      "photoFile": "Dr.Glenn Lyle.png",
+      "photoURL": "/api/provider-photos/LYLE%20PLASTIC%20SURGERY%20%26%20AESTHETICS%20CENTER/Dr.Glenn%20Lyle.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 84,
+      "providerName": "DR. ANDREW LYOS",
+      "clinicName": "LYOS PLASTIC SURGERY & DERMATOLOGY ASSOCIATES",
+      "photoFile": "DR. ANDREW LYOS.png",
+      "photoURL": "/api/provider-photos/LYOS%20PLASTIC%20SURGERY%20%26%20DERMATOLOGY%20ASSOCIATES/DR.%20ANDREW%20LYOS.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 14,
+      "providerName": "Dr.Diana Breister Ghosh",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr. Diana Bresiter Ghosh.jpeg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.%20Diana%20Bresiter%20Ghosh.jpeg",
+      "matchScore": 0.8181818181818182
+    },
+    {
+      "providerID": 11,
+      "providerName": "Dr. Hector Salazar-Reyes",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr. Hector Salazar-Reyes.jpeg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.%20Hector%20Salazar-Reyes.jpeg",
+      "matchScore": 1
+    },
+    {
+      "providerID": 9,
+      "providerName": "Dr.Johan Brahme",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr. John Brahme.jpg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.%20John%20Brahme.jpg",
+      "matchScore": 0.7857142857142857
+    },
+    {
+      "providerID": 10,
+      "providerName": "Dr. John D.Smoot",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr. John D.Smoot.jpeg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.%20John%20D.Smoot.jpeg",
+      "matchScore": 1
+    },
+    {
+      "providerID": 12,
+      "providerName": "Dr.Luke Swistun",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr. Luke Swistun.jpeg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.%20Luke%20Swistun.jpeg",
+      "matchScore": 0.8571428571428571
+    },
+    {
+      "providerID": 13,
+      "providerName": "Dr.Kiersten L. Riedler",
+      "clinicName": "La Jolla Cosmetic Surgery Centre",
+      "photoFile": "Dr.Kiersten L. Riedler.jpeg",
+      "photoURL": "/api/provider-photos/La%20Jolla%20Cosmetic%20Surgery%20Centre/Dr.Kiersten%20L.%20Riedler.jpeg",
+      "matchScore": 1
+    },
+    {
+      "providerID": 21,
+      "providerName": "Dr. Leonard M. Hochstein",
+      "clinicName": "Leonard M. Hochstein MD - Plastic Surgery & MedSpa",
+      "photoFile": "Dr. Leonard M. Hochstein.webp",
+      "photoURL": "/api/provider-photos/Leonard%20M.%20Hochstein%20MD%20-%20Plastic%20Surgery%20%26%20MedSpa/Dr.%20Leonard%20M.%20Hochstein.webp",
+      "matchScore": 1
+    },
+    {
+      "providerID": 137,
+      "providerName": "Dr. Dann K. Leonard",
+      "clinicName": "Leonard Medi Spa",
+      "photoFile": "Dr. Dann K. Leonard.png",
+      "photoURL": "/api/provider-photos/Leonard%20Medi%20Spa/Dr.%20Dann%20K.%20Leonard.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 63,
+      "providerName": "Dr.Loftus",
+      "clinicName": "Loftus Plastic Surgery Center",
+      "photoFile": "Dr.Loftus.png",
+      "photoURL": "/api/provider-photos/Loftus%20Plastic%20Surgery%20Center/Dr.Loftus.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 34,
+      "providerName": "Dr. Camille Chavez",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr. Camille Chavez.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.%20Camille%20Chavez.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 33,
+      "providerName": "Dr. Daniel Kaufman",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr. Daniel Kaufman.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.%20Daniel%20Kaufman.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 35,
+      "providerName": "Dr. Nassif Soueid",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr. Nassif Soueid.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.%20Nassif%20Soueid.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 38,
+      "providerName": "Dr. Onyeka Nwokocha",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr. Onyeka Nwokocha.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.%20Onyeka%20Nwokocha.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 36,
+      "providerName": "Dr. Robert S. Kagan",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr. Robert S. Kagan.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.%20Robert%20S.%20Kagan.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 32,
+      "providerName": "Dr.Michael Lee Miller",
+      "clinicName": "MIAMI LIFE PLASTIC SURGERY",
+      "photoFile": "Dr.Michael Lee Miller.png",
+      "photoURL": "/api/provider-photos/MIAMI%20LIFE%20PLASTIC%20SURGERY/Dr.Michael%20Lee%20Miller.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 62,
+      "providerName": "Dr. Fereydoon Mahjouri",
+      "clinicName": "Mahjouri Cosmetic Surgery & Skincare Clinic",
+      "photoFile": "Dr. Fereydoon Mahjouri.png",
+      "photoURL": "/api/provider-photos/Mahjouri%20Cosmetic%20Surgery%20%26%20Skincare%20Clinic/Dr.%20Fereydoon%20Mahjouri.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 141,
+      "providerName": "Dr.Mark D Wigod",
+      "clinicName": "Mark D. Wigod MD- Plastic Surgery",
+      "photoFile": "Dr.Mark D Wigod.png",
+      "photoURL": "/api/provider-photos/Mark%20D.%20Wigod%20MD-%20Plastic%20Surgery/Dr.Mark%20D%20Wigod.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 118,
+      "providerName": "Dr. Shaun Patel",
+      "clinicName": "Miami Skin & Vein",
+      "photoFile": "Dr. Shaun Patel.png",
+      "photoURL": "/api/provider-photos/Miami%20Skin%20%26%20Vein/Dr.%20Shaun%20Patel.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 156,
+      "providerName": "Dr.Mariam Awada",
+      "clinicName": "Michigan Cosmetic Surgery",
+      "photoFile": "Dr.Mariam Awada.png",
+      "photoURL": "/api/provider-photos/Michigan%20Cosmetic%20Surgery/Dr.Mariam%20Awada.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 193,
+      "providerName": "Dr.John Aker",
+      "clinicName": "My Plastic Surgery Group- John Aker Aesthetics",
+      "photoFile": "Dr. John Aker.png",
+      "photoURL": "/api/provider-photos/My%20Plastic%20Surgery%20Group-%20John%20Aker%20Aesthetics/Dr.%20John%20Aker.png",
+      "matchScore": 0.8181818181818182
+    },
+    {
+      "providerID": 81,
+      "providerName": "Dr. Kailash Narasimhan",
+      "clinicName": "Narasimhan Plastic Surgery",
+      "photoFile": "Dr. Kailash Narasimhan.png",
+      "photoURL": "/api/provider-photos/Narasimhan%20Plastic%20Surgery/Dr.%20Kailash%20Narasimhan.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 76,
+      "providerName": "Dr.Brad Nesmith",
+      "clinicName": "Nesmith Plastic Surgery Center",
+      "photoFile": "Dr.Brad Nesmith.png",
+      "photoURL": "/api/provider-photos/Nesmith%20Plastic%20Surgery%20Center/Dr.Brad%20Nesmith.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 75,
+      "providerName": "Dr.Richard Nesmith",
+      "clinicName": "Nesmith Plastic Surgery Center",
+      "photoFile": "Dr.Richard Nesmith.png",
+      "photoURL": "/api/provider-photos/Nesmith%20Plastic%20Surgery%20Center/Dr.Richard%20Nesmith.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 115,
+      "providerName": "Dr. David Jativa MD",
+      "clinicName": "New Face MD.Aesthietics wellness Medicine",
+      "photoFile": "Dr. David Jativa MD.png",
+      "photoURL": "/api/provider-photos/New%20Face%20MD.Aesthietics%20wellness%20Medicine/Dr.%20David%20Jativa%20MD.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 117,
+      "providerName": "Dr. Joan Alvarez MD",
+      "clinicName": "New Face MD.Aesthietics wellness Medicine",
+      "photoFile": "Dr. Joan Alvarez MD.png",
+      "photoURL": "/api/provider-photos/New%20Face%20MD.Aesthietics%20wellness%20Medicine/Dr.%20Joan%20Alvarez%20MD.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 203,
+      "providerName": "Dr.Jeremy Nikfarjam",
+      "clinicName": "New You Plastic Surgery",
+      "photoFile": "Dr.Jeremy Nikfarjam.png",
+      "photoURL": "/api/provider-photos/New%20You%20Plastic%20Surgery/Dr.Jeremy%20Nikfarjam.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 167,
+      "providerName": "DR. JUAN A. ORTIZ",
+      "clinicName": "North Raleigh Plastic Surgery",
+      "photoFile": "DR. JUAN A. ORTIZ.png",
+      "photoURL": "/api/provider-photos/North%20Raleigh%20Plastic%20Surgery/DR.%20JUAN%20A.%20ORTIZ.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 189,
+      "providerName": "Dr. Aiello",
+      "clinicName": "Ocean Plastic Surgery",
+      "photoFile": "Dr. Aiello.png",
+      "photoURL": "/api/provider-photos/Ocean%20Plastic%20Surgery/Dr.%20Aiello.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 148,
+      "providerName": "DR. JOHN HARBISON",
+      "clinicName": "Omaha Face Plastic Surgery and Medspa",
+      "photoFile": "DR. JOHN HARBISON.png",
+      "photoURL": "/api/provider-photos/Omaha%20Face%20Plastic%20Surgery%20and%20Medspa/DR.%20JOHN%20HARBISON.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 85,
+      "providerName": "Dr.Paul Fortes",
+      "clinicName": "PAUL F. FORTES MD PLASTIC SURGERY",
+      "photoFile": "Dr.Paul Fortes.png",
+      "photoURL": "/api/provider-photos/PAUL%20F.%20FORTES%20MD%20PLASTIC%20SURGERY/Dr.Paul%20Fortes.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 188,
+      "providerName": "Dr.Pedy Ganchi",
+      "clinicName": "PEDY GANCHI, MD VILLAGE PLASTIC SURGERY",
+      "photoFile": "Dr.Pedy Ganchi.png",
+      "photoURL": "/api/provider-photos/PEDY%20GANCHI%2C%20MD%20VILLAGE%20PLASTIC%20SURGERY/Dr.Pedy%20Ganchi.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 202,
+      "providerName": "Dr.Lawrence Rosenberg",
+      "clinicName": "PLASTIC SURGERY CENTER OF MARYLAND, P.A. LAWRENCE ROSENBERG, M.D.",
+      "photoFile": "Dr.Lawrence Rosenberg.png",
+      "photoURL": "/api/provider-photos/PLASTIC%20SURGERY%20CENTER%20OF%20MARYLAND%2C%20P.A.%20LAWRENCE%20ROSENBERG%2C%20M.D./Dr.Lawrence%20Rosenberg.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 112,
+      "providerName": "Dr. Kate Zibilich Holcomb",
+      "clinicName": "PURE DERMATOLOGY",
+      "photoFile": "Dr. Kate Zibilich Holcomb.png",
+      "photoURL": "/api/provider-photos/PURE%20DERMATOLOGY/Dr.%20Kate%20Zibilich%20Holcomb.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 113,
+      "providerName": "Dr. Mara Haseltine",
+      "clinicName": "PURE DERMATOLOGY",
+      "photoFile": "Dr. Mara Haseltine.png",
+      "photoURL": "/api/provider-photos/PURE%20DERMATOLOGY/Dr.%20Mara%20Haseltine.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 40,
+      "providerName": "Dr. John Compoginis",
+      "clinicName": "Pacific Liposculpture",
+      "photoFile": "Dr. John Compoginis.png",
+      "photoURL": "/api/provider-photos/Pacific%20Liposculpture/Dr.%20John%20Compoginis.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 41,
+      "providerName": "Dr. Joseph Bivens",
+      "clinicName": "Pacific Liposculpture",
+      "photoFile": "Dr. Joseph Bivens.png",
+      "photoURL": "/api/provider-photos/Pacific%20Liposculpture/Dr.%20Joseph%20Bivens.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 39,
+      "providerName": "Dr. Sam Assassa",
+      "clinicName": "Pacific Liposculpture",
+      "photoFile": "Dr. Sam Assassa.png",
+      "photoURL": "/api/provider-photos/Pacific%20Liposculpture/Dr.%20Sam%20Assassa.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 163,
+      "providerName": "Dr. Christopher A. (Chris) Park",
+      "clinicName": "Park & Rebowe Clinic",
+      "photoFile": "Dr. Christopher A. (Chris) Park.png",
+      "photoURL": "/api/provider-photos/Park%20%26%20Rebowe%20Clinic/Dr.%20Christopher%20A.%20(Chris)%20Park.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 164,
+      "providerName": "Dr. Ryan Rebowe",
+      "clinicName": "Park & Rebowe Clinic",
+      "photoFile": "Dr. Ryan Rebowe.png",
+      "photoURL": "/api/provider-photos/Park%20%26%20Rebowe%20Clinic/Dr.%20Ryan%20Rebowe.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 8,
+      "providerName": "Dr. Christopher K. Patronella",
+      "clinicName": "Patronella's Plastic Surgery",
+      "photoFile": "Dr. Christopher K. Patronella.jpeg",
+      "photoURL": "/api/provider-photos/Patronella's%20Plastic%20Surgery/Dr.%20Christopher%20K.%20Patronella.jpeg",
+      "matchScore": 1
+    },
+    {
+      "providerID": 104,
+      "providerName": "Dr.Paul Angelchik",
+      "clinicName": "Paul Angelchik , MD- Plastic Surgery",
+      "photoFile": "Dr.Paul Angelchik.png",
+      "photoURL": "/api/provider-photos/Paul%20Angelchik%20%2C%20MD-%20Plastic%20Surgery/Dr.Paul%20Angelchik.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 160,
+      "providerName": "Dr. Jason M. Jack",
+      "clinicName": "Plastic Surgery  Specialists ",
+      "photoFile": "Dr. Jason M. Jack.png",
+      "photoURL": "/api/provider-photos/Plastic%20Surgery%20%20Specialists/Dr.%20Jason%20M.%20Jack.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 161,
+      "providerName": "Dr. Robert Oliver Jr.",
+      "clinicName": "Plastic Surgery  Specialists ",
+      "photoFile": "Dr. Robert Oliver.png",
+      "photoURL": "/api/provider-photos/Plastic%20Surgery%20%20Specialists/Dr.%20Robert%20Oliver.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 190,
+      "providerName": "Dr. Alexander Ovchinsky",
+      "clinicName": "Plastic Surgery of Short Hills",
+      "photoFile": "Dr. Alexander Ovchinsky.png",
+      "photoURL": "/api/provider-photos/Plastic%20Surgery%20of%20Short%20Hills/Dr.%20Alexander%20Ovchinsky.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 94,
+      "providerName": "Dr.Christopher Costa",
+      "clinicName": "Platinum Plastic Surgery",
+      "photoFile": "Dr.Christopher Costa.png",
+      "photoURL": "/api/provider-photos/Platinum%20Plastic%20Surgery/Dr.Christopher%20Costa.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 66,
+      "providerName": "Dr. Kirk Potter",
+      "clinicName": "Potter Plastic Surgery & Med  Spa",
+      "photoFile": "Dr. Kirk Potter.png",
+      "photoURL": "/api/provider-photos/Potter%20Plastic%20Surgery%20%26%20Med%20%20Spa/Dr.%20Kirk%20Potter.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 138,
+      "providerName": "TRACEE DAHLKE MSN",
+      "clinicName": "Precision Medical Aesthetics",
+      "photoFile": "TRACEE DAHLKE MSN.png",
+      "photoURL": "/api/provider-photos/Precision%20Medical%20Aesthetics/TRACEE%20DAHLKE%20MSN.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 83,
+      "providerName": "Dr. Edward J. Gross.",
+      "clinicName": "Primera Plastic Surgery & Med Spa",
+      "photoFile": "Dr. Edward J. Gross..png",
+      "photoURL": "/api/provider-photos/Primera%20Plastic%20Surgery%20%26%20Med%20Spa/Dr.%20Edward%20J.%20Gross..png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 201,
+      "providerName": "Dr. Ramsen Azizi",
+      "clinicName": "R.A.M Plastic Surgery",
+      "photoFile": "Dr. Ramsen Azizi.png",
+      "photoURL": "/api/provider-photos/R.A.M%20Plastic%20Surgery/Dr.%20Ramsen%20Azizi.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 73,
+      "providerName": "Dr. Jeffrey Rockmore",
+      "clinicName": "ROCKMORE PLASTIC SURGERY",
+      "photoFile": "Dr. Jeffrey Rockmore.png",
+      "photoURL": "/api/provider-photos/ROCKMORE%20PLASTIC%20SURGERY/Dr.%20Jeffrey%20Rockmore.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 185,
+      "providerName": "Dr.Neil J. Zemmel",
+      "clinicName": "Richmond Aesthetic Surgery",
+      "photoFile": "Dr.Neil J. Zemmel.png",
+      "photoURL": "/api/provider-photos/Richmond%20Aesthetic%20Surgery/Dr.Neil%20J.%20Zemmel.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 20,
+      "providerName": "Dr. Juan L. Rendon",
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "photoFile": "Dr. Juan L. Rendon.png",
+      "photoURL": "/api/provider-photos/SOUTH%20BAY%20PLASTIC%20SURGEONS/Dr.%20Juan%20L.%20Rendon.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 16,
+      "providerName": "Dr. Lisa L. Jewell",
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "photoFile": "Dr. Lisa L. Jewell.png",
+      "photoURL": "/api/provider-photos/SOUTH%20BAY%20PLASTIC%20SURGEONS/Dr.%20Lisa%20L.%20Jewell.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 17,
+      "providerName": "Dr. Michael K. Newman",
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "photoFile": "Dr. Michael K. Newman.png",
+      "photoURL": "/api/provider-photos/SOUTH%20BAY%20PLASTIC%20SURGEONS/Dr.%20Michael%20K.%20Newman.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 19,
+      "providerName": "Dr. Ni-Jui James Liang",
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "photoFile": "Dr. Ni-Jui James Liang.png",
+      "photoURL": "/api/provider-photos/SOUTH%20BAY%20PLASTIC%20SURGEONS/Dr.%20Ni-Jui%20James%20Liang.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 18,
+      "providerName": "Dr. Whitney A. Burrell",
+      "clinicName": "SOUTH BAY PLASTIC SURGEONS",
+      "photoFile": "Dr. Whitney A. Burrell.png",
+      "photoURL": "/api/provider-photos/SOUTH%20BAY%20PLASTIC%20SURGEONS/Dr.%20Whitney%20A.%20Burrell.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 70,
+      "providerName": "Dr.Scott J. Zevon",
+      "clinicName": "Scott J. Zevon, MD - Central Park Plastic Surgery",
+      "photoFile": "Dr.Scott J. Zevon.png",
+      "photoURL": "/api/provider-photos/Scott%20J.%20Zevon%2C%20MD%20-%20Central%20Park%20Plastic%20Surgery/Dr.Scott%20J.%20Zevon.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 51,
+      "providerName": "Dr.Sean Younai",
+      "clinicName": "Sean Younai, MD - Plastic & Cosmetic Surgery",
+      "photoFile": "Dr.Sean Younai.png",
+      "photoURL": "/api/provider-photos/Sean%20Younai%2C%20MD%20-%20Plastic%20%26%20Cosmetic%20Surgery/Dr.Sean%20Younai.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 95,
+      "providerName": "DR. CRAIG JONOV",
+      "clinicName": "Seattle Plastic Surgery Center",
+      "photoFile": "DR. CRAIG JONOV.png",
+      "photoURL": "/api/provider-photos/Seattle%20Plastic%20Surgery%20Center/DR.%20CRAIG%20JONOV.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 96,
+      "providerName": "DR. DAVID SANTOS",
+      "clinicName": "Seattle Plastic Surgery Center",
+      "photoFile": "R. DAVID SANTOS.png",
+      "photoURL": "/api/provider-photos/Seattle%20Plastic%20Surgery%20Center/R.%20DAVID%20SANTOS.png",
+      "matchScore": 0.8571428571428571
+    },
+    {
+      "providerID": 49,
+      "providerName": "Dr. Alfred Sofer",
+      "clinicName": "Seduction Cosmetic ",
+      "photoFile": "Dr. Alfred Sofer.png",
+      "photoURL": "/api/provider-photos/Seduction%20Cosmetic/Dr.%20Alfred%20Sofer.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 45,
+      "providerName": "Dr. Keith Robertson",
+      "clinicName": "Seduction Cosmetic ",
+      "photoFile": "Dr. Keith Robertson.png",
+      "photoURL": "/api/provider-photos/Seduction%20Cosmetic/Dr.%20Keith%20Robertson.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 44,
+      "providerName": "Dr. Marco Amarante",
+      "clinicName": "Seduction Cosmetic ",
+      "photoFile": "Dr. Marco Amarante.png",
+      "photoURL": "/api/provider-photos/Seduction%20Cosmetic/Dr.%20Marco%20Amarante.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 47,
+      "providerName": "Dr. Paul Perales",
+      "clinicName": "Seduction Cosmetic ",
+      "photoFile": "Dr. Paul Perales.png",
+      "photoURL": "/api/provider-photos/Seduction%20Cosmetic/Dr.%20Paul%20Perales.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 197,
+      "providerName": "Dr.Jaime Harper",
+      "clinicName": "Sharper Plastic Surgery",
+      "photoFile": "Dr.Jaime Harper.png",
+      "photoURL": "/api/provider-photos/Sharper%20Plastic%20Surgery/Dr.Jaime%20Harper.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 196,
+      "providerName": "Dr.Stanley Harper",
+      "clinicName": "Sharper Plastic Surgery",
+      "photoFile": "Dr.Stanley Harper.png",
+      "photoURL": "/api/provider-photos/Sharper%20Plastic%20Surgery/Dr.Stanley%20Harper.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 90,
+      "providerName": "Dr.Sheldon Lincenberg",
+      "clinicName": "Sheldon Lincenberg MD, FACS- Plastic Surgery Center",
+      "photoFile": "Dr.Sheldon Lincenberg.png",
+      "photoURL": "/api/provider-photos/Sheldon%20Lincenberg%20MD%2C%20FACS-%20Plastic%20Surgery%20Center/Dr.Sheldon%20Lincenberg.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 86,
+      "providerName": "Dr.Simona Paulter",
+      "clinicName": "Simona V. Pautler, MD FACS-Aesthetic Plastic Surgery",
+      "photoFile": "Dr.Simona Paulter.png",
+      "photoURL": "/api/provider-photos/Simona%20V.%20Pautler%2C%20MD%20FACS-Aesthetic%20Plastic%20Surgery/Dr.Simona%20Paulter.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 135,
+      "providerName": "Dr.Behrooz Torkian",
+      "clinicName": "Skin By Lovely ",
+      "photoFile": "Dr.Behrooz Torkian.png",
+      "photoURL": "/api/provider-photos/Skin%20By%20Lovely/Dr.Behrooz%20Torkian.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 125,
+      "providerName": "NP. Lindsey Ratcliff",
+      "clinicName": "Skin Studio Cosmetic Dermatology",
+      "photoFile": "NP. Lindsey Ratcliff.png",
+      "photoURL": "/api/provider-photos/Skin%20Studio%20Cosmetic%20Dermatology/NP.%20Lindsey%20Ratcliff.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 165,
+      "providerName": "Dr.MATTHEW W. BLANTON",
+      "clinicName": "Specialists in Plastic Surgery",
+      "photoFile": "Dr.MATTHEW W. BLANTON.png",
+      "photoURL": "/api/provider-photos/Specialists%20in%20Plastic%20Surgery/Dr.MATTHEW%20W.%20BLANTON.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 166,
+      "providerName": "Dr.SANJAY V. DALUVOY",
+      "clinicName": "Specialists in Plastic Surgery",
+      "photoFile": "Dr.SANJAY V. DALUVOY.png",
+      "photoURL": "/api/provider-photos/Specialists%20in%20Plastic%20Surgery/Dr.SANJAY%20V.%20DALUVOY.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 93,
+      "providerName": "Dr.Stephen Miller",
+      "clinicName": "Stephen Miller MD Plastic Surgery",
+      "photoFile": "Dr.Stephen Miller.png",
+      "photoURL": "/api/provider-photos/Stephen%20Miller%20MD%20Plastic%20Surgery/Dr.Stephen%20Miller.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 59,
+      "providerName": "Dr.Howard Gross",
+      "clinicName": "Surgical Arts On State",
+      "photoFile": "Dr.Howard Gross.png",
+      "photoURL": "/api/provider-photos/Surgical%20Arts%20On%20State/Dr.Howard%20Gross.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 175,
+      "providerName": "Dr.Craig Blum",
+      "clinicName": "Sweetgrass Plastic Surgery & Spa",
+      "photoFile": "Dr.Craig Blum.png",
+      "photoURL": "/api/provider-photos/Sweetgrass%20Plastic%20Surgery%20%26%20Spa/Dr.Craig%20Blum.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 6,
+      "providerName": "Dr. Aisha White",
+      "clinicName": "Synergy Plastic Surgery",
+      "photoFile": "Dr. Aisha White.png",
+      "photoURL": "/api/provider-photos/Synergy%20Plastic%20Surgery/Dr.%20Aisha%20White.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 5,
+      "providerName": "Dr. Ankur Mehta",
+      "clinicName": "Synergy Plastic Surgery",
+      "photoFile": "Dr. Ankur Mehta.png",
+      "photoURL": "/api/provider-photos/Synergy%20Plastic%20Surgery/Dr.%20Ankur%20Mehta.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 4,
+      "providerName": "Dr. Lauren Crawford",
+      "clinicName": "Synergy Plastic Surgery",
+      "photoFile": "Dr. Lauren Crawford.png",
+      "photoURL": "/api/provider-photos/Synergy%20Plastic%20Surgery/Dr.%20Lauren%20Crawford.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 2,
+      "providerName": "Dr. Mahlon Kerr",
+      "clinicName": "Synergy Plastic Surgery",
+      "photoFile": "Dr. Mahlon Kerr.png",
+      "photoURL": "/api/provider-photos/Synergy%20Plastic%20Surgery/Dr.%20Mahlon%20Kerr.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 3,
+      "providerName": "Dr. Ross Blagg",
+      "clinicName": "Synergy Plastic Surgery",
+      "photoFile": "Dr. Ross Blagg.png",
+      "photoURL": "/api/provider-photos/Synergy%20Plastic%20Surgery/Dr.%20Ross%20Blagg.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 58,
+      "providerName": "Dr. Abigail Rodriguez",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Abigail Rodriguez.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Abigail%20Rodriguez.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 52,
+      "providerName": "Dr. Christopher Patronella",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Christopher Patronella.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Christopher%20Patronella.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 54,
+      "providerName": "Dr. German Newall",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. German Newall.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20German%20Newall.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 53,
+      "providerName": "Dr. Henry Mentz",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Henry Mentz.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Henry%20Mentz.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 57,
+      "providerName": "Dr. Kristi Hustak",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Kristi Hustak.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Kristi%20Hustak.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 55,
+      "providerName": "Dr. Paul Fortes",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Paul Fortes.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Paul%20Fortes.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 56,
+      "providerName": "Dr. Rolando Morales",
+      "clinicName": "The Aesthetic Center For Plastic Surgery",
+      "photoFile": "Dr. Rolando Morales.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Center%20For%20Plastic%20Surgery/Dr.%20Rolando%20Morales.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 78,
+      "providerName": "Dr.Jon Paul Trevisani",
+      "clinicName": "The Aesthetic Surgery Centre",
+      "photoFile": "Dr.Jon Paul Trevisani.png",
+      "photoURL": "/api/provider-photos/The%20Aesthetic%20Surgery%20Centre/Dr.Jon%20Paul%20Trevisani.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 172,
+      "providerName": "Dr.Greco",
+      "clinicName": "The Georgia Institute for Plastic Surgery",
+      "photoFile": "Dr.Greco.png",
+      "photoURL": "/api/provider-photos/The%20Georgia%20Institute%20for%20Plastic%20Surgery/Dr.Greco.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 181,
+      "providerName": "Dr. Alexandra Snodgrass",
+      "clinicName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "photoFile": "Dr. Alexandra Snodgrass.png",
+      "photoURL": "/api/provider-photos/The%20Naderi%20Center%20for%20Plastic%20Surgery%20%26%20Dermatology/Dr.%20Alexandra%20Snodgrass.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 179,
+      "providerName": "Dr. Jessica Kulak",
+      "clinicName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "photoFile": "Dr. Jessica Kulak.png",
+      "photoURL": "/api/provider-photos/The%20Naderi%20Center%20for%20Plastic%20Surgery%20%26%20Dermatology/Dr.%20Jessica%20Kulak.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 180,
+      "providerName": "Dr. Shervin Naderi",
+      "clinicName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "photoFile": "Dr. Shervin Naderi.png",
+      "photoURL": "/api/provider-photos/The%20Naderi%20Center%20for%20Plastic%20Surgery%20%26%20Dermatology/Dr.%20Shervin%20Naderi.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 7,
+      "providerName": "Dr. George A. Toledo",
+      "clinicName": "Toledo Plastic Surgery",
+      "photoFile": "Dr. George A. Toldeo.png",
+      "photoURL": "/api/provider-photos/Toledo%20Plastic%20Surgery/Dr.%20George%20A.%20Toldeo.png",
+      "matchScore": 0.8666666666666667
+    },
+    {
+      "providerID": 88,
+      "providerName": "Dr.Robert A. Colgrove Jr",
+      "clinicName": "Vinings Surgery & Hair Restoration Center",
+      "photoFile": "Dr.Robert A. Colgrove Jr.png",
+      "photoURL": "/api/provider-photos/Vinings%20Surgery%20%26%20Hair%20Restoration%20Center/Dr.Robert%20A.%20Colgrove%20Jr.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 173,
+      "providerName": "Dr. Paul Diegidio",
+      "clinicName": "Virtu Cosmetic Surgery",
+      "photoFile": "Dr. Paul Diegidio.png",
+      "photoURL": "/api/provider-photos/Virtu%20Cosmetic%20Surgery/Dr.%20Paul%20Diegidio.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 174,
+      "providerName": "Dr. Steven J. Hermiz",
+      "clinicName": "Virtu Cosmetic Surgery",
+      "photoFile": "Dr. Steven J. Hermiz.png",
+      "photoURL": "/api/provider-photos/Virtu%20Cosmetic%20Surgery/Dr.%20Steven%20J.%20Hermiz.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 149,
+      "providerName": "Dr.Micheal A. Williams",
+      "clinicName": "Williams Surgical Arts & Esthetics ",
+      "photoFile": "Dr.Micheal A. Williams.png",
+      "photoURL": "/api/provider-photos/Williams%20Surgical%20Arts%20%26%20Esthetics/Dr.Micheal%20A.%20Williams.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 89,
+      "providerName": "Dr.Asaf Yalif",
+      "clinicName": "Y Plastic Surgery- Dr.Asaf Yalif",
+      "photoFile": "Dr.Asaf Yalif.png",
+      "photoURL": "/api/provider-photos/Y%20Plastic%20Surgery-%20Dr.Asaf%20Yalif/Dr.Asaf%20Yalif.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 157,
+      "providerName": "Dr.Ayoub Sayeg",
+      "clinicName": "Your New Looks",
+      "photoFile": "Dr.Ayoub Sayeg.png",
+      "photoURL": "/api/provider-photos/Your%20New%20Looks/Dr.Ayoub%20Sayeg.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 195,
+      "providerName": "Dr.Wally Zollman",
+      "clinicName": "ZOLLMAN PLASTIC SURGERY",
+      "photoFile": "Dr.Wally Zollman.png",
+      "photoURL": "/api/provider-photos/ZOLLMAN%20PLASTIC%20SURGERY/Dr.Wally%20Zollman.png",
+      "matchScore": 1
+    },
+    {
+      "providerID": 169,
+      "providerName": "Dr. Zannis",
+      "clinicName": "Zannis Plastic Surgery",
+      "photoFile": "Dr. Zannis.png",
+      "photoURL": "/api/provider-photos/Zannis%20Plastic%20Surgery/Dr.%20Zannis.png",
+      "matchScore": 1
+    }
+  ],
+  "unmatchedFiles": [
+    {
+      "folder": "Center for Plastic Surgery - Ann Arbor",
+      "file": "Dr. Galina Primeau.png"
+    },
+    {
+      "folder": "Cosmetic Surgery Affiliates",
+      "file": "Dr. John Smith.png"
+    },
+    {
+      "folder": "Cosmetic Surgery Affiliates",
+      "file": "Dr. Tessa Meyer.png"
+    },
+    {
+      "folder": "Dermatology + Plastic Surgery - For Your Best Self",
+      "file": "Dr. Michael Murchland.png"
+    },
+    {
+      "folder": "Dermatology + Plastic Surgery - For Your Best Self",
+      "file": "Dr.Alexandra Grammenos.png"
+    },
+    {
+      "folder": "Dr. York Yates Plastic Surgery",
+      "file": "Dr. York Yates Plastic Surgery.png"
+    },
+    {
+      "folder": "My Plastic Surgery Group- John Aker Aesthetics",
+      "file": "Dr. Di Beckman.png"
+    },
+    {
+      "folder": "New You Plastic Surgery",
+      "file": "Dr.Alexander H. Sun.png"
+    }
+  ],
+  "improvements": [
+    "Normalized string matching (trim, lowercase, collapse whitespace)",
+    "Better suffix handling (Jr., Sr., MD, etc.)",
+    "Lower threshold for better fuzzy matching (0.45 vs 0.50)",
+    "Skip \"Please Request Consult\" providers in matching"
+  ]
+}
