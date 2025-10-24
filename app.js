@@ -491,6 +491,184 @@ app.get('/api/clinics/search-index', async (req, res) => {
   }
 });
 
+// Get top-rated clinics near a location with one review each
+// Optimized for homepage "Book with Local Doctors" section
+// IMPORTANT: This must be defined BEFORE /api/clinics/:clinicId to avoid route collision
+app.get('/api/clinics/nearby-top-rated', async (req, res) => {
+  let pool;
+  try {
+    const { lat, lng, limit = 3 } = req.query;
+
+    // Validate required parameters
+    if (!lat || !lng) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters',
+        message: 'Both lat and lng are required'
+      });
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ 
+        error: 'Invalid coordinates',
+        message: 'lat and lng must be valid numbers'
+      });
+    }
+
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ 
+        error: 'Invalid coordinates',
+        message: 'Coordinates out of valid range'
+      });
+    }
+
+    const clinicLimit = Math.min(Math.max(parseInt(limit) || 3, 1), 20); // Max 20 clinics
+
+    pool = await db.getConnection();
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+
+    const request = pool.request();
+    request.input('latitude', sql.Float, latitude);
+    request.input('longitude', sql.Float, longitude);
+    request.input('limit', sql.Int, clinicLimit);
+
+    // Query to get top-rated clinics with distance calculation
+    // Uses Haversine formula for distance calculation
+    const result = await request.query(`
+      SELECT TOP (@limit)
+        c.ClinicID,
+        c.ClinicName,
+        c.Address,
+        c.Latitude,
+        c.Longitude,
+        c.GoogleRating,
+        c.GoogleReviewCount,
+        c.GoogleReviewsJSON,
+        c.Phone,
+        c.Website,
+        g.Photo as PhotoURL,
+        g.Category as ClinicCategory,
+        g.Description,
+        
+        -- Calculate distance in miles using Haversine formula
+        (
+          3959 * ACOS(
+            CASE
+              WHEN COS(RADIANS(@latitude)) * COS(RADIANS(c.Latitude)) * 
+                   COS(RADIANS(c.Longitude) - RADIANS(@longitude)) + 
+                   SIN(RADIANS(@latitude)) * SIN(RADIANS(c.Latitude)) > 1
+              THEN 1
+              WHEN COS(RADIANS(@latitude)) * COS(RADIANS(c.Latitude)) * 
+                   COS(RADIANS(c.Longitude) - RADIANS(@longitude)) + 
+                   SIN(RADIANS(@latitude)) * SIN(RADIANS(c.Latitude)) < -1
+              THEN -1
+              ELSE COS(RADIANS(@latitude)) * COS(RADIANS(c.Latitude)) * 
+                   COS(RADIANS(c.Longitude) - RADIANS(@longitude)) + 
+                   SIN(RADIANS(@latitude)) * SIN(RADIANS(c.Latitude))
+            END
+          )
+        ) AS DistanceMiles
+      FROM Clinics c
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      WHERE 
+        c.GoogleRating >= 4.0
+        AND c.Latitude IS NOT NULL
+        AND c.Longitude IS NOT NULL
+      ORDER BY 
+        c.GoogleRating DESC,
+        DistanceMiles ASC
+    `);
+
+    // Process results to include one quality review per clinic
+    const clinics = result.recordset.map(clinic => {
+      let selectedReview = null;
+      
+      // Parse and select a quality review
+      if (clinic.GoogleReviewsJSON) {
+        try {
+          const reviews = JSON.parse(clinic.GoogleReviewsJSON);
+          
+          // Filter for high-rated reviews (4-5 stars) with substantial text
+          const qualityReviews = reviews.filter(review => 
+            review.rating >= 4 && 
+            review.text && 
+            review.text.trim().length >= 50 // At least 50 characters
+          );
+          
+          if (qualityReviews.length > 0) {
+            // Sort by text length (prefer more detailed reviews) and pick randomly from top ones
+            qualityReviews.sort((a, b) => b.text.length - a.text.length);
+            
+            // Pick one from the top 3 most detailed reviews (random if multiple available)
+            const topReviews = qualityReviews.slice(0, Math.min(3, qualityReviews.length));
+            selectedReview = topReviews[Math.floor(Math.random() * topReviews.length)];
+          } else {
+            // Fallback: pick any 4-5 star review even if short
+            const highRatedReviews = reviews.filter(review => review.rating >= 4);
+            if (highRatedReviews.length > 0) {
+              selectedReview = highRatedReviews[Math.floor(Math.random() * highRatedReviews.length)];
+            }
+          }
+        } catch (parseError) {
+          console.error(`Error parsing reviews for clinic ${clinic.ClinicID}:`, parseError);
+        }
+      }
+
+      // Calculate distance in km as well
+      const distanceKm = clinic.DistanceMiles * 1.60934;
+
+      return {
+        clinicId: clinic.ClinicID,
+        clinicName: clinic.ClinicName,
+        address: clinic.Address,
+        phone: clinic.Phone,
+        website: clinic.Website,
+        rating: clinic.GoogleRating,
+        reviewCount: clinic.GoogleReviewCount,
+        category: clinic.ClinicCategory || 'Medical Spa',
+        description: clinic.Description,
+        photoURL: clinic.PhotoURL,
+        location: {
+          latitude: clinic.Latitude,
+          longitude: clinic.Longitude
+        },
+        distance: {
+          miles: Math.round(clinic.DistanceMiles * 10) / 10, // Round to 1 decimal
+          km: Math.round(distanceKm * 10) / 10
+        },
+        review: selectedReview ? {
+          author: selectedReview.author_name || selectedReview.author,
+          rating: selectedReview.rating,
+          text: selectedReview.text,
+          time: selectedReview.time || selectedReview.relative_time_description
+        } : null
+      };
+    });
+
+    res.json({
+      success: true,
+      count: clinics.length,
+      query: {
+        latitude,
+        longitude,
+        limit: clinicLimit
+      },
+      clinics
+    });
+
+  } catch (error) {
+    console.error('Error in /api/clinics/nearby-top-rated:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // Get specific clinic details with cached Google Places ratings and rich metadata
 // Note: This endpoint only reads from the database cache and never calls Google Places API
 // The scheduled job (runs daily at 2 AM) keeps the rating data fresh
