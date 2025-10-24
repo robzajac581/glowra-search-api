@@ -456,9 +456,10 @@ app.get('/api/clinics/search-index', async (req, res) => {
       // Get the clinic object
       const clinic = clinicsMap.get(clinicId);
 
-      // Add procedure to the clinic (avoid duplicates by checking if it already exists)
+      // Deduplicate procedures by name AND category to avoid showing the same procedure multiple times
+      // This handles cases where multiple providers at the same clinic offer the same procedure
       const procedureExists = clinic.procedures.some(
-        proc => proc.procedureId === row.ProcedureID
+        proc => proc.procedureName === row.ProcedureName && proc.category === row.ProcedureCategory
       );
 
       if (!procedureExists) {
