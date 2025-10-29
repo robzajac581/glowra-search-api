@@ -14,7 +14,40 @@ const port = process.env.PORT || 3001;
 // Load environment configuration
 require('dotenv').config();
 
-app.use(cors());
+// Determine allowed origins based on environment
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      'https://glowra.com',
+      'https://www.glowra.com',
+      'https://glowra-fe.vercel.app',
+    ]
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173', // Vite default
+      'https://glowra.com',
+      'https://www.glowra.com',
+      'https://glowra-fe.vercel.app',
+    ];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Photo cache configuration
