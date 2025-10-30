@@ -995,6 +995,9 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
     );
     
     // Map providers with photo URLs pointing to database-served endpoint
+    // Use full URL for production (Render API) so frontend (Vercel) can access it
+    const apiBaseUrl = process.env.API_BASE_URL || 'https://glowra-search-api.onrender.com';
+    
     const providers = result.recordset
       .filter(p => !p.ProviderName.includes('Please Request Consult')) // Filter out placeholder providers
       .map(provider => ({
@@ -1002,7 +1005,7 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
         ProviderName: provider.ProviderName,
         Specialty: provider.Specialty,
         PhotoURL: provider.HasPhotoData 
-          ? `/api/provider-photos/${provider.ProviderID}`
+          ? `${apiBaseUrl}/api/provider-photos/${provider.ProviderID}`
           : null, // Return null if no photo
         hasPhoto: !!provider.HasPhotoData // Boolean flag for frontend convenience
       }));

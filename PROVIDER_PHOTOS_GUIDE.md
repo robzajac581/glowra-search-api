@@ -9,43 +9,65 @@
 
 ## 🚀 What You Need to Do
 
-### Check: Are You Using a Shared Database?
+### Important: Azure Firewall Configuration
 
-**Shared Database** (local and production use same database):
-- ✅ Photos are already in database (I ran the import locally)
-- 👉 Skip to **Step 1** below
+Before deploying, make sure your Azure SQL Server firewall allows Render to connect:
 
-**Separate Databases** (production has its own database):
-- ⚠️ You'll need to import photos on production too
-- 👉 Follow **Step 2** below
+1. Go to **Azure Portal** → Your SQL Server (`glowra`)
+2. Go to **Security** → **Networking**
+3. Toggle **ON**: "Allow Azure services and resources to access this server"
+4. Click **Save**
+
+Without this, Render can't access your database!
 
 ---
 
-## Step 1: Deploy to Production (Shared Database)
-
-If your local and production environments share the same database:
+## Step 1: Deploy to Production
 
 ```bash
 # 1. Commit and push code
 git add .
-git commit -m "feat: store provider photos in database for production"
+git commit -m "feat: store provider photos in database, return full URLs"
 git push origin main
 
-# 2. Deploy to production (however you normally deploy)
-# Then restart your server:
-pm2 restart glowra-search-api  # or however you restart
+# 2. Render will auto-deploy (or manually trigger deploy)
 
-# 3. Test it works
-curl https://your-production-api.com/api/clinics/1/providers
+# 3. Test the API returns full URLs
+curl https://glowra-search-api.onrender.com/api/clinics/1/providers
+# Should see: "PhotoURL": "https://glowra-search-api.onrender.com/api/provider-photos/1"
+
+# 4. Test photo loads
+curl https://glowra-search-api.onrender.com/api/provider-photos/1 --output test.jpg
+file test.jpg  # Should say image data
 ```
 
 **That's it!** Photos should now work on glowra.com ✅
 
 ---
 
-## Step 2: Deploy to Production (Separate Database)
+## What Changed
 
-If production uses a different database:
+The API now returns **full URLs** instead of relative paths:
+
+**Before**:
+```json
+{
+  "PhotoURL": "/api/provider-photos/1"
+}
+```
+
+**After**:
+```json
+{
+  "PhotoURL": "https://glowra-search-api.onrender.com/api/provider-photos/1"
+}
+```
+
+This fixes the issue where your frontend (on Vercel at `glowra.com`) couldn't find the photos on the API server (on Render at `glowra-search-api.onrender.com`).
+
+---
+
+## Optional: If Using Separate Database
 
 ```bash
 # 1. Commit and push code (same as above)
