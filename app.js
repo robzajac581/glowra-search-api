@@ -64,13 +64,65 @@ const PHOTO_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   }
 })();
 
-// Serve provider photos as static files
-// Photos accessible via: /api/provider-photos/[ClinicName]/[ProviderName].png
-app.use('/api/provider-photos', express.static('photos/Provider Pictures', {
-  maxAge: '7d', // Cache for 7 days for better performance
-  etag: true,
-  lastModified: true
-}));
+/**
+ * Provider Photo Endpoint - Serves provider photos from database
+ * GET /api/provider-photos/:providerId
+ * 
+ * This endpoint:
+ * - Serves provider photos stored as binary data in the database
+ * - Works in production without requiring filesystem access
+ * - Caches photos for 7 days for better performance
+ * - Returns actual image binary data with proper content type
+ */
+app.get('/api/provider-photos/:providerId', async (req, res) => {
+  let pool;
+  try {
+    const { providerId } = req.params;
+    
+    // Validate provider ID
+    if (!providerId || isNaN(parseInt(providerId))) {
+      return res.status(400).json({ error: 'Invalid provider ID' });
+    }
+
+    pool = await db.getConnection();
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+
+    const request = pool.request();
+    request.input('providerId', sql.Int, parseInt(providerId));
+
+    const result = await request.query(`
+      SELECT 
+        PhotoData,
+        PhotoContentType,
+        ProviderName
+      FROM Providers
+      WHERE ProviderID = @providerId AND PhotoData IS NOT NULL
+    `);
+
+    if (result.recordset.length === 0 || !result.recordset[0].PhotoData) {
+      return res.status(404).json({ error: 'Photo not found for this provider' });
+    }
+
+    const photo = result.recordset[0];
+    const contentType = photo.PhotoContentType || 'image/jpeg';
+    
+    // Set cache headers (7 days)
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=604800', // 7 days
+      'ETag': `"${Buffer.from(photo.PhotoData).toString('base64', 0, 32)}"`,
+      'Content-Length': photo.PhotoData.length
+    });
+
+    // Send binary image data
+    res.send(photo.PhotoData);
+  } catch (error) {
+    console.error('Error serving provider photo:', error);
+    res.status(500).json({ error: 'Failed to retrieve photo' });
+  }
+});
 
 /**
  * Photo Proxy Endpoint - Handles Google Places photos with caching
@@ -924,12 +976,12 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
 
-    // Query providers with photo URLs
+    // Query providers with photo data availability
     const result = await request.query(`
       SELECT DISTINCT
         p.ProviderID,
         p.ProviderName,
-        p.PhotoURL,
+        CASE WHEN p.PhotoData IS NOT NULL THEN 1 ELSE 0 END as HasPhotoData,
         s.Specialty
       FROM Providers p
       JOIN Procedures [procs] ON p.ProviderID = [procs].ProviderID
@@ -942,15 +994,17 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
       !p.ProviderName.includes('Please Request Consult')
     );
     
-    // Map providers with photo URLs, no fallback for missing photos
+    // Map providers with photo URLs pointing to database-served endpoint
     const providers = result.recordset
       .filter(p => !p.ProviderName.includes('Please Request Consult')) // Filter out placeholder providers
       .map(provider => ({
         ProviderID: provider.ProviderID,
         ProviderName: provider.ProviderName,
         Specialty: provider.Specialty,
-        PhotoURL: provider.PhotoURL || null, // Return null if no photo
-        hasPhoto: !!provider.PhotoURL // Boolean flag for frontend convenience
+        PhotoURL: provider.HasPhotoData 
+          ? `/api/provider-photos/${provider.ProviderID}`
+          : null, // Return null if no photo
+        hasPhoto: !!provider.HasPhotoData // Boolean flag for frontend convenience
       }));
     
     // Return response with flag indicating if clinic requires consult request
