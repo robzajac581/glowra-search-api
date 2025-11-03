@@ -152,14 +152,19 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, parseInt(clinicId));
 
-    // First, try to get the photo URL or reference from GooglePlacesData
+    // First, try to get the photo URL from GooglePlacesData, fallback to ClinicPhotos
     const result = await request.query(`
       SELECT 
         c.ClinicID,
         c.ClinicName,
-        g.Photo as PhotoURL
+        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN (
+        SELECT ClinicID, PhotoURL,
+          ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
+        FROM ClinicPhotos
+      ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
       WHERE c.ClinicID = @clinicId
     `);
 
@@ -491,6 +496,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
 
     // Query to get all clinics with their procedures
     // Excludes providers that are placeholder "Please Request Consult" entries
+    // Excludes clinics without photos from any source (temporary filter until photo data is complete)
     const result = await pool.request().query(`
       SELECT 
         c.ClinicID,
@@ -501,7 +507,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
         c.GoogleRating,
         c.GoogleReviewCount,
         COALESCE(g.Category, 'Medical Spa') as ClinicCategory,
-        g.Photo as PhotoURL,
+        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL,
         p.ProcedureID,
         p.ProcedureName,
         p.AverageCost,
@@ -509,10 +515,16 @@ app.get('/api/clinics/search-index', async (req, res) => {
       FROM Clinics c
       LEFT JOIN Locations l ON c.LocationID = l.LocationID
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN (
+        SELECT ClinicID, PhotoURL,
+          ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
+        FROM ClinicPhotos
+      ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
       JOIN Providers pr ON c.ClinicID = pr.ClinicID
       JOIN Procedures p ON pr.ProviderID = p.ProviderID
       JOIN Categories cat ON p.CategoryID = cat.CategoryID
       WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+        AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
       ORDER BY c.ClinicID, p.ProcedureName
     `);
 
@@ -623,6 +635,7 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
 
     // Query to get top-rated clinics with distance calculation
     // Uses Haversine formula for distance calculation
+    // Excludes clinics without photos from any source (temporary filter until photo data is complete)
     const result = await request.query(`
       SELECT TOP (@limit)
         c.ClinicID,
@@ -635,7 +648,7 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         c.GoogleReviewsJSON,
         c.Phone,
         c.Website,
-        g.Photo as PhotoURL,
+        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL,
         g.Category as ClinicCategory,
         g.Description,
         
@@ -659,10 +672,16 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         ) AS DistanceMiles
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN (
+        SELECT ClinicID, PhotoURL,
+          ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
+        FROM ClinicPhotos
+      ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
       WHERE 
         c.GoogleRating >= 4.0
         AND c.Latitude IS NOT NULL
         AND c.Longitude IS NOT NULL
+        AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
       ORDER BY 
         c.GoogleRating DESC,
         DistanceMiles ASC
