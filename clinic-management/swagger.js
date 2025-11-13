@@ -14,14 +14,21 @@ const options = {
       }
     },
     servers: [
+      // Dynamically set server based on environment
       {
-        url: 'http://localhost:3001/api/clinic-management',
-        description: 'Development server'
+        url: process.env.NODE_ENV === 'production' 
+          ? (process.env.API_BASE_URL || 'https://glowra-search-api.onrender.com') + '/api/clinic-management'
+          : 'http://localhost:3001/api/clinic-management',
+        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server'
       },
-      {
+      // Include alternate server for easy switching
+      ...(process.env.NODE_ENV === 'production' ? [{
+        url: 'http://localhost:3001/api/clinic-management',
+        description: 'Development server (local only)'
+      }] : [{
         url: (process.env.API_BASE_URL || 'https://glowra-search-api.onrender.com') + '/api/clinic-management',
         description: 'Production server'
-      }
+      }])
     ],
     components: {
       securitySchemes: {

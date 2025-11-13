@@ -21,6 +21,7 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
       'https://glowra.com',
       'https://www.glowra.com',
       'https://glowra-fe.vercel.app',
+      'https://glowra-search-api.onrender.com', // Allow Swagger UI from production
     ]
   : [
       'http://localhost:3000',
@@ -29,6 +30,7 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
       'https://glowra.com',
       'https://www.glowra.com',
       'https://glowra-fe.vercel.app',
+      'https://glowra-search-api.onrender.com', // Allow production testing
     ];
 
 const corsOptions = {
@@ -44,7 +46,7 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Submitted-By', 'X-Reviewed-By'],
   credentials: true,
 };
 
