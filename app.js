@@ -9,6 +9,7 @@ const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob } = require('./jobs/ratingRefresh');
 const clinicManagementRouter = require('./clinic-management');
+const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea } = require('./utils/locationUtils');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -489,15 +490,23 @@ app.get('/api/procedures/search-index', async (req, res) => {
 
 // Get all clinics with their procedures for clinic-based search
 // This endpoint returns a clinic-centric data structure for client-side search
+// Supports optional filtering by location and procedure
+// Query parameters:
+//   - location: city name, state abbreviation, or zip code
+//   - procedure: procedure name (case-insensitive, partial match)
+//   - radius: radius in miles for location searches (default: 20-30 for cities, 20 for zip)
 app.get('/api/clinics/search-index', async (req, res) => {
   let pool;
   try {
+    const { location, procedure, radius } = req.query;
+    
     pool = await db.getConnection();
     if (!pool) {
       throw new Error('Could not establish database connection');
     }
 
     // Query to get all clinics with their procedures
+    // Includes Latitude and Longitude for distance calculations
     // Excludes providers that are placeholder "Please Request Consult" entries
     // Excludes clinics without photos from any source (temporary filter until photo data is complete)
     const result = await pool.request().query(`
@@ -508,6 +517,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
         l.City,
         l.State,
         g.PostalCode,
+        c.Latitude,
+        c.Longitude,
         c.GoogleRating,
         c.GoogleReviewCount,
         COALESCE(g.Category, 'Medical Spa') as ClinicCategory,
@@ -547,6 +558,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
           city: row.City,
           state: row.State,
           zipCode: row.PostalCode || null,
+          latitude: row.Latitude || null,
+          longitude: row.Longitude || null,
           rating: row.GoogleRating || 0,
           reviewCount: row.GoogleReviewCount || 0,
           clinicCategory: row.ClinicCategory,
@@ -575,13 +588,28 @@ app.get('/api/clinics/search-index', async (req, res) => {
     });
 
     // Convert map to array
-    const clinics = Array.from(clinicsMap.values());
+    let clinics = Array.from(clinicsMap.values());
+
+    // Apply location filtering if provided
+    if (location) {
+      clinics = await filterByLocation(clinics, location, radius);
+    }
+
+    // Apply procedure filtering if provided
+    if (procedure) {
+      clinics = filterByProcedure(clinics, procedure);
+    }
 
     res.json({
       clinics,
       meta: {
         totalClinics: clinics.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        filters: {
+          location: location || null,
+          procedure: procedure || null,
+          radius: radius || null
+        }
       }
     });
   } catch (error) {
@@ -592,6 +620,285 @@ app.get('/api/clinics/search-index', async (req, res) => {
     });
   }
 });
+
+/**
+ * Filter clinics by location (city, state, or zip)
+ * @param {Array} clinics - Array of clinic objects
+ * @param {string} location - Location string (city, state, or zip)
+ * @param {string|number} radius - Optional radius in miles
+ * @returns {Promise<Array>} Filtered clinics array
+ */
+async function filterByLocation(clinics, location, radius) {
+  const locationInfo = parseLocationInput(location);
+  
+  if (!locationInfo.type || !locationInfo.value) {
+    return [];
+  }
+
+  const searchRadius = radius ? parseFloat(radius) : null;
+
+  switch (locationInfo.type) {
+    case 'state':
+      // State search: exact state match (case-insensitive)
+      return clinics.filter(clinic => 
+        clinic.state && clinic.state.toUpperCase() === locationInfo.value
+      );
+
+    case 'zip':
+      // ZIP code search
+      if (searchRadius && searchRadius > 0) {
+        // Use radius-based search
+        return await filterByZipRadius(clinics, locationInfo.value, searchRadius);
+      } else {
+        // Exact zip match or same first 3 digits (nearby zip codes)
+        const zipPrefix = locationInfo.value.substring(0, 3);
+        return clinics.filter(clinic => {
+          if (!clinic.zipCode) return false;
+          const clinicZip = clinic.zipCode.toString().trim();
+          return clinicZip === locationInfo.value || clinicZip.startsWith(zipPrefix);
+        });
+      }
+
+    case 'city':
+      // City search: exact city + metro area + nearby cities
+      return await filterByCity(clinics, locationInfo.value, searchRadius);
+
+    default:
+      return [];
+  }
+}
+
+/**
+ * Filter clinics by city, including metro area and nearby cities
+ * @param {Array} clinics - Array of clinic objects
+ * @param {string} cityName - City name
+ * @param {number|null} radius - Optional radius override
+ * @returns {Promise<Array>} Filtered clinics array
+ */
+async function filterByCity(clinics, cityName, radius) {
+  const lowerCityName = cityName.toLowerCase().trim();
+  const matchedClinics = new Set();
+  let primaryState = null; // Track the primary state for the city to prevent false positives
+
+  // Step 1: Find exact city matches and determine primary state
+  const exactMatches = [];
+  clinics.forEach(clinic => {
+    if (clinic.city && clinic.city.toLowerCase().trim() === lowerCityName) {
+      exactMatches.push(clinic);
+      matchedClinics.add(clinic.clinicId);
+      // Use the first matched clinic's state as primary state
+      if (!primaryState && clinic.state) {
+        primaryState = clinic.state.toUpperCase();
+      }
+    }
+  });
+
+  // If we found exact matches, prefer clinics in the same state to prevent false positives
+  // (e.g., "Palo Alto" in CA should not match "Palo Alto" in other states)
+  if (primaryState && exactMatches.length > 0) {
+    // Re-filter to prioritize same-state matches
+    const sameStateMatches = exactMatches.filter(c => c.state && c.state.toUpperCase() === primaryState);
+    if (sameStateMatches.length > 0) {
+      // If we have same-state matches, use those as the primary state
+      matchedClinics.clear();
+      sameStateMatches.forEach(clinic => matchedClinics.add(clinic.clinicId));
+    }
+  }
+
+  // Step 2: Check if city is in a defined metro area
+  const metroArea = findMetroArea(cityName);
+  let searchRadius = radius || (metroArea ? metroArea.radius : 25); // Default 25 miles
+  let centerLat = null;
+  let centerLng = null;
+
+  if (metroArea) {
+    // Use metro area center coordinates
+    centerLat = metroArea.lat;
+    centerLng = metroArea.lng;
+    searchRadius = radius || metroArea.radius;
+
+    // Include all cities in the metro area (metro areas are typically single-state)
+    metroArea.cities.forEach(metroCity => {
+      clinics.forEach(clinic => {
+        if (clinic.city && clinic.city.toLowerCase().trim() === metroCity.toLowerCase()) {
+          // If we have a primary state, prefer same-state matches
+          if (!primaryState || !clinic.state || clinic.state.toUpperCase() === primaryState) {
+            matchedClinics.add(clinic.clinicId);
+          }
+        }
+      });
+    });
+  } else {
+    // Try to geocode the city to get coordinates
+    // Add state context if available to improve geocoding accuracy
+    const geocodeQuery = primaryState ? `${cityName}, ${primaryState}` : cityName;
+    const geocoded = await geocodeLocation(geocodeQuery);
+    if (geocoded) {
+      centerLat = geocoded.lat;
+      centerLng = geocoded.lng;
+    } else {
+      // If geocoding fails, try to find a clinic in the city and use its coordinates
+      // Prefer clinics in the primary state if we have one
+      const cityClinic = clinics.find(c => 
+        c.city && c.city.toLowerCase().trim() === lowerCityName && 
+        c.latitude && c.longitude &&
+        (!primaryState || !c.state || c.state.toUpperCase() === primaryState)
+      ) || clinics.find(c => 
+        c.city && c.city.toLowerCase().trim() === lowerCityName && c.latitude && c.longitude
+      );
+      if (cityClinic) {
+        centerLat = cityClinic.latitude;
+        centerLng = cityClinic.longitude;
+        if (!primaryState && cityClinic.state) {
+          primaryState = cityClinic.state.toUpperCase();
+        }
+      }
+    }
+  }
+
+  // Step 3: Include clinics within radius using coordinates
+  // Prefer clinics in the same state to prevent false positives
+  if (centerLat && centerLng) {
+    clinics.forEach(clinic => {
+      if (clinic.latitude && clinic.longitude) {
+        const distance = calculateDistance(
+          centerLat,
+          centerLng,
+          clinic.latitude,
+          clinic.longitude
+        );
+        
+        if (distance !== null && distance <= searchRadius) {
+          // If we have a primary state, prefer same-state matches
+          // But still include nearby clinics even if different state (for border cities)
+          // Only exclude if it's clearly a false positive (very far and different state)
+          const isSameState = primaryState && clinic.state && clinic.state.toUpperCase() === primaryState;
+          const isFarAway = distance > searchRadius * 0.8; // More than 80% of radius
+          
+          if (isSameState || !isFarAway || !primaryState) {
+            matchedClinics.add(clinic.clinicId);
+          }
+        }
+      }
+    });
+  }
+
+  // Return filtered clinics
+  return clinics.filter(clinic => matchedClinics.has(clinic.clinicId));
+}
+
+/**
+ * Filter clinics by ZIP code with radius
+ * @param {Array} clinics - Array of clinic objects
+ * @param {string} zipCode - ZIP code
+ * @param {number} radius - Radius in miles
+ * @returns {Promise<Array>} Filtered clinics array
+ */
+async function filterByZipRadius(clinics, zipCode, radius) {
+  // First, find a clinic with this zip code to get coordinates
+  let zipClinic = clinics.find(c => 
+    c.zipCode && c.zipCode.toString().trim() === zipCode && c.latitude && c.longitude
+  );
+
+  // If no clinic found with exact zip, try geocoding
+  let centerLat = null;
+  let centerLng = null;
+
+  if (zipClinic) {
+    centerLat = zipClinic.latitude;
+    centerLng = zipClinic.longitude;
+  } else {
+    const geocoded = await geocodeLocation(zipCode);
+    if (geocoded) {
+      centerLat = geocoded.lat;
+      centerLng = geocoded.lng;
+    } else {
+      // Fallback: return clinics with same first 3 digits
+      const zipPrefix = zipCode.substring(0, 3);
+      return clinics.filter(clinic => {
+        if (!clinic.zipCode) return false;
+        const clinicZip = clinic.zipCode.toString().trim();
+        return clinicZip.startsWith(zipPrefix);
+      });
+    }
+  }
+
+  // Filter clinics within radius
+  const matchedClinics = new Set();
+
+  // Include exact zip matches first
+  clinics.forEach(clinic => {
+    if (clinic.zipCode && clinic.zipCode.toString().trim() === zipCode) {
+      matchedClinics.add(clinic.clinicId);
+    }
+  });
+
+  // Include clinics within radius
+  if (centerLat && centerLng) {
+    clinics.forEach(clinic => {
+      if (clinic.latitude && clinic.longitude) {
+        const distance = calculateDistance(
+          centerLat,
+          centerLng,
+          clinic.latitude,
+          clinic.longitude
+        );
+        
+        if (distance !== null && distance <= radius) {
+          matchedClinics.add(clinic.clinicId);
+        }
+      }
+    });
+  }
+
+  return clinics.filter(clinic => matchedClinics.has(clinic.clinicId));
+}
+
+/**
+ * Filter clinics by procedure name
+ * @param {Array} clinics - Array of clinic objects
+ * @param {string} procedureName - Procedure name to search for (case-insensitive, partial match)
+ * @returns {Array} Filtered clinics array
+ */
+function filterByProcedure(clinics, procedureName) {
+  const lowerProcedure = procedureName.toLowerCase().trim();
+  
+  // Common procedure abbreviations mapping
+  const procedureAbbreviations = {
+    'bbl': 'brazilian butt lift',
+    'tummy tuck': 'abdominoplasty',
+    'nose job': 'rhinoplasty',
+    'boob job': 'breast augmentation',
+    'botox': 'botulinum toxin',
+    'filler': 'dermal filler'
+  };
+
+  // Check if search term is an abbreviation
+  const expandedTerm = procedureAbbreviations[lowerProcedure] || null;
+
+  return clinics.filter(clinic => {
+    // Check if clinic has any procedure matching the search term
+    return clinic.procedures.some(proc => {
+      const procName = proc.procedureName.toLowerCase();
+      // Direct match
+      if (procName.includes(lowerProcedure)) {
+        return true;
+      }
+      // Abbreviation match (e.g., "BBL" matches "Brazilian Butt Lift")
+      if (expandedTerm && procName.includes(expandedTerm)) {
+        return true;
+      }
+      // Reverse: if search term is full name, check if procedure name contains abbreviation
+      // (e.g., "Brazilian Butt Lift" matches "BBL")
+      for (const [abbr, fullName] of Object.entries(procedureAbbreviations)) {
+        if (lowerProcedure.includes(fullName) && procName.includes(abbr)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  });
+}
 
 // Get top-rated clinics near a location with one review each
 // Optimized for homepage "Book with Local Doctors" section
