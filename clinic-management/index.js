@@ -10,8 +10,29 @@ const router = express.Router();
 
 // Swagger UI documentation (no auth required for viewing docs)
 router.use('/docs', swaggerUi.serve);
-router.get('/docs', swaggerUi.setup(swaggerSpec, {
-  customCss: `
+router.get('/docs', (req, res, next) => {
+  // Dynamically set server URL based on request host
+  // Handle proxy headers (Render, Heroku, etc. use X-Forwarded-* headers)
+  const protocol = req.get('x-forwarded-proto') || req.protocol || (req.secure ? 'https' : 'http');
+  const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3001';
+  const baseUrl = `${protocol}://${host}/api/clinic-management`;
+  
+  // Create a modified spec with the current host as the first server
+  const dynamicSpec = {
+    ...swaggerSpec,
+    servers: [
+      {
+        url: baseUrl,
+        description: host.includes('localhost') ? 'Current server (Development)' : 'Current server (Production)'
+      },
+      // Keep other servers for easy switching
+      ...swaggerSpec.servers.filter(s => s.url !== baseUrl)
+    ]
+  };
+  
+  const swaggerHandler = swaggerUi.setup(dynamicSpec, {
+    customSiteTitle: 'Clinic Management API Documentation',
+    customCss: `
     .swagger-ui .topbar { display: none }
     .swagger-ui .auth-wrapper { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 4px; }
     .swagger-ui .auth-btn-wrapper { margin: 10px 0; }
@@ -33,9 +54,8 @@ router.get('/docs', swaggerUi.setup(swaggerSpec, {
     }
     .auth-success-indicator.show { display: block; }
   `,
-  customSiteTitle: 'Clinic Management API Documentation',
-  customCssUrl: null,
-  customJs: `
+    customCssUrl: null,
+    customJs: `
     window.addEventListener('load', function() {
       // Monitor authorization changes
       const observer = new MutationObserver(function(mutations) {
@@ -81,14 +101,17 @@ router.get('/docs', swaggerUi.setup(swaggerSpec, {
       });
     });
   `,
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayRequestDuration: true,
-    filter: true,
-    tryItOutEnabled: true,
-    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch']
-  }
-}));
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      tryItOutEnabled: true,
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch']
+    }
+  });
+  
+  return swaggerHandler(req, res, next);
+});
 
 // Swagger JSON endpoint
 router.get('/docs.json', (req, res) => {
