@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob } = require('./jobs/ratingRefresh');
+const clinicManagementRouter = require('./clinic-management');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -1232,6 +1233,9 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
     });
   }
 });
+
+// Clinic Management API routes
+app.use('/api/clinic-management', clinicManagementRouter);
 
 // Global error handler
 app.use((err, req, res, next) => {

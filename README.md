@@ -78,6 +78,46 @@ The following columns are required for the Google Places integration:
 
 Run the provided SQL script in `schema/add_google_ratings.sql` to add these columns automatically.
 
+## Clinic Management API
+
+The Clinic Management API provides a complete draft/approval workflow for bulk clinic imports and form submissions. This module is self-contained and can be accessed via Swagger UI.
+
+### Quick Start
+
+1. **Access Swagger UI**: `http://localhost:3001/api/clinic-management/docs`
+2. **Set API Key**: Add `CLINIC_MANAGEMENT_API_KEY` to your `.env` file
+3. **Run Migration**: `npm run migrate:clinic-management` (if not already done)
+
+### Features
+
+- ✅ Excel bulk import with validation
+- ✅ Duplicate detection (PlaceID, fuzzy matching, phone, website)
+- ✅ Draft/approval workflow
+- ✅ Form integration endpoints
+- ✅ Interactive Swagger documentation
+- ✅ API key authentication
+
+### Documentation
+
+Complete documentation is available in the `clinic-management/` directory:
+
+- **Quick Start**: `clinic-management/docs/QUICK_START.md`
+- **API Documentation**: `clinic-management/docs/API_DOCUMENTATION.md`
+- **Excel Template Guide**: `clinic-management/docs/EXCEL_TEMPLATE_GUIDE.md`
+- **Duplicate Detection Guide**: `clinic-management/docs/DUPLICATE_DETECTION_GUIDE.md`
+- **Integration Guide**: `clinic-management/docs/INTEGRATION_GUIDE.md`
+- **Setup Guide**: `clinic-management/docs/SETUP_GUIDE.md`
+
+### Key Endpoints
+
+- `GET /api/clinic-management/docs` - Swagger UI
+- `POST /api/clinic-management/bulk-import` - Upload Excel file
+- `GET /api/clinic-management/drafts` - List drafts
+- `POST /api/clinic-management/drafts/:id/approve` - Approve draft
+- `POST /api/clinic-management/forms/submit` - Form submission
+
+See `clinic-management/README.md` for complete details.
+
 ## API Endpoints
 
 ### Clinic Endpoints
@@ -307,6 +347,7 @@ This ensures:
 | `PORT` | No | `3001` | Server port |
 | `NODE_ENV` | No | `development` | Environment (development/production) |
 | `TZ` | No | `America/New_York` | Timezone for scheduled jobs |
+| `CLINIC_MANAGEMENT_API_KEY` | Yes* | - | API key for clinic management endpoints (*required for clinic management features) |
 
 ## Error Handling
 
