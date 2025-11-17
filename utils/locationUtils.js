@@ -212,11 +212,97 @@ function findMetroArea(cityName) {
   return null;
 }
 
+/**
+ * Create reverse mapping from abbreviations to full state names
+ */
+const STATE_ABBR_TO_NAME = {
+  'CA': 'California',
+  'TX': 'Texas',
+  'FL': 'Florida',
+  'NY': 'New York',
+  'IL': 'Illinois',
+  'PA': 'Pennsylvania',
+  'OH': 'Ohio',
+  'GA': 'Georgia',
+  'NC': 'North Carolina',
+  'MI': 'Michigan',
+  'NJ': 'New Jersey',
+  'VA': 'Virginia',
+  'WA': 'Washington',
+  'AZ': 'Arizona',
+  'MA': 'Massachusetts',
+  'TN': 'Tennessee',
+  'IN': 'Indiana',
+  'MO': 'Missouri',
+  'MD': 'Maryland',
+  'WI': 'Wisconsin',
+  'CO': 'Colorado',
+  'MN': 'Minnesota',
+  'SC': 'South Carolina',
+  'AL': 'Alabama',
+  'LA': 'Louisiana',
+  'KY': 'Kentucky',
+  'OR': 'Oregon',
+  'OK': 'Oklahoma',
+  'CT': 'Connecticut',
+  'UT': 'Utah',
+  'IA': 'Iowa',
+  'NV': 'Nevada',
+  'AR': 'Arkansas',
+  'MS': 'Mississippi',
+  'KS': 'Kansas',
+  'NM': 'New Mexico',
+  'NE': 'Nebraska',
+  'WV': 'West Virginia',
+  'ID': 'Idaho',
+  'HI': 'Hawaii',
+  'NH': 'New Hampshire',
+  'ME': 'Maine',
+  'MT': 'Montana',
+  'RI': 'Rhode Island',
+  'DE': 'Delaware',
+  'SD': 'South Dakota',
+  'ND': 'North Dakota',
+  'AK': 'Alaska',
+  'VT': 'Vermont',
+  'WY': 'Wyoming',
+  'DC': 'District of Columbia'
+};
+
+/**
+ * Check if a clinic's state matches the search state
+ * Handles both abbreviations (FL, TX) and full names (Florida, Texas)
+ * @param {string} clinicState - State from clinic data
+ * @param {string} searchStateAbbr - Search state as abbreviation (e.g., "FL")
+ * @returns {boolean} True if states match
+ */
+function stateMatches(clinicState, searchStateAbbr) {
+  if (!clinicState) return false;
+  
+  const normalizedClinicState = clinicState.trim().toUpperCase();
+  const searchAbbr = searchStateAbbr.toUpperCase();
+  const searchFullName = STATE_ABBR_TO_NAME[searchAbbr];
+  
+  // Check abbreviation match
+  if (normalizedClinicState === searchAbbr) {
+    return true;
+  }
+  
+  // Check full name match (case-insensitive)
+  if (searchFullName && normalizedClinicState === searchFullName.toUpperCase()) {
+    return true;
+  }
+  
+  return false;
+}
+
 module.exports = {
   calculateDistance,
   geocodeLocation,
   parseLocationInput,
   findMetroArea,
-  METRO_AREAS
+  stateMatches,
+  METRO_AREAS,
+  STATE_ABBR_TO_NAME
 };
 

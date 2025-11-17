@@ -9,7 +9,7 @@ const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob } = require('./jobs/ratingRefresh');
 const clinicManagementRouter = require('./clinic-management');
-const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea } = require('./utils/locationUtils');
+const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -514,8 +514,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
         c.ClinicID,
         c.ClinicName,
         c.Address,
-        l.City,
-        l.State,
+        COALESCE(l.City, g.City) as City,
+        COALESCE(l.State, g.State) as State,
         g.PostalCode,
         c.Latitude,
         c.Longitude,
@@ -639,9 +639,9 @@ async function filterByLocation(clinics, location, radius) {
 
   switch (locationInfo.type) {
     case 'state':
-      // State search: exact state match (case-insensitive)
+      // State search: matches both abbreviations (FL) and full names (Florida)
       return clinics.filter(clinic => 
-        clinic.state && clinic.state.toUpperCase() === locationInfo.value
+        stateMatches(clinic.state, locationInfo.value)
       );
 
     case 'zip':
