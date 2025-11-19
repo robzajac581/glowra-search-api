@@ -5,10 +5,11 @@ Backend API for the Glowra clinic search and rating system.
 ## Features
 
 - Clinic search with filtering by location, price, specialty, and category
-- Google Places API integration for clinic ratings and reviews
+- Google Places API integration for clinic ratings, reviews, and photos
 - Automatic rating cache with configurable expiration
-- Scheduled daily rating refresh
-- Admin endpoints for manual rating updates
+- Scheduled daily rating refresh and monthly photo refresh
+- Admin endpoints for manual rating and photo updates
+- Photo proxy with server-side caching to prevent rate limiting
 
 ## Setup
 
@@ -286,16 +287,36 @@ Returns all procedures in a flat structure. *Note: Use `/api/clinics/search-inde
 
 ## Scheduled Jobs
 
+The application runs automated jobs to keep Google Places data fresh.
+
 ### Rating Refresh Job
 
-The application runs a scheduled job daily at 2:00 AM to refresh ratings for all clinics with PlaceIDs.
+Runs **daily at 2:00 AM** to refresh ratings and reviews for all clinics.
 
 - **Schedule:** Daily at 2:00 AM (configurable timezone)
 - **Concurrency:** Processes 10 clinics at a time with 500ms delay between batches
 - **Rate Limiting:** Built-in to avoid Google API quota issues
 - **Error Handling:** Continues processing even if individual clinics fail
 
-The job logs detailed information about each refresh operation and provides a summary at completion.
+### Photo Refresh Job
+
+Runs **monthly on the 1st** at 2:00 AM to refresh photo references for all clinics.
+
+- **Schedule:** Monthly on the 1st at 2:00 AM (configurable)
+- **Purpose:** Prevents photo reference expiration (Google references expire after 6-12 months)
+- **Processing:** Fetches up to 20 photos per clinic
+- **Rate Limiting:** 200ms delay between clinics to avoid API quota issues
+
+**Manual Photo Refresh:**
+```bash
+# Refresh photos for all clinics
+node scripts/fetchClinicPhotos.js
+
+# Refresh photos for a specific clinic
+node scripts/fetchClinicPhotos.js --clinic-id=5
+```
+
+Both jobs log detailed information about each refresh operation and provide a summary at completion.
 
 ## Google Places API Integration
 
@@ -304,8 +325,8 @@ The job logs detailed information about each refresh operation and provides a su
 The system uses a **cache-first** approach for optimal performance:
 
 1. **User Requests** → Always return cached data from database (fast, no API calls)
-2. **Scheduled Job** → Updates all clinic ratings daily at 2 AM via Google Places API
-3. **Manual Refresh** → Admin endpoint for on-demand updates when needed
+2. **Scheduled Jobs** → Updates ratings daily and photos monthly at 2 AM via Google Places API
+3. **Manual Refresh** → Admin endpoints and scripts for on-demand updates when needed
 
 This ensures:
 - ⚡ Fast, consistent response times for users
@@ -375,7 +396,7 @@ glowra-search-api/
 ├── utils/
 │   └── googlePlaces.js         # Google Places API integration
 ├── jobs/
-│   └── ratingRefresh.js        # Scheduled rating refresh job
+│   └── scheduledRefresh.js     # Scheduled rating & photo refresh jobs
 ├── services/
 │   └── clinicSearchService.js  # Clinic search service
 └── docs/

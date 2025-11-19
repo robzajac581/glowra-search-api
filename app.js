@@ -7,7 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
-const { initRatingRefreshJob } = require('./jobs/ratingRefresh');
+const { initRatingRefreshJob } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const app = express();
@@ -276,6 +276,167 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
 
   } catch (error) {
     console.error('Error in /api/photos/clinic/:clinicId:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * Photo Proxy Endpoint for Individual Photos - Handles Google Places photos by PhotoID with caching
+ * GET /api/photos/proxy/:photoId
+ * 
+ * This endpoint:
+ * - Proxies individual Google Places photos from ClinicPhotos table
+ * - Supports size parameter: thumbnail (400px), medium (800px), large (1600px)
+ * - Caches images locally for 7 days
+ * - Uses authenticated API requests to Google
+ * - Returns actual image binary data with proper headers
+ */
+app.get('/api/photos/proxy/:photoId', async (req, res) => {
+  let pool;
+  try {
+    const { photoId } = req.params;
+    const { size = 'medium' } = req.query;
+    
+    // Validate photo ID
+    if (!photoId || isNaN(parseInt(photoId))) {
+      return res.status(400).json({ error: 'Invalid photo ID' });
+    }
+
+    // Validate and map size parameter to maxwidth
+    const sizeMap = {
+      'thumbnail': 400,
+      'medium': 800,
+      'large': 1600
+    };
+    
+    const maxWidth = sizeMap[size] || 800;
+
+    pool = await db.getConnection();
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+
+    const request = pool.request();
+    request.input('photoId', sql.Int, parseInt(photoId));
+
+    // Get the photo reference and URL from ClinicPhotos table
+    const result = await request.query(`
+      SELECT 
+        PhotoID,
+        PhotoReference,
+        PhotoURL,
+        ClinicID
+      FROM ClinicPhotos
+      WHERE PhotoID = @photoId
+    `);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+
+    const photo = result.recordset[0];
+    
+    // Construct the Google Places Photo URL with the appropriate size
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    const photoURL = `https://maps.googleapis.com/maps/api/place/photo?key=${apiKey}&photoreference=${photo.PhotoReference}&maxwidth=${maxWidth}`;
+
+    // Generate cache key based on photo ID and size
+    const cacheKey = crypto.createHash('md5').update(`${photoId}-${size}`).digest('hex');
+    const cacheFilePath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.jpg`);
+    const cacheMetaPath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.meta.json`);
+
+    // Check if cached version exists and is fresh
+    let cachedPhoto = null;
+    try {
+      const stats = await fs.stat(cacheFilePath);
+      const meta = JSON.parse(await fs.readFile(cacheMetaPath, 'utf-8'));
+      
+      const cacheAge = Date.now() - stats.mtimeMs;
+      
+      if (cacheAge < PHOTO_CACHE_DURATION) {
+        cachedPhoto = await fs.readFile(cacheFilePath);
+        
+        // Serve cached image
+        res.set({
+          'Content-Type': meta.contentType || 'image/jpeg',
+          'Cache-Control': 'public, max-age=604800', // 7 days
+          'X-Cache': 'HIT',
+          'Last-Modified': stats.mtime.toUTCString(),
+          'ETag': `"${cacheKey}"`
+        });
+        
+        return res.send(cachedPhoto);
+      }
+    } catch (error) {
+      // Cache miss or expired - continue to fetch from Google
+    }
+
+    // Fetch from Google Places API with authentication
+    try {
+      const response = await axios.get(photoURL, {
+        responseType: 'arraybuffer',
+        timeout: 15000, // 15 second timeout
+        maxRedirects: 5
+      });
+
+      const imageBuffer = Buffer.from(response.data);
+      const contentType = response.headers['content-type'] || 'image/jpeg';
+
+      // Cache the image
+      await fs.writeFile(cacheFilePath, imageBuffer);
+      await fs.writeFile(cacheMetaPath, JSON.stringify({
+        contentType,
+        photoId: photo.PhotoID,
+        clinicId: photo.ClinicID,
+        size: size,
+        maxWidth: maxWidth,
+        cachedAt: new Date().toISOString()
+      }));
+
+      // Serve the image
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=604800', // 7 days
+        'X-Cache': 'MISS',
+        'ETag': `"${cacheKey}"`
+      });
+
+      return res.send(imageBuffer);
+
+    } catch (fetchError) {
+      console.error(`Failed to fetch photo ${photoId}:`, fetchError.message);
+
+      // Check for specific error types
+      if (fetchError.response?.status === 429) {
+        // Rate limited by Google
+        return res.status(503).set({
+          'Retry-After': '60',
+          'X-Error': 'Rate limited'
+        }).json({ 
+          error: 'Service temporarily unavailable due to rate limiting',
+          retryAfter: 60
+        });
+      }
+
+      if (fetchError.response?.status === 403) {
+        return res.status(403).json({ 
+          error: 'Access denied by photo provider',
+          message: 'API key may be invalid or photo access is restricted'
+        });
+      }
+
+      // For other errors, return 404 (photo not available)
+      return res.status(404).json({ 
+        error: 'Photo could not be retrieved',
+        message: process.env.NODE_ENV === 'development' ? fetchError.message : undefined
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in /api/photos/proxy/:photoId:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -1232,7 +1393,7 @@ app.get('/api/clinics/:clinicId/photos', async (req, res) => {
     request.input('clinicId', sql.Int, clinicId);
     
     let query = `
-      SELECT 
+      SELECT ${limit && !isNaN(parseInt(limit)) ? 'TOP ' + parseInt(limit) : ''}
         PhotoID,
         PhotoReference,
         PhotoURL,
@@ -1253,28 +1414,23 @@ app.get('/api/clinics/:clinicId/photos', async (req, res) => {
     
     query += ' ORDER BY DisplayOrder ASC';
     
-    // Apply limit if specified
-    if (limit && !isNaN(parseInt(limit))) {
-      const limitNum = parseInt(limit);
-      query = `SELECT TOP ${limitNum} * FROM (${query}) AS Photos`;
-    }
-    
     const result = await request.query(query);
     
     // Transform data to include optimized URLs for different sizes
+    // Use backend proxy URLs instead of direct Google Places API URLs
+    const baseURL = process.env.BASE_URL || 'http://localhost:3001';
+    
     const photos = result.recordset.map(photo => {
-      // Extract the base photo reference from the URL
-      const photoRef = photo.PhotoReference;
-      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-      const baseParams = `key=${apiKey}&photoreference=${photoRef}`;
+      // Use backend proxy endpoint with size parameter
+      const photoId = photo.PhotoID;
       
       return {
         photoId: photo.PhotoID,
-        url: photo.PhotoURL, // Full size (1600px)
+        url: `${baseURL}/api/photos/proxy/${photoId}?size=large`, // Full size (1600px)
         urls: {
-          thumbnail: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=400`,
-          medium: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=800`,
-          large: photo.PhotoURL
+          thumbnail: `${baseURL}/api/photos/proxy/${photoId}?size=thumbnail`,
+          medium: `${baseURL}/api/photos/proxy/${photoId}?size=medium`,
+          large: `${baseURL}/api/photos/proxy/${photoId}?size=large`
         },
         width: photo.Width,
         height: photo.Height,
