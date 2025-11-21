@@ -46,6 +46,11 @@ Backend API for the Glowra clinic search and rating system.
    # Server Configuration
    PORT=3001
    NODE_ENV=development
+   
+   # API Base URL (optional - for photo proxy URLs and provider photos)
+   # If not set, automatically constructs from request (e.g., http://localhost:3001 or https://your-domain.com)
+   # Only set this if you need to override the automatic detection
+   # API_BASE_URL=https://glowra-search-api.onrender.com
 
    # Timezone for scheduled jobs (optional, defaults to America/New_York)
    TZ=America/Chicago
@@ -367,6 +372,7 @@ This ensures:
 | `RATING_CACHE_HOURS` | No | `24` | Hours before cache expires |
 | `PORT` | No | `3001` | Server port |
 | `NODE_ENV` | No | `development` | Environment (development/production) |
+| `API_BASE_URL` | No | Auto-detected from request | Base URL for photo proxy and provider photo URLs. Auto-constructs from incoming request if not set (e.g., `http://localhost:3001` or `https://your-domain.com`). Only override if needed. |
 | `TZ` | No | `America/New_York` | Timezone for scheduled jobs |
 | `CLINIC_MANAGEMENT_API_KEY` | Yes* | - | API key for clinic management endpoints (*required for clinic management features) |
 

@@ -51,6 +51,9 @@ const corsOptions = {
   credentials: true,
 };
 
+// Trust proxy headers (required for proper protocol detection behind proxies like Render, Heroku, etc.)
+app.set('trust proxy', true);
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -1418,7 +1421,8 @@ app.get('/api/clinics/:clinicId/photos', async (req, res) => {
     
     // Transform data to include optimized URLs for different sizes
     // Use backend proxy URLs instead of direct Google Places API URLs
-    const baseURL = process.env.BASE_URL || 'http://localhost:3001';
+    // Construct base URL from the request to automatically work in any environment
+    const baseURL = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
     
     const photos = result.recordset.map(photo => {
       // Use backend proxy endpoint with size parameter
@@ -1482,8 +1486,8 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
     );
     
     // Map providers with photo URLs pointing to database-served endpoint
-    // Use full URL for production (Render API) so frontend (Vercel) can access it
-    const apiBaseUrl = process.env.API_BASE_URL || 'https://glowra-search-api.onrender.com';
+    // Construct base URL from the request to automatically work in any environment
+    const apiBaseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
     
     const providers = result.recordset
       .filter(p => !p.ProviderName.includes('Please Request Consult')) // Filter out placeholder providers
