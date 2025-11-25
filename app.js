@@ -707,6 +707,37 @@ app.get('/api/clinics/search-index', async (req, res) => {
       ORDER BY c.ClinicID, p.ProcedureName
     `);
 
+    // Query to get gallery photos for all clinics (up to 5 photos per clinic)
+    const photosResult = await pool.request().query(`
+      SELECT 
+        ClinicID,
+        PhotoID,
+        DisplayOrder
+      FROM ClinicPhotos
+      WHERE ClinicID IN (
+        SELECT DISTINCT c.ClinicID
+        FROM Clinics c
+        JOIN Providers pr ON c.ClinicID = pr.ClinicID
+        WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+      )
+      ORDER BY ClinicID, DisplayOrder ASC
+    `);
+
+    // Build a map of clinic gallery photos
+    const galleryPhotosMap = new Map();
+    const baseURL = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    
+    photosResult.recordset.forEach(photo => {
+      if (!galleryPhotosMap.has(photo.ClinicID)) {
+        galleryPhotosMap.set(photo.ClinicID, []);
+      }
+      const photos = galleryPhotosMap.get(photo.ClinicID);
+      // Limit to 5 photos per clinic for efficiency
+      if (photos.length < 5) {
+        photos.push(`${baseURL}/api/photos/proxy/${photo.PhotoID}?size=thumbnail`);
+      }
+    });
+
     // Transform the flat result set into a clinic-centric structure
     const clinicsMap = new Map();
 
@@ -728,6 +759,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
           reviewCount: row.GoogleReviewCount || 0,
           clinicCategory: row.ClinicCategory,
           photoURL: row.PhotoURL || null,
+          galleryPhotos: galleryPhotosMap.get(clinicId) || null,
           procedures: []
         });
       }

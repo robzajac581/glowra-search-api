@@ -6,6 +6,7 @@ Backend API for the Glowra clinic search and rating system.
 
 - Clinic search with filtering by location, price, specialty, and category
 - Google Places API integration for clinic ratings, reviews, and photos
+- Gallery photos included in search index (up to 5 photos per clinic)
 - Automatic rating cache with configurable expiration
 - Scheduled daily rating refresh and monthly photo refresh
 - Admin endpoints for manual rating and photo updates
@@ -247,6 +248,11 @@ Returns all clinics with their complete procedure lists for client-side search. 
       "reviewCount": 245,
       "clinicCategory": "Plastic Surgery",
       "photoURL": "https://lh3.googleusercontent.com/places/ANXAkqF...",
+      "galleryPhotos": [
+        "https://api.yourdomain.com/api/photos/proxy/1?size=thumbnail",
+        "https://api.yourdomain.com/api/photos/proxy/2?size=thumbnail",
+        "https://api.yourdomain.com/api/photos/proxy/3?size=thumbnail"
+      ],
       "procedures": [
         {
           "procedureId": 101,
@@ -263,6 +269,8 @@ Returns all clinics with their complete procedure lists for client-side search. 
   }
 }
 ```
+
+**Note:** The `galleryPhotos` field contains an array of up to 5 photo URLs (thumbnail size) served via backend proxy, or `null` if no gallery photos are available. See `docs/GALLERY_PHOTOS_IMPLEMENTATION.md` for details.
 
 **Documentation:** See `docs/FE communications/CLINIC_SEARCH_API_GUIDE.md` for complete implementation guide.
 
