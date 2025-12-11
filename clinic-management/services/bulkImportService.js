@@ -2,6 +2,7 @@ const { parseExcelFile, normalizeParsedData } = require('../utils/excelParser');
 const { validateExcelData } = require('../utils/excelValidator');
 const draftService = require('./draftService');
 const duplicateDetectionService = require('./duplicateDetectionService');
+const { normalizeCategory } = require('../../utils/categoryNormalizer');
 
 /**
  * Bulk import service
@@ -66,7 +67,7 @@ class BulkImportService {
           latitude: clinicData.latitude ? parseFloat(clinicData.latitude) : null,
           longitude: clinicData.longitude ? parseFloat(clinicData.longitude) : null,
           placeID: clinicData.placeID || null,
-          category: clinicData.category || null,
+          category: normalizeCategory(clinicData.category),
           status: 'pending_review',
           source: 'bulk_import',
           submittedBy,

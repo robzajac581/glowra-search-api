@@ -1,4 +1,5 @@
 const draftService = require('./draftService');
+const { normalizeCategory } = require('../../utils/categoryNormalizer');
 
 /**
  * Form integration service
@@ -19,7 +20,7 @@ class FormIntegrationService {
       website: formData.website || null,
       phone: formData.phone || null,
       email: formData.email || null,
-      category: formData.clinicCategory || formData.category || null,
+      category: normalizeCategory(formData.clinicCategory || formData.category),
       status: 'draft', // Form submissions start as drafts
       source: formData.requestType === 'adjustment' ? 'form_adjustment' : 'form',
       submittedBy: formData.email || 'public_form',

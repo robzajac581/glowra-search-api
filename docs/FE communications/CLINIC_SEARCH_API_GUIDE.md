@@ -60,11 +60,26 @@ interface Clinic {
   state: string;              // State/Province abbreviation (e.g., "CA", "IL")
   rating: number;             // Google rating (0-5), defaults to 0 if null
   reviewCount: number;        // Number of Google reviews, defaults to 0 if null
-  clinicCategory: string;     // Primary clinic category (e.g., "Medical Spa", "Plastic Surgery")
+  clinicCategory: string;     // Primary clinic category - one of 5 standardized values (see below)
   photoURL: string | null;    // Google Places photo URL, null if not available
   procedures: Procedure[];    // Array of all procedures offered by this clinic
 }
 ```
+
+### Clinic Categories (Standardized)
+The `clinicCategory` field will always be one of these **5 standardized values**:
+
+1. **"Plastic Surgery"** - Plastic surgery clinics, plastic surgeons, cosmetic surgeons, etc.
+2. **"Medspa / Aesthetics"** - Medical spas, aesthetic clinics, beauty centers
+3. **"Medical"** - General medical clinics, hospitals, surgical centers, doctors, nurse practitioners
+4. **"Dermatology"** - Dermatologists, skin care clinics
+5. **"Other"** - Any clinic that doesn't fit the above categories
+
+**Important Notes:**
+- Categories are automatically normalized by the backend
+- All variations (typos, plurals, capitalization) are handled automatically
+- You can safely use these exact values for filtering and display logic
+- Categories will never be null - they default to "Other" if uncategorized
 
 ### Procedure Object Structure
 ```typescript
@@ -130,7 +145,7 @@ interface Procedure {
       "state": "CA",
       "rating": 4.9,
       "reviewCount": 892,
-      "clinicCategory": "Medical Spa",
+      "clinicCategory": "Medspa / Aesthetics",
       "photoURL": null,
       "procedures": [
         {

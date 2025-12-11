@@ -1,5 +1,6 @@
 const { db, sql } = require('../../db');
 const draftService = require('./draftService');
+const { normalizeCategory } = require('../../utils/categoryNormalizer');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -367,7 +368,7 @@ class ClinicCreationService {
     request.input('state', sql.NVarChar, draft.State);
     request.input('website', sql.NVarChar, draft.Website || null);
     request.input('email', sql.NVarChar, draft.Email || null);
-    request.input('category', sql.NVarChar, draft.Category || null);
+    request.input('category', sql.NVarChar, normalizeCategory(draft.Category));
 
     await request.query(`
       INSERT INTO GooglePlacesData (

@@ -1,4 +1,5 @@
 const { db, sql } = require('../../db');
+const { normalizeCategory } = require('../../utils/categoryNormalizer');
 
 /**
  * Draft management service
@@ -27,7 +28,7 @@ class DraftService {
       request.input('latitude', sql.Decimal(10, 7), draftData.latitude || null);
       request.input('longitude', sql.Decimal(11, 7), draftData.longitude || null);
       request.input('placeID', sql.NVarChar, draftData.placeID || null);
-      request.input('category', sql.NVarChar, draftData.category || null);
+      request.input('category', sql.NVarChar, normalizeCategory(draftData.category));
       request.input('status', sql.NVarChar, draftData.status || 'draft');
       request.input('source', sql.NVarChar, draftData.source || 'manual');
       request.input('submittedBy', sql.NVarChar, draftData.submittedBy || null);
@@ -279,7 +280,7 @@ class DraftService {
       }
       if (updateData.category !== undefined) {
         updates.push('Category = @category');
-        request.input('category', sql.NVarChar, updateData.category || null);
+        request.input('category', sql.NVarChar, normalizeCategory(updateData.category));
       }
       if (updateData.status !== undefined) {
         updates.push('Status = @status');

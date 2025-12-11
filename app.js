@@ -10,6 +10,7 @@ const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
+const { normalizeCategory } = require('./utils/categoryNormalizer');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -757,7 +758,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
           longitude: row.Longitude || null,
           rating: row.GoogleRating || 0,
           reviewCount: row.GoogleReviewCount || 0,
-          clinicCategory: row.ClinicCategory,
+          clinicCategory: normalizeCategory(row.ClinicCategory),
           photoURL: row.PhotoURL || null,
           galleryPhotos: galleryPhotosMap.get(clinicId) || null,
           procedures: []
@@ -1241,7 +1242,7 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         website: clinic.Website,
         rating: clinic.GoogleRating,
         reviewCount: clinic.GoogleReviewCount,
-        category: clinic.ClinicCategory || 'Medical Spa',
+        category: normalizeCategory(clinic.ClinicCategory),
         description: clinic.Description,
         photoURL: clinic.PhotoURL,
         location: {
@@ -1402,7 +1403,7 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
       
       // Business info
       BusinessStatus: clinic.BusinessStatus,
-      Category: clinic.Category,
+      Category: normalizeCategory(clinic.Category),
       Subtypes: clinic.Subtypes,
       BusinessName: clinic.BusinessName,
       Email: clinic.Email,
