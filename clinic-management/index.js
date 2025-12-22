@@ -3,6 +3,7 @@ const bulkImportRoutes = require('./routes/bulkImportRoutes');
 const draftRoutes = require('./routes/draftRoutes');
 const duplicateRoutes = require('./routes/duplicateRoutes');
 const formRoutes = require('./routes/formRoutes');
+const submissionRoutes = require('./routes/submissionRoutes');
 const { apiKeyAuth, optionalApiKeyAuth } = require('./middleware/auth');
 const { swaggerUi, swaggerSpec } = require('./swagger');
 
@@ -119,11 +120,12 @@ router.get('/docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-// Apply API key auth to all routes except form submissions
+// Apply API key auth to all routes except form/wizard submissions
 router.use('/bulk-import', apiKeyAuth, bulkImportRoutes);
 router.use('/drafts', apiKeyAuth, draftRoutes);
 router.use('/duplicates', apiKeyAuth, duplicateRoutes);
 router.use('/forms', optionalApiKeyAuth, formRoutes); // Form routes use optional auth
+router.use('/submissions', submissionRoutes); // Public - no API key required for wizard submissions
 
 /**
  * @swagger

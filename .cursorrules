@@ -1,0 +1,132 @@
+# Cursor Rules for Glowra Search API
+
+## Frontend Communication
+
+### Rule 1: Frontend Change Prompts
+When planning any feature that requires frontend changes:
+1. Identify all frontend changes needed
+2. Create a copy-paste prompt for the frontend Cursor agent
+3. **Default**: Include the prompt directly in chat for easy copying
+4. **Exception**: If the frontend changes are extensive (multiple components, complex state management, or significant UI changes), recommend creating a document in `docs/FE communications/` and wait for user confirmation before creating it
+5. Format frontend prompts clearly with:
+   - What needs to be changed/added
+   - Any new API endpoints or data structures
+   - Expected behavior and edge cases
+   - Any relevant backend implementation details
+
+## Documentation
+
+### Rule 2: Documentation Updates (Not Change Logs)
+- **DO NOT** create "What Was Changed" or "Update Summary" documents
+- Keep implementation summaries and change descriptions in chat only
+- **DO** update existing documentation when features are modified
+- **DO** create new feature documentation for substantial new features
+- **Goal**: Documentation should help developers and future Cursor Agents understand the codebase and its features, not track change history (that's what git is for)
+
+### Documentation Structure
+- Feature guides go in `docs/` (root level for general features)
+- Clinic management specific docs go in `clinic-management/docs/`
+- Frontend communication documents go in `docs/FE communications/`
+- Future work and enhancement plans go in `docs/Future Work/`
+
+## Database Changes
+
+### Rule 3: Always Create Migration Files
+When making database schema changes:
+1. Create a new migration file in `migrations/` with a descriptive name
+2. Use pattern: `[action][TableName].sql` (e.g., `addClinicPhotos.sql`)
+3. Include both the schema changes and any necessary data migrations
+4. Test migrations before considering the task complete
+5. Document any manual steps needed in comments within the migration file
+
+## API Development
+
+### Rule 4: Maintain Service Layer Architecture
+Follow the existing architecture pattern:
+- **Routes** (`routes/`): Handle HTTP requests, validation, error responses
+- **Services** (`services/`): Business logic, database operations, data transformation
+- **Middleware** (`middleware/`): Authentication, request validation, logging
+- **Schema** (`schema/`): Field definitions and validation rules
+- **Utils** (`utils/`): Reusable helper functions
+
+### Rule 5: Update API Documentation
+When adding or modifying API endpoints:
+1. Update Swagger documentation in `clinic-management/swagger.js`
+2. Include example requests/responses
+3. Document all query parameters, request body fields, and response structures
+4. Update relevant API documentation files in `clinic-management/docs/`
+
+## Code Quality
+
+### Rule 6: Error Handling
+- Always use try-catch blocks for async operations
+- Return appropriate HTTP status codes (400, 404, 500, etc.)
+- Include descriptive error messages
+- Log errors with sufficient context for debugging
+- Follow existing error handling patterns in the codebase
+
+### Rule 7: Database Transactions
+- Use transactions for operations that modify multiple tables
+- Always include proper rollback handling
+- Follow the pattern in `clinicCreationService.js` for transaction management
+- Close connections properly
+
+### Rule 8: Input Validation
+- Validate all user inputs
+- Use schema validators where available
+- Sanitize inputs to prevent SQL injection
+- Return clear validation error messages
+
+## Testing
+
+### Rule 9: Test New Features
+- Test API endpoints manually or with test scripts before considering complete
+- For complex features, create test scripts in the root directory (see `test-*.js` files)
+- Document test procedures in `clinic-management/docs/TEST_CHECKLIST.md` for major features
+- Verify database state after operations
+
+## Code Style
+
+### Rule 10: Follow Existing Patterns
+- Use consistent naming conventions (camelCase for variables/functions, PascalCase for classes)
+- Follow existing code formatting and structure
+- Add JSDoc comments for service methods
+- Use async/await over promises
+- Keep functions focused and single-purpose
+
+## Security
+
+### Rule 11: Authentication & Authorization
+- Use existing auth middleware for protected routes
+- Never expose sensitive data in API responses
+- Validate user permissions before operations
+- Use parameterized queries to prevent SQL injection
+
+## Performance
+
+### Rule 12: Database Optimization
+- Use appropriate indexes for query performance
+- Avoid N+1 queries
+- Use connection pooling (already configured in `db.js`)
+- Consider pagination for large result sets
+
+## Additional Guidelines
+
+### When Adding New Features:
+1. Check if similar functionality exists elsewhere in the codebase
+2. Reuse existing utilities and services where possible
+3. Consider impact on existing features
+4. Update integration guides if feature affects external systems
+
+### When Fixing Bugs:
+1. Understand the root cause before fixing
+2. Check if the bug exists in multiple places
+3. Add validation or error handling to prevent recurrence
+4. Consider if a migration is needed to fix data
+
+### When Refactoring:
+1. Maintain backward compatibility with frontend
+2. Update all affected documentation
+3. Test thoroughly across all affected endpoints
+4. Consider creating a "Future Work" document if the refactor is partial
+

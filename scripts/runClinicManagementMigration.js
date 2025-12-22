@@ -8,12 +8,21 @@ const { db, sql } = require('../db');
 /**
  * Run clinic management migration
  * Executes the SQL migration file using the existing database connection
+ * 
+ * Usage:
+ *   node scripts/runClinicManagementMigration.js                    # runs addClinicManagementTables.sql
+ *   node scripts/runClinicManagementMigration.js updateClinicSubmissions  # runs updateClinicSubmissions.sql
  */
-async function runMigration() {
+async function runMigration(migrationFile = 'addClinicManagementTables.sql') {
   let pool;
   try {
-    console.log('Reading migration file...');
-    const migrationPath = path.join(__dirname, '../migrations/addClinicManagementTables.sql');
+    console.log(`Reading migration file: ${migrationFile}...`);
+    const migrationPath = path.join(__dirname, '../migrations/', migrationFile);
+    
+    if (!fs.existsSync(migrationPath)) {
+      throw new Error(`Migration file not found: ${migrationPath}`);
+    }
+    
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
     console.log('Connecting to database...');
@@ -79,7 +88,16 @@ async function runMigration() {
 
 // Run migration if called directly
 if (require.main === module) {
-  runMigration()
+  // Get migration file from command line args
+  const args = process.argv.slice(2);
+  let migrationFile = 'addClinicManagementTables.sql';
+  
+  if (args[0]) {
+    // Allow passing just the name without .sql extension
+    migrationFile = args[0].endsWith('.sql') ? args[0] : `${args[0]}.sql`;
+  }
+  
+  runMigration(migrationFile)
     .then(() => process.exit(0))
     .catch((error) => {
       console.error('Fatal error:', error);

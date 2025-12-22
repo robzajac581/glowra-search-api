@@ -108,6 +108,7 @@ class DraftService {
         Address,
         City,
         State,
+        ZipCode,
         Website,
         Phone,
         Email,
@@ -118,6 +119,9 @@ class DraftService {
         Status,
         Source,
         SubmittedBy,
+        SubmitterKey,
+        SubmissionFlow,
+        SubmissionId,
         SubmittedAt,
         ReviewedBy,
         ReviewedAt,
@@ -148,15 +152,45 @@ class DraftService {
     const proceduresResult = await pool.request()
       .input('draftID', sql.Int, draftId)
       .query(`
-        SELECT DraftProcedureID, ProcedureName, Category, AverageCost, ProviderName
+        SELECT 
+          DraftProcedureID, 
+          ProcedureName, 
+          Category, 
+          AverageCost,
+          PriceMin,
+          PriceMax,
+          PriceUnit,
+          ProviderName,
+          ProviderNames
         FROM DraftProcedures
         WHERE DraftID = @draftID
+      `);
+
+    // Get photos
+    const photosResult = await pool.request()
+      .input('draftID', sql.Int, draftId)
+      .query(`
+        SELECT 
+          DraftPhotoID,
+          PhotoType,
+          PhotoURL,
+          FileName,
+          MimeType,
+          FileSize,
+          IsPrimary,
+          DisplayOrder,
+          Caption,
+          CreatedAt
+        FROM DraftPhotos
+        WHERE DraftID = @draftID
+        ORDER BY DisplayOrder, CreatedAt
       `);
 
     return {
       ...draft,
       providers: providersResult.recordset,
-      procedures: proceduresResult.recordset
+      procedures: proceduresResult.recordset,
+      photos: photosResult.recordset
     };
   }
 
@@ -171,10 +205,12 @@ class DraftService {
       SELECT
         DraftID,
         RequestID,
+        SubmissionId,
         ClinicName,
         Address,
         City,
         State,
+        ZipCode,
         Website,
         Phone,
         Email,
@@ -183,6 +219,8 @@ class DraftService {
         Status,
         Source,
         SubmittedBy,
+        SubmitterKey,
+        SubmissionFlow,
         SubmittedAt,
         ReviewedBy,
         ReviewedAt,
@@ -200,6 +238,11 @@ class DraftService {
     if (filters.source) {
       request.input('source', sql.NVarChar, filters.source);
       query += ' AND Source = @source';
+    }
+
+    if (filters.submitterKey) {
+      request.input('submitterKey', sql.NVarChar, filters.submitterKey);
+      query += ' AND SubmitterKey = @submitterKey';
     }
 
     if (filters.fromDate) {
@@ -377,6 +420,7 @@ class DraftService {
 
   /**
    * Check if draft has all required fields for approval
+   * Only Category is truly required - others are optional but recommended
    */
   async validateForApproval(draftId) {
     const draft = await this.getDraftById(draftId);
@@ -385,17 +429,30 @@ class DraftService {
     }
 
     const errors = [];
-    const requiredFields = ['website', 'phone', 'email', 'placeID', 'category'];
+    const warnings = [];
+    
+    // Truly required fields (PascalCase to match DB column names)
+    const requiredFields = ['Category'];
+    
+    // Recommended but optional fields
+    const recommendedFields = ['Website', 'Phone', 'Email', 'PlaceID'];
 
     for (const field of requiredFields) {
       if (!draft[field] || String(draft[field]).trim() === '') {
         errors.push(`Missing required field: ${field}`);
       }
     }
+    
+    for (const field of recommendedFields) {
+      if (!draft[field] || String(draft[field]).trim() === '') {
+        warnings.push(`Missing recommended field: ${field}`);
+      }
+    }
 
     return {
       isValid: errors.length === 0,
       errors,
+      warnings,
       missingFields: errors.map(e => e.replace('Missing required field: ', ''))
     };
   }

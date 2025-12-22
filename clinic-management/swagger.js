@@ -7,8 +7,8 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'Clinic Management API',
-      version: '1.0.0',
-      description: 'API for managing clinic submissions, bulk imports, duplicate detection, and draft/approval workflows',
+      version: '2.0.0',
+      description: 'API for the "List Your Clinic" wizard, bulk imports, duplicate detection, and draft/approval workflows. The /submissions endpoints are PUBLIC and do not require an API key.',
       contact: {
         name: 'Glowra API Support'
       }
@@ -42,6 +42,10 @@ const options = {
     },
     tags: [
       {
+        name: 'Submissions',
+        description: 'List Your Clinic wizard submissions (PUBLIC - no API key required)'
+      },
+      {
         name: 'Bulk Import',
         description: 'Excel file upload and validation endpoints'
       },
@@ -55,7 +59,7 @@ const options = {
       },
       {
         name: 'Forms',
-        description: 'Form submission endpoints'
+        description: 'Form submission endpoints (legacy)'
       },
       {
         name: 'Health',

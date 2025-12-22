@@ -36,28 +36,33 @@ class ClinicCreationService {
       }
 
       // Create new clinic
+      // Note: ClinicID is NOT an IDENTITY column, so we need to manually get the next ID
+      const maxIdRequest = new sql.Request(transaction);
+      const maxIdResult = await maxIdRequest.query(`
+        SELECT ISNULL(MAX(ClinicID), 0) + 1 AS NextID FROM Clinics
+      `);
+      const clinicId = maxIdResult.recordset[0].NextID;
+
       const clinicRequest = new sql.Request(transaction);
+      clinicRequest.input('clinicID', sql.Int, clinicId);
       clinicRequest.input('clinicName', sql.NVarChar, draft.ClinicName);
       clinicRequest.input('address', sql.NVarChar, draft.Address);
-      clinicRequest.input('phone', sql.NVarChar, draft.Phone);
-      clinicRequest.input('website', sql.NVarChar, draft.Website);
+      clinicRequest.input('phone', sql.NVarChar, draft.Phone || null);
+      clinicRequest.input('website', sql.NVarChar, draft.Website || null);
       clinicRequest.input('latitude', sql.Decimal(10, 7), draft.Latitude || null);
       clinicRequest.input('longitude', sql.Decimal(11, 7), draft.Longitude || null);
-      clinicRequest.input('placeID', sql.NVarChar, draft.PlaceID);
+      clinicRequest.input('placeID', sql.NVarChar, draft.PlaceID || null);
 
-      const clinicResult = await clinicRequest.query(`
+      await clinicRequest.query(`
         INSERT INTO Clinics (
-          ClinicName, Address, Phone, Website,
+          ClinicID, ClinicName, Address, Phone, Website,
           Latitude, Longitude, PlaceID, LastRatingUpdate
         )
-        OUTPUT INSERTED.ClinicID
         VALUES (
-          @clinicName, @address, @phone, @website,
+          @clinicID, @clinicName, @address, @phone, @website,
           @latitude, @longitude, @placeID, GETDATE()
         )
       `);
-
-      const clinicId = clinicResult.recordset[0].ClinicID;
 
       // Get or create LocationID
       const locationId = await this.getOrCreateLocation(draft.City, draft.State, transaction);
