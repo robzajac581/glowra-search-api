@@ -3,7 +3,7 @@
  * Single source of truth for photo upload validation
  */
 
-const PHOTO_TYPES = ['clinic', 'icon'];
+const PHOTO_TYPES = ['clinic', 'icon', 'logo'];
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 

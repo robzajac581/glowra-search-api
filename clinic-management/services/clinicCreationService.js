@@ -1,6 +1,7 @@
 const { db, sql } = require('../../db');
 const draftService = require('./draftService');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
+const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googlePlaces');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -9,10 +10,23 @@ class ClinicCreationService {
   /**
    * Create clinic from approved draft
    * @param {number} draftId - Draft ID to approve
-   * @param {string} reviewedBy - User who approved
+   * @param {Object} options - Approval options
+   * @param {string} options.reviewedBy - User who approved
+   * @param {string} options.photoSource - 'user' | 'google' | 'both'
+   * @param {string} options.ratingSource - 'google' | 'manual'
+   * @param {number} options.manualRating - Manual rating (if ratingSource is 'manual')
+   * @param {number} options.manualReviewCount - Manual review count (if ratingSource is 'manual')
    * @returns {Promise<Object>} Created clinic data
    */
-  async createClinicFromDraft(draftId, reviewedBy = null) {
+  async createClinicFromDraft(draftId, options = {}) {
+    const {
+      reviewedBy = null,
+      photoSource = 'user',
+      ratingSource = 'google',
+      manualRating = null,
+      manualReviewCount = null
+    } = typeof options === 'string' ? { reviewedBy: options } : options;
+
     const draft = await draftService.getDraftById(draftId);
     if (!draft) {
       throw new Error('Draft not found');
@@ -32,7 +46,32 @@ class ClinicCreationService {
 
       // Check if this is an update to existing clinic (merge scenario)
       if (draft.DuplicateClinicID) {
-        return await this.updateExistingClinic(draft, transaction, reviewedBy);
+        const result = await this.updateExistingClinic(draft, transaction, reviewedBy, { photoSource, ratingSource, manualRating, manualReviewCount });
+        await transaction.commit();
+        return result;
+      }
+
+      // Fetch Google data if needed for ratings
+      let googleRating = null;
+      let googleReviewCount = null;
+      let googleReviews = null;
+      
+      if (ratingSource === 'google' && draft.PlaceID) {
+        try {
+          const googleData = await fetchGooglePlaceDetails(draft.PlaceID, false);
+          if (googleData) {
+            googleRating = googleData.rating;
+            googleReviewCount = googleData.reviewCount;
+            googleReviews = googleData.reviews;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch Google rating, using draft values:', error.message);
+          googleRating = draft.GoogleRating;
+          googleReviewCount = draft.GoogleReviewCount;
+        }
+      } else if (ratingSource === 'manual') {
+        googleRating = manualRating;
+        googleReviewCount = manualReviewCount;
       }
 
       // Create new clinic
@@ -52,15 +91,20 @@ class ClinicCreationService {
       clinicRequest.input('latitude', sql.Decimal(10, 7), draft.Latitude || null);
       clinicRequest.input('longitude', sql.Decimal(11, 7), draft.Longitude || null);
       clinicRequest.input('placeID', sql.NVarChar, draft.PlaceID || null);
+      clinicRequest.input('googleRating', sql.Decimal(2, 1), googleRating);
+      clinicRequest.input('googleReviewCount', sql.Int, googleReviewCount);
+      clinicRequest.input('googleReviewsJSON', sql.NVarChar(sql.MAX), googleReviews ? JSON.stringify(googleReviews) : null);
 
       await clinicRequest.query(`
         INSERT INTO Clinics (
           ClinicID, ClinicName, Address, Phone, Website,
-          Latitude, Longitude, PlaceID, LastRatingUpdate
+          Latitude, Longitude, PlaceID, GoogleRating, GoogleReviewCount,
+          GoogleReviewsJSON, LastRatingUpdate
         )
         VALUES (
           @clinicID, @clinicName, @address, @phone, @website,
-          @latitude, @longitude, @placeID, GETDATE()
+          @latitude, @longitude, @placeID, @googleRating, @googleReviewCount,
+          @googleReviewsJSON, GETDATE()
         )
       `);
 
@@ -75,6 +119,9 @@ class ClinicCreationService {
 
       // Create GooglePlacesData entry
       await this.createGooglePlacesData(clinicId, draft, transaction);
+
+      // Handle photos based on photoSource
+      await this.handlePhotos(clinicId, draft, photoSource, transaction);
 
       // Create providers
       const providerMap = new Map();
@@ -112,6 +159,89 @@ class ClinicCreationService {
     } catch (error) {
       await transaction.rollback();
       throw error;
+    }
+  }
+
+  /**
+   * Handle photos based on photoSource option
+   * @param {number} clinicId - Clinic ID
+   * @param {Object} draft - Draft object with photos
+   * @param {string} photoSource - 'user' | 'google' | 'both'
+   * @param {Object} transaction - SQL transaction
+   */
+  async handlePhotos(clinicId, draft, photoSource, transaction) {
+    const userPhotos = draft.photos ? draft.photos.filter(p => p.Source !== 'google') : [];
+    let displayOrder = 0;
+
+    // Add user photos first if using 'user' or 'both'
+    if ((photoSource === 'user' || photoSource === 'both') && userPhotos.length > 0) {
+      for (const photo of userPhotos) {
+        const request = new sql.Request(transaction);
+        request.input('clinicId', sql.Int, clinicId);
+        request.input('photoURL', sql.NVarChar(2000), photo.PhotoURL);
+        request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
+        request.input('displayOrder', sql.Int, displayOrder);
+        request.input('photoType', sql.NVarChar(50), photo.PhotoType || 'clinic');
+
+        await request.query(`
+          INSERT INTO ClinicPhotos (ClinicID, PhotoURL, IsPrimary, DisplayOrder, LastUpdated)
+          VALUES (@clinicId, @photoURL, @isPrimary, @displayOrder, GETDATE())
+        `);
+        
+        displayOrder++;
+      }
+    }
+
+    // Add Google photos if using 'google' or 'both'
+    if ((photoSource === 'google' || photoSource === 'both') && draft.PlaceID) {
+      try {
+        const googlePhotos = await fetchPlacePhotos(draft.PlaceID);
+        
+        // Limit Google photos based on source
+        const maxGooglePhotos = photoSource === 'both' ? 5 : 10;
+        const photosToAdd = googlePhotos.slice(0, maxGooglePhotos);
+
+        for (const photo of photosToAdd) {
+          const request = new sql.Request(transaction);
+          request.input('clinicId', sql.Int, clinicId);
+          request.input('photoReference', sql.NVarChar(1000), photo.reference);
+          request.input('photoURL', sql.NVarChar(2000), photo.urls?.large || photo.url);
+          request.input('width', sql.Int, photo.width);
+          request.input('height', sql.Int, photo.height);
+          request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
+          request.input('displayOrder', sql.Int, displayOrder);
+
+          await request.query(`
+            INSERT INTO ClinicPhotos (ClinicID, PhotoReference, PhotoURL, Width, Height, IsPrimary, DisplayOrder, LastUpdated)
+            VALUES (@clinicId, @photoReference, @photoURL, @width, @height, @isPrimary, @displayOrder, GETDATE())
+          `);
+          
+          displayOrder++;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch Google photos:', error.message);
+        // Continue without Google photos
+      }
+    }
+
+    // Update GooglePlacesData.Photo with primary photo URL
+    if (displayOrder > 0) {
+      const primaryPhotoResult = await transaction.request()
+        .input('clinicId', sql.Int, clinicId)
+        .query(`
+          SELECT TOP 1 PhotoURL FROM ClinicPhotos 
+          WHERE ClinicID = @clinicId 
+          ORDER BY IsPrimary DESC, DisplayOrder ASC
+        `);
+
+      if (primaryPhotoResult.recordset.length > 0) {
+        await transaction.request()
+          .input('clinicId', sql.Int, clinicId)
+          .input('photoURL', sql.NVarChar(2000), primaryPhotoResult.recordset[0].PhotoURL)
+          .query(`
+            UPDATE GooglePlacesData SET Photo = @photoURL WHERE ClinicID = @clinicId
+          `);
+      }
     }
   }
 
@@ -248,11 +378,12 @@ class ClinicCreationService {
     request.input('clinicID', sql.Int, clinicId);
     request.input('providerName', sql.NVarChar, providerData.ProviderName);
     request.input('specialty', sql.NVarChar, providerData.Specialty || null);
+    request.input('photoURL', sql.NVarChar, providerData.PhotoURL || null);
 
     const result = await request.query(`
-      INSERT INTO Providers (ClinicID, ProviderName)
+      INSERT INTO Providers (ClinicID, ProviderName, PhotoURL)
       OUTPUT INSERTED.ProviderID
-      VALUES (@clinicID, @providerName)
+      VALUES (@clinicID, @providerName, @photoURL)
     `);
 
     const providerId = result.recordset[0].ProviderID;

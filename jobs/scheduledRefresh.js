@@ -2,10 +2,18 @@ const cron = require('node-cron');
 const { sql, db } = require('../db');
 const { batchFetchPlaceDetails, fetchPlacePhotos } = require('../utils/googlePlaces');
 
+// Configuration for refresh intervals (in days)
+const PHOTO_REFRESH_INTERVAL_DAYS = 14; // Bi-weekly
+const RATING_REFRESH_INTERVAL_DAYS = 1; // Daily
+
 /**
  * Scheduled job to refresh Google Places ratings and photos for all clinics
  * - Ratings: Daily at 2 AM
- * - Photos: Monthly on the 1st at 2 AM
+ * - Photos: Bi-weekly (1st & 15th of month) at 2 AM
+ * 
+ * IMPORTANT: This also runs a startup check to catch missed jobs!
+ * Since in-process cron jobs don't persist state across restarts,
+ * we check the database on startup to see if any refresh is overdue.
  */
 function initRatingRefreshJob() {
   // Schedule: Run every day at 2 AM (0 2 * * *)
@@ -15,7 +23,14 @@ function initRatingRefreshJob() {
   console.log('Initializing rating and photo refresh cron job...');
   console.log(`Schedule: Daily at 2:00 AM (${cronSchedule})`);
   console.log('  - Ratings: Daily');
-  console.log('  - Photos: Monthly (1st of month)');
+  console.log('  - Photos: Bi-weekly (1st & 15th of month)');
+
+  // Run startup check for overdue jobs (delayed to allow DB connection to establish)
+  setTimeout(() => {
+    checkAndRunOverdueJobs().catch(error => {
+      console.error('Error in startup overdue job check:', error);
+    });
+  }, 10000); // 10 second delay after startup
 
   const job = cron.schedule(cronSchedule, async () => {
     console.log('\n=== Starting scheduled rating refresh ===');
@@ -25,15 +40,11 @@ function initRatingRefreshJob() {
       // Always refresh ratings
       await refreshAllClinicRatings();
       
-      // Refresh photos monthly on the 1st of each month
-      // This prevents Google photo references from expiring (they typically expire after 6-12 months)
-      // To change frequency:
-      //   - Weekly (Sundays): if (today.getDay() === 0)
-      //   - Bi-weekly (1st & 15th): if (today.getDate() === 1 || today.getDate() === 15)
-      //   - Quarterly (1st of Jan/Apr/Jul/Oct): if (today.getDate() === 1 && [0,3,6,9].includes(today.getMonth()))
+      // Refresh photos bi-weekly on the 1st and 15th of each month
+      // Google photo references expire after ~30-60 days, so bi-weekly keeps them fresh
       const today = new Date();
-      if (today.getDate() === 1) { // 1st of month
-        console.log('\n🖼️  Monthly photo refresh starting (1st of month)...');
+      if (today.getDate() === 1 || today.getDate() === 15) {
+        console.log('\n🖼️  Bi-weekly photo refresh starting...');
         await refreshAllClinicPhotos();
       }
     } catch (error) {
@@ -50,6 +61,81 @@ function initRatingRefreshJob() {
   console.log('Rating refresh cron job initialized successfully');
   
   return job;
+}
+
+/**
+ * Check if any refresh jobs are overdue and run them
+ * This handles the case where the server was down during scheduled times
+ * or was redeployed and missed scheduled jobs
+ */
+async function checkAndRunOverdueJobs() {
+  console.log('\n=== Checking for overdue refresh jobs ===');
+  
+  let pool;
+  try {
+    pool = await db.getConnection();
+    
+    // Check when photos were last updated
+    const photoResult = await pool.request().query(`
+      SELECT TOP 1 LastUpdated 
+      FROM ClinicPhotos 
+      ORDER BY LastUpdated DESC
+    `);
+    
+    const lastPhotoUpdate = photoResult.recordset[0]?.LastUpdated;
+    const now = new Date();
+    
+    console.log(`Last photo update: ${lastPhotoUpdate ? lastPhotoUpdate.toISOString() : 'Never'}`);
+    
+    // Check if photo refresh is overdue (more than PHOTO_REFRESH_INTERVAL_DAYS days old)
+    if (!lastPhotoUpdate) {
+      console.log('🖼️  No photos found - running initial photo fetch...');
+      await refreshAllClinicPhotos();
+    } else {
+      const daysSincePhotoUpdate = (now - new Date(lastPhotoUpdate)) / (1000 * 60 * 60 * 24);
+      console.log(`Days since last photo update: ${daysSincePhotoUpdate.toFixed(1)}`);
+      
+      if (daysSincePhotoUpdate > PHOTO_REFRESH_INTERVAL_DAYS) {
+        console.log(`🖼️  Photo refresh overdue (>${PHOTO_REFRESH_INTERVAL_DAYS} days) - running now...`);
+        await refreshAllClinicPhotos();
+      } else {
+        console.log(`✓ Photos are fresh (last updated ${daysSincePhotoUpdate.toFixed(1)} days ago)`);
+      }
+    }
+    
+    // Check when ratings were last updated
+    const ratingResult = await pool.request().query(`
+      SELECT TOP 1 LastRatingUpdate 
+      FROM Clinics 
+      WHERE LastRatingUpdate IS NOT NULL
+      ORDER BY LastRatingUpdate DESC
+    `);
+    
+    const lastRatingUpdate = ratingResult.recordset[0]?.LastRatingUpdate;
+    console.log(`Last rating update: ${lastRatingUpdate ? lastRatingUpdate.toISOString() : 'Never'}`);
+    
+    // Check if rating refresh is overdue (more than 2 days old - gives some buffer)
+    if (!lastRatingUpdate) {
+      console.log('⭐ No ratings found - running initial rating fetch...');
+      await refreshAllClinicRatings();
+    } else {
+      const daysSinceRatingUpdate = (now - new Date(lastRatingUpdate)) / (1000 * 60 * 60 * 24);
+      console.log(`Days since last rating update: ${daysSinceRatingUpdate.toFixed(1)}`);
+      
+      if (daysSinceRatingUpdate > 2) { // 2 days buffer for ratings
+        console.log(`⭐ Rating refresh overdue (>2 days) - running now...`);
+        await refreshAllClinicRatings();
+      } else {
+        console.log(`✓ Ratings are fresh (last updated ${daysSinceRatingUpdate.toFixed(1)} days ago)`);
+      }
+    }
+    
+    console.log('=== Overdue job check completed ===\n');
+    
+  } catch (error) {
+    console.error('Error checking for overdue jobs:', error);
+    throw error;
+  }
 }
 
 /**
@@ -178,7 +264,7 @@ async function manualRefresh() {
 /**
  * Refresh photos for all clinics with PlaceIDs
  * Fetches fresh photo references from Google Places API to prevent expiration
- * Google photo references typically expire after 6-12 months
+ * Google photo references can expire after ~30-60 days, so we refresh bi-weekly
  */
 async function refreshAllClinicPhotos() {
   let pool;
@@ -293,6 +379,7 @@ module.exports = {
   initRatingRefreshJob,
   refreshAllClinicRatings,
   refreshAllClinicPhotos,
+  checkAndRunOverdueJobs,
   manualRefresh
 };
 

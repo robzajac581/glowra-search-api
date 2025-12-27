@@ -7,12 +7,12 @@ When planning any feature that requires frontend changes:
 1. Identify all frontend changes needed
 2. Create a copy-paste prompt for the frontend Cursor agent
 3. **Default**: Include the prompt directly in chat for easy copying
-4. **Exception**: If the frontend changes are extensive (multiple components, complex state management, or significant UI changes), recommend creating a document in `docs/FE communications/` and wait for user confirmation before creating it
+4. **Exception**: If the frontend changes are extensive (multiple components, complex state management, or significant UI changes), recommend creating a document in `docs/FE communications/` and wait for user confirmation before creating it. DO NOT CREATE A NEW DOCUMENT FOR THIS WITHOUT CONFIRMATION
 5. Format frontend prompts clearly with:
-   - What needs to be changed/added
    - Any new API endpoints or data structures
    - Expected behavior and edge cases
    - Any relevant backend implementation details
+   - (optional) suggestion on how to implement this. Keep in mind that the frontend knows more about the UI and than you do
 
 ## Documentation
 
@@ -37,7 +37,7 @@ When making database schema changes:
 2. Use pattern: `[action][TableName].sql` (e.g., `addClinicPhotos.sql`)
 3. Include both the schema changes and any necessary data migrations
 4. Test migrations before considering the task complete
-5. Document any manual steps needed in comments within the migration file
+5. Document any manual steps needed in comments within the migration file. Explicitly write any commands I may need to execute (ex: to migrate data)
 
 ## API Development
 

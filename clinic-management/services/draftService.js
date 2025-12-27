@@ -139,11 +139,11 @@ class DraftService {
 
     const draft = result.recordset[0];
 
-    // Get providers
+    // Get providers (including photos and file metadata)
     const providersResult = await pool.request()
       .input('draftID', sql.Int, draftId)
       .query(`
-        SELECT DraftProviderID, ProviderName, Specialty
+        SELECT DraftProviderID, ProviderName, Specialty, PhotoURL, PhotoData, FileName, MimeType
         FROM DraftProviders
         WHERE DraftID = @draftID
       `);
@@ -166,13 +166,14 @@ class DraftService {
         WHERE DraftID = @draftID
       `);
 
-    // Get photos
+    // Get photos (including PhotoData and Source for proper persistence)
     const photosResult = await pool.request()
       .input('draftID', sql.Int, draftId)
       .query(`
         SELECT 
           DraftPhotoID,
           PhotoType,
+          PhotoData,
           PhotoURL,
           FileName,
           MimeType,
@@ -180,6 +181,7 @@ class DraftService {
           IsPrimary,
           DisplayOrder,
           Caption,
+          Source,
           CreatedAt
         FROM DraftPhotos
         WHERE DraftID = @draftID
@@ -351,16 +353,20 @@ class DraftService {
           .input('draftID', sql.Int, draftId)
           .query('DELETE FROM DraftProviders WHERE DraftID = @draftID');
 
-        // Insert new providers
+        // Insert new providers (including photo data)
         for (const provider of updateData.providers) {
           const providerRequest = new sql.Request(transaction);
           providerRequest.input('draftID', sql.Int, draftId);
           providerRequest.input('providerName', sql.NVarChar, provider.providerName);
           providerRequest.input('specialty', sql.NVarChar, provider.specialty || null);
+          providerRequest.input('photoURL', sql.NVarChar, provider.photoUrl || provider.photoURL || null);
+          providerRequest.input('photoData', sql.NVarChar(sql.MAX), provider.photoData || null);
+          providerRequest.input('fileName', sql.NVarChar, provider.fileName || null);
+          providerRequest.input('mimeType', sql.NVarChar, provider.mimeType || null);
 
           await providerRequest.query(`
-            INSERT INTO DraftProviders (DraftID, ProviderName, Specialty)
-            VALUES (@draftID, @providerName, @specialty)
+            INSERT INTO DraftProviders (DraftID, ProviderName, Specialty, PhotoURL, PhotoData, FileName, MimeType)
+            VALUES (@draftID, @providerName, @specialty, @photoURL, @photoData, @fileName, @mimeType)
           `);
         }
       }
@@ -384,6 +390,36 @@ class DraftService {
           await procedureRequest.query(`
             INSERT INTO DraftProcedures (DraftID, ProcedureName, Category, AverageCost, ProviderName)
             VALUES (@draftID, @procedureName, @category, @averageCost, @providerName)
+          `);
+        }
+      }
+
+      // Update photos if provided
+      if (updateData.photos !== undefined) {
+        // Delete existing photos
+        await transaction.request()
+          .input('draftID', sql.Int, draftId)
+          .query('DELETE FROM DraftPhotos WHERE DraftID = @draftID');
+
+        // Insert new photos
+        for (let i = 0; i < updateData.photos.length; i++) {
+          const photo = updateData.photos[i];
+          const photoRequest = new sql.Request(transaction);
+          photoRequest.input('draftID', sql.Int, draftId);
+          photoRequest.input('photoType', sql.NVarChar, photo.photoType || 'clinic');
+          photoRequest.input('photoData', sql.NVarChar(sql.MAX), photo.photoData || null);
+          photoRequest.input('photoURL', sql.NVarChar, photo.photoUrl || photo.photoURL || null);
+          photoRequest.input('fileName', sql.NVarChar, photo.fileName || null);
+          photoRequest.input('mimeType', sql.NVarChar, photo.mimeType || null);
+          photoRequest.input('fileSize', sql.Int, photo.fileSize || null);
+          photoRequest.input('isPrimary', sql.Bit, photo.isPrimary ? 1 : 0);
+          photoRequest.input('displayOrder', sql.Int, photo.displayOrder ?? i);
+          photoRequest.input('caption', sql.NVarChar, photo.caption || null);
+          photoRequest.input('source', sql.NVarChar, photo.source || 'user');
+
+          await photoRequest.query(`
+            INSERT INTO DraftPhotos (DraftID, PhotoType, PhotoData, PhotoURL, FileName, MimeType, FileSize, IsPrimary, DisplayOrder, Caption, Source)
+            VALUES (@draftID, @photoType, @photoData, @photoURL, @fileName, @mimeType, @fileSize, @isPrimary, @displayOrder, @caption, @source)
           `);
         }
       }

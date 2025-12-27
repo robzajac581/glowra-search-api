@@ -289,10 +289,155 @@ async function fetchPlacePhotos(placeId) {
   }
 }
 
+/**
+ * Search for a place by text query (clinic name + address)
+ * Uses Google Places Text Search API to find matching businesses
+ * @param {string} clinicName - Name of the clinic
+ * @param {string} address - Full address (street, city, state)
+ * @returns {Promise<Object|null>} - Place info with confidence score, or null if not found
+ */
+async function searchPlaceByText(clinicName, address) {
+  if (!GOOGLE_PLACES_API_KEY) {
+    throw new Error('GOOGLE_PLACES_API_KEY is not configured in environment variables');
+  }
+
+  try {
+    // Construct search query
+    const query = `${clinicName} ${address}`;
+    
+    // Use Text Search API (findplacefromtext for better accuracy)
+    const response = await axios.get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', {
+      params: {
+        input: query,
+        inputtype: 'textquery',
+        fields: 'place_id,name,formatted_address,geometry',
+        key: GOOGLE_PLACES_API_KEY
+      },
+      timeout: 10000
+    });
+
+    if (response.data.status === 'OK' && response.data.candidates && response.data.candidates.length > 0) {
+      const candidate = response.data.candidates[0];
+      
+      // Calculate confidence based on name similarity
+      const confidence = calculateNameSimilarity(clinicName, candidate.name);
+      
+      return {
+        placeId: candidate.place_id,
+        name: candidate.name,
+        formattedAddress: candidate.formatted_address,
+        latitude: candidate.geometry?.location?.lat || null,
+        longitude: candidate.geometry?.location?.lng || null,
+        confidence
+      };
+    } else if (response.data.status === 'ZERO_RESULTS') {
+      // Try with just the clinic name if address didn't help
+      const fallbackResponse = await axios.get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', {
+        params: {
+          input: clinicName,
+          inputtype: 'textquery',
+          fields: 'place_id,name,formatted_address,geometry',
+          locationbias: `point:${await getApproximateLocation(address)}`, // bias towards the address area
+          key: GOOGLE_PLACES_API_KEY
+        },
+        timeout: 10000
+      });
+
+      if (fallbackResponse.data.status === 'OK' && fallbackResponse.data.candidates && fallbackResponse.data.candidates.length > 0) {
+        const candidate = fallbackResponse.data.candidates[0];
+        const confidence = calculateNameSimilarity(clinicName, candidate.name) * 0.8; // Lower confidence for fallback
+        
+        return {
+          placeId: candidate.place_id,
+          name: candidate.name,
+          formattedAddress: candidate.formatted_address,
+          latitude: candidate.geometry?.location?.lat || null,
+          longitude: candidate.geometry?.location?.lng || null,
+          confidence
+        };
+      }
+      
+      return null;
+    } else {
+      console.warn(`Places Text Search returned status: ${response.data.status}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error in searchPlaceByText:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Calculate similarity between two business names
+ * Simple implementation - can be improved with fuzzy matching
+ * @param {string} name1 - First name
+ * @param {string} name2 - Second name
+ * @returns {number} - Similarity score 0-1
+ */
+function calculateNameSimilarity(name1, name2) {
+  if (!name1 || !name2) return 0;
+  
+  // Normalize names
+  const normalize = (s) => s.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  const n1 = normalize(name1);
+  const n2 = normalize(name2);
+  
+  // Exact match
+  if (n1 === n2) return 1;
+  
+  // One contains the other
+  if (n1.includes(n2) || n2.includes(n1)) return 0.9;
+  
+  // Calculate word overlap
+  const words1 = new Set(n1.split(' '));
+  const words2 = new Set(n2.split(' '));
+  
+  const intersection = [...words1].filter(w => words2.has(w));
+  const union = new Set([...words1, ...words2]);
+  
+  const jaccardSimilarity = intersection.length / union.size;
+  
+  return Math.min(jaccardSimilarity + 0.3, 0.95); // Boost but cap at 0.95
+}
+
+/**
+ * Get approximate lat/lng for an address (for location biasing)
+ * Uses Geocoding API
+ * @param {string} address - Address to geocode
+ * @returns {Promise<string>} - "lat,lng" string
+ */
+async function getApproximateLocation(address) {
+  try {
+    const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+      params: {
+        address: address,
+        key: GOOGLE_PLACES_API_KEY
+      },
+      timeout: 5000
+    });
+
+    if (response.data.status === 'OK' && response.data.results.length > 0) {
+      const location = response.data.results[0].geometry.location;
+      return `${location.lat},${location.lng}`;
+    }
+  } catch (error) {
+    console.warn('Geocoding failed for location bias:', error.message);
+  }
+  
+  // Default to center of US if geocoding fails
+  return '39.8283,-98.5795';
+}
+
 module.exports = {
   fetchGooglePlaceDetails,
   fetchGooglePlaceDetailsWithRetry,
   fetchPlacePhotos,
+  searchPlaceByText,
   parseReviews,
   parsePhotos,
   isCacheFresh,

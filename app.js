@@ -56,7 +56,10 @@ const corsOptions = {
 app.set('trust proxy', true);
 
 app.use(cors(corsOptions));
-app.use(express.json());
+// Increase JSON body size limit to support base64 image uploads
+// Base64 encoding increases file size by ~33%, so 15MB covers 10MB files
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 // Photo cache configuration
 const PHOTO_CACHE_DIR = path.join(__dirname, '.photo-cache');
@@ -1735,6 +1738,10 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
     });
   }
 });
+
+// Admin routes (mounted directly for cleaner frontend access)
+const adminRoutes = require('./clinic-management/routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
 
 // Clinic Management API routes
 app.use('/api/clinic-management', clinicManagementRouter);
