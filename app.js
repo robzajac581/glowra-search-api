@@ -1100,6 +1100,77 @@ function filterByProcedure(clinics, procedureName) {
   });
 }
 
+/**
+ * Simple Clinic Search Endpoint
+ * GET /api/clinics/search?q={query}
+ * 
+ * Used by:
+ * - List Your Clinic wizard → "Edit Existing" flow
+ * - Quick clinic lookup by name/address
+ * 
+ * Returns a simplified list of clinics matching the search query.
+ */
+app.get('/api/clinics/search', async (req, res) => {
+  let pool;
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json({ results: [] });
+    }
+    
+    const searchTerm = q.trim();
+    
+    pool = await db.getConnection();
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+    
+    const request = pool.request();
+    request.input('searchTerm', sql.NVarChar, `%${searchTerm}%`);
+    
+    // Search clinics by name, address, city, or state
+    const result = await request.query(`
+      SELECT TOP 20
+        c.ClinicID as id,
+        c.ClinicName as clinicName,
+        c.Address as address,
+        COALESCE(g.City, l.City) as city,
+        COALESCE(g.State, l.State) as state,
+        COALESCE(g.Category, 'Medical Spa') as category,
+        c.GoogleRating as rating,
+        c.GoogleReviewCount as reviewCount
+      FROM Clinics c
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID
+      WHERE 
+        c.ClinicName LIKE @searchTerm
+        OR c.Address LIKE @searchTerm
+        OR g.City LIKE @searchTerm
+        OR l.City LIKE @searchTerm
+        OR g.State LIKE @searchTerm
+        OR l.State LIKE @searchTerm
+      ORDER BY 
+        CASE 
+          WHEN c.ClinicName LIKE @searchTerm THEN 0
+          ELSE 1
+        END,
+        c.GoogleRating DESC,
+        c.ClinicName
+    `);
+    
+    res.json({
+      results: result.recordset
+    });
+  } catch (error) {
+    console.error('Error in /api/clinics/search:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // Get top-rated clinics near a location with one review each
 // Optimized for homepage "Book with Local Doctors" section
 // IMPORTANT: This must be defined BEFORE /api/clinics/:clinicId to avoid route collision

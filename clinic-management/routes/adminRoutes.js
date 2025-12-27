@@ -137,6 +137,125 @@ router.get('/me', requireAdminAuth, async (req, res) => {
 
 /**
  * @swagger
+ * /admin/clinics:
+ *   get:
+ *     summary: List all clinics with pagination and search
+ *     tags: [Admin Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by clinic name, address, city, or state
+ *     responses:
+ *       200:
+ *         description: List of clinics with pagination
+ */
+router.get('/clinics', requireAdminAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search } = req.query;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const offset = (pageNum - 1) * limitNum;
+    
+    const { db, sql } = require('../../db');
+    const pool = await db.getConnection();
+    
+    if (!pool) {
+      throw new Error('Could not establish database connection');
+    }
+    
+    const request = pool.request();
+    request.input('limit', sql.Int, limitNum);
+    request.input('offset', sql.Int, offset);
+    
+    let whereClause = '';
+    if (search && search.trim()) {
+      request.input('searchTerm', sql.NVarChar, `%${search.trim()}%`);
+      whereClause = `
+        WHERE 
+          c.ClinicName LIKE @searchTerm
+          OR c.Address LIKE @searchTerm
+          OR g.City LIKE @searchTerm
+          OR l.City LIKE @searchTerm
+          OR g.State LIKE @searchTerm
+          OR l.State LIKE @searchTerm
+      `;
+    }
+    
+    // Get clinics with pagination
+    const clinicsResult = await request.query(`
+      SELECT 
+        c.ClinicID as id,
+        c.ClinicName as clinicName,
+        c.Address as address,
+        COALESCE(g.City, l.City) as city,
+        COALESCE(g.State, l.State) as state,
+        COALESCE(g.Category, 'Medical Spa') as category,
+        c.GoogleRating as rating,
+        c.GoogleReviewCount as reviewCount,
+        c.Phone as phone,
+        c.Website as website,
+        c.LastRatingUpdate as lastUpdated
+      FROM Clinics c
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID
+      ${whereClause}
+      ORDER BY c.ClinicName
+      OFFSET @offset ROWS
+      FETCH NEXT @limit ROWS ONLY
+    `);
+    
+    // Get total count for pagination
+    const countRequest = pool.request();
+    if (search && search.trim()) {
+      countRequest.input('searchTerm', sql.NVarChar, `%${search.trim()}%`);
+    }
+    
+    const countResult = await countRequest.query(`
+      SELECT COUNT(*) as total
+      FROM Clinics c
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID
+      ${whereClause}
+    `);
+    
+    const total = countResult.recordset[0].total;
+    const totalPages = Math.ceil(total / limitNum);
+    
+    res.json({
+      success: true,
+      clinics: clinicsResult.recordset,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages
+      }
+    });
+  } catch (error) {
+    console.error('List clinics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
  * /admin/stats:
  *   get:
  *     summary: Get dashboard statistics
@@ -572,6 +691,202 @@ router.post('/drafts/:draftId/reject', requireAdminAuth, async (req, res) => {
 // ============================================
 // GOOGLE PLACES INTEGRATION ROUTES
 // ============================================
+
+/**
+ * @swagger
+ * /admin/google-photos:
+ *   get:
+ *     summary: Fetch Google Photos using a PlaceID (no draft required)
+ *     description: |
+ *       Fetches Google Place photos directly using a PlaceID.
+ *       This endpoint is useful for lazy draft creation flows where
+ *       you need to preview Google photos before creating a draft.
+ *     tags: [Admin Google]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: placeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Google PlaceID to fetch photos for
+ *     responses:
+ *       200:
+ *         description: Google photos fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 photos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       reference:
+ *                         type: string
+ *                       width:
+ *                         type: integer
+ *                       height:
+ *                         type: integer
+ *                       url:
+ *                         type: string
+ *                       urls:
+ *                         type: object
+ *                         properties:
+ *                           thumbnail:
+ *                             type: string
+ *                           medium:
+ *                             type: string
+ *                           large:
+ *                             type: string
+ *                       attributions:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       isPrimary:
+ *                         type: boolean
+ *       400:
+ *         description: PlaceID is required
+ *       500:
+ *         description: Failed to fetch Google photos
+ */
+router.get('/google-photos', requireAdminAuth, async (req, res) => {
+  try {
+    const { placeId } = req.query;
+    
+    if (!placeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'PlaceID is required. Provide it as a query parameter: ?placeId=YOUR_PLACE_ID'
+      });
+    }
+    
+    // Fetch Google photos directly using the placeId
+    const photos = await fetchPlacePhotos(placeId);
+    
+    res.json({
+      success: true,
+      photos
+    });
+  } catch (error) {
+    console.error('Get Google photos error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch Google photos',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/clinics/{clinicId}/google-photos:
+ *   get:
+ *     summary: Fetch Google Photos for an existing clinic
+ *     description: |
+ *       Looks up the PlaceID from an existing clinic record and fetches its Google photos.
+ *       This endpoint is useful when editing an existing clinic without a draft.
+ *     tags: [Admin Google]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the existing clinic
+ *     responses:
+ *       200:
+ *         description: Google photos fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 placeId:
+ *                   type: string
+ *                   description: The PlaceID used to fetch photos
+ *                 photos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: No PlaceID available for this clinic
+ *       404:
+ *         description: Clinic not found
+ *       500:
+ *         description: Failed to fetch Google photos
+ */
+router.get('/clinics/:clinicId/google-photos', requireAdminAuth, async (req, res) => {
+  try {
+    const clinicId = parseInt(req.params.clinicId);
+    
+    if (isNaN(clinicId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid clinic ID'
+      });
+    }
+    
+    // Look up PlaceID from the clinic's GooglePlacesData
+    const { db, sql } = require('../../db');
+    const pool = await db.getConnection();
+    
+    const result = await pool.request()
+      .input('clinicId', sql.Int, clinicId)
+      .query(`
+        SELECT 
+          c.ClinicID,
+          c.ClinicName,
+          g.PlaceID
+        FROM Clinics c
+        LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+        WHERE c.ClinicID = @clinicId
+      `);
+    
+    if (result.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Clinic not found'
+      });
+    }
+    
+    const clinic = result.recordset[0];
+    
+    if (!clinic.PlaceID) {
+      return res.status(400).json({
+        success: false,
+        error: 'No PlaceID available for this clinic. Google photos cannot be fetched without a PlaceID.',
+        clinicName: clinic.ClinicName
+      });
+    }
+    
+    // Fetch Google photos using the clinic's PlaceID
+    const photos = await fetchPlacePhotos(clinic.PlaceID);
+    
+    res.json({
+      success: true,
+      placeId: clinic.PlaceID,
+      photos
+    });
+  } catch (error) {
+    console.error('Get clinic Google photos error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch Google photos',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 
 /**
  * @swagger
