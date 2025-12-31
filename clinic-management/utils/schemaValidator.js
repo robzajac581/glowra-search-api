@@ -4,7 +4,7 @@
  */
 
 const { clinicFields, advancedClinicFields, CLINIC_CATEGORIES, US_STATES } = require('../schema/clinicFields');
-const { providerFields, PROVIDER_SPECIALTIES } = require('../schema/providerFields');
+const { providerFields } = require('../schema/providerFields');
 const { procedureFields, PROCEDURE_CATEGORIES, PRICE_UNITS } = require('../schema/procedureFields');
 const { validateClinicPhotos, PHOTO_TYPES, ALLOWED_MIME_TYPES } = require('../schema/photoFields');
 
@@ -278,7 +278,6 @@ module.exports = {
   procedureFields,
   // Export enums
   CLINIC_CATEGORIES,
-  PROVIDER_SPECIALTIES,
   PROCEDURE_CATEGORIES,
   PRICE_UNITS,
   US_STATES,

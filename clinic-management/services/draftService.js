@@ -22,6 +22,7 @@ class DraftService {
       request.input('address', sql.NVarChar, draftData.address);
       request.input('city', sql.NVarChar, draftData.city);
       request.input('state', sql.NVarChar, draftData.state);
+      request.input('zipCode', sql.NVarChar, draftData.zipCode || null);
       request.input('website', sql.NVarChar, draftData.website || null);
       request.input('phone', sql.NVarChar, draftData.phone || null);
       request.input('email', sql.NVarChar, draftData.email || null);
@@ -38,13 +39,13 @@ class DraftService {
 
       const result = await request.query(`
         INSERT INTO ClinicDrafts (
-          ClinicName, Address, City, State, Website, Phone, Email,
+          ClinicName, Address, City, State, ZipCode, Website, Phone, Email,
           Latitude, Longitude, PlaceID, Category, Status, Source,
           SubmittedBy, RequestID, DuplicateClinicID, Notes
         )
         OUTPUT INSERTED.DraftID, INSERTED.CreatedAt
         VALUES (
-          @clinicName, @address, @city, @state, @website, @phone, @email,
+          @clinicName, @address, @city, @state, @zipCode, @website, @phone, @email,
           @latitude, @longitude, @placeID, @category, @status, @source,
           @submittedBy, @requestID, @duplicateClinicID, @notes
         )
@@ -298,6 +299,10 @@ class DraftService {
       if (updateData.state !== undefined) {
         updates.push('State = @state');
         request.input('state', sql.NVarChar, updateData.state);
+      }
+      if (updateData.zipCode !== undefined) {
+        updates.push('ZipCode = @zipCode');
+        request.input('zipCode', sql.NVarChar, updateData.zipCode || null);
       }
       if (updateData.website !== undefined) {
         updates.push('Website = @website');

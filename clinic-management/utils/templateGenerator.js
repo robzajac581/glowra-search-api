@@ -46,16 +46,14 @@ function generateTemplate() {
   // Providers Sheet
   const providerHeaders = [
     'ClinicName',
-    'ProviderName',
-    'Specialty'
+    'ProviderName'
   ];
 
   const providerSheet = XLSX.utils.aoa_to_sheet([providerHeaders]);
   
   providerSheet['!cols'] = [
     { wch: 30 }, // ClinicName
-    { wch: 30 }, // ProviderName
-    { wch: 40 }  // Specialty
+    { wch: 30 }  // ProviderName
   ];
 
   XLSX.utils.book_append_sheet(workbook, providerSheet, 'Providers');

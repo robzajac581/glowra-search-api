@@ -8,7 +8,6 @@ const express = require('express');
 const submissionService = require('../services/submissionService');
 const { 
   CLINIC_CATEGORIES, 
-  PROVIDER_SPECIALTIES, 
   PROCEDURE_CATEGORIES, 
   PRICE_UNITS,
   US_STATES,
@@ -259,7 +258,6 @@ router.get('/schema', async (req, res) => {
     success: true,
     schema: {
       clinicCategories: CLINIC_CATEGORIES,
-      providerSpecialties: PROVIDER_SPECIALTIES,
       procedureCategories: PROCEDURE_CATEGORIES,
       priceUnits: PRICE_UNITS,
       usStates: US_STATES,

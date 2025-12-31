@@ -455,7 +455,7 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
 app.get('/api/procedures', async (req, res) => {
   let pool;
   try {
-    const { searchQuery, location, minPrice, maxPrice, specialty, category, page = 1, limit = 100 } = req.query;
+    const { searchQuery, location, minPrice, maxPrice, category, page = 1, limit = 100 } = req.query;
     
     pool = await db.getConnection();
     if (!pool) {
@@ -469,7 +469,6 @@ app.get('/api/procedures', async (req, res) => {
         p.AverageCost,
         l.City,
         l.State,
-        s.Specialty,
         c.Category,
         pr.ProviderName,
         cl.ClinicID,
@@ -478,7 +477,6 @@ app.get('/api/procedures', async (req, res) => {
         cl.Website
       FROM Procedures p
       JOIN Locations l ON p.LocationID = l.LocationID
-      JOIN Specialties s ON p.SpecialtyID = s.SpecialtyID
       JOIN Categories c ON p.CategoryID = c.CategoryID
       JOIN Providers pr ON p.ProviderID = pr.ProviderID
       JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
@@ -505,8 +503,7 @@ app.get('/api/procedures', async (req, res) => {
             p.ProcedureName LIKE @${paramName} OR 
             cl.ClinicName LIKE @${paramName} OR 
             pr.ProviderName LIKE @${paramName} OR
-            c.Category LIKE @${paramName} OR
-            s.Specialty LIKE @${paramName}
+            c.Category LIKE @${paramName}
           )`;
         });
         
@@ -532,11 +529,6 @@ app.get('/api/procedures', async (req, res) => {
     if (maxPrice) {
       conditions.push(`p.AverageCost <= @maxPrice`);
       parameters.maxPrice = Number(maxPrice);
-    }
-
-    if (specialty) {
-      conditions.push(`s.Specialty LIKE @specialty`);
-      parameters.specialty = `%${specialty}%`;
     }
 
     if (category) {
@@ -583,7 +575,6 @@ app.get('/api/procedures', async (req, res) => {
       SELECT COUNT(*) as total
       FROM Procedures p
       JOIN Locations l ON p.LocationID = l.LocationID
-      JOIN Specialties s ON p.SpecialtyID = s.SpecialtyID
       JOIN Categories c ON p.CategoryID = c.CategoryID
       JOIN Providers pr ON p.ProviderID = pr.ProviderID
       JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
@@ -634,7 +625,6 @@ app.get('/api/procedures/search-index', async (req, res) => {
         p.AverageCost,
         l.City,
         l.State,
-        s.Specialty,
         c.Category,
         pr.ProviderName,
         cl.ClinicID,
@@ -643,7 +633,6 @@ app.get('/api/procedures/search-index', async (req, res) => {
         cl.Website
       FROM Procedures p
       JOIN Locations l ON p.LocationID = l.LocationID
-      JOIN Specialties s ON p.SpecialtyID = s.SpecialtyID
       JOIN Categories c ON p.CategoryID = c.CategoryID
       JOIN Providers pr ON p.ProviderID = pr.ProviderID
       JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
@@ -1579,11 +1568,8 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
       SELECT DISTINCT
         p.ProviderID,
         p.ProviderName,
-        CASE WHEN p.PhotoData IS NOT NULL THEN 1 ELSE 0 END as HasPhotoData,
-        s.Specialty
+        CASE WHEN p.PhotoData IS NOT NULL THEN 1 ELSE 0 END as HasPhotoData
       FROM Providers p
-      JOIN Procedures [procs] ON p.ProviderID = [procs].ProviderID
-      JOIN Specialties s ON [procs].SpecialtyID = s.SpecialtyID
       WHERE p.ClinicID = @clinicId;
     `);
 
@@ -1601,7 +1587,6 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
       .map(provider => ({
         ProviderID: provider.ProviderID,
         ProviderName: provider.ProviderName,
-        Specialty: provider.Specialty,
         PhotoURL: provider.HasPhotoData 
           ? `${apiBaseUrl}/api/provider-photos/${provider.ProviderID}`
           : null, // Return null if no photo

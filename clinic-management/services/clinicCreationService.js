@@ -123,8 +123,8 @@ class ClinicCreationService {
       // Handle photos based on photoSource
       await this.handlePhotos(clinicId, draft, photoSource, transaction);
 
-      // Create providers
-      const providerMap = new Map();
+      // Create providers and store their IDs
+      const providerMap = new Map(); // Maps provider name to provider ID
       if (draft.providers && draft.providers.length > 0) {
         for (const providerData of draft.providers) {
           const providerId = await this.createProvider(clinicId, providerData, transaction);
@@ -135,14 +135,17 @@ class ClinicCreationService {
       // Create procedures
       if (draft.procedures && draft.procedures.length > 0) {
         for (const procedureData of draft.procedures) {
-          const providerId = procedureData.ProviderName 
+          // Get provider ID
+          let providerId = procedureData.ProviderName 
             ? providerMap.get(procedureData.ProviderName) 
             : null;
           
-          // If no provider specified, use first provider or create placeholder
-          const finalProviderId = providerId || (providerMap.size > 0 ? Array.from(providerMap.values())[0] : null);
+          // If no provider specified, use first provider
+          if (!providerId && providerMap.size > 0) {
+            providerId = Array.from(providerMap.values())[0];
+          }
           
-          await this.createProcedure(finalProviderId, procedureData, transaction);
+          await this.createProcedure(providerId, procedureData, transaction);
         }
       }
 
@@ -377,7 +380,6 @@ class ClinicCreationService {
     const request = new sql.Request(transaction);
     request.input('clinicID', sql.Int, clinicId);
     request.input('providerName', sql.NVarChar, providerData.ProviderName);
-    request.input('specialty', sql.NVarChar, providerData.Specialty || null);
     request.input('photoURL', sql.NVarChar, providerData.PhotoURL || null);
 
     const result = await request.query(`
@@ -386,16 +388,15 @@ class ClinicCreationService {
       VALUES (@clinicID, @providerName, @photoURL)
     `);
 
-    const providerId = result.recordset[0].ProviderID;
-
-    // If specialty provided, we'd need to link it via Procedures
-    // For now, we'll handle specialty when creating procedures
-
-    return providerId;
+    return result.recordset[0].ProviderID;
   }
 
   /**
    * Create procedure
+   * Note: ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
+   * @param {number} providerId - Provider ID
+   * @param {Object} procedureData - Procedure data
+   * @param {Object} transaction - SQL transaction
    */
   async createProcedure(providerId, procedureData, transaction) {
     if (!providerId) {
@@ -405,27 +406,28 @@ class ClinicCreationService {
     // Get or create CategoryID
     const categoryId = await this.getOrCreateCategory(procedureData.Category, transaction);
 
-    // Get or create SpecialtyID (from provider's specialty if available)
-    const specialtyId = await this.getOrCreateSpecialty(
-      procedureData.ProviderName ? 'General' : 'General',
-      transaction
-    );
+    // ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
+    const maxIdRequest = new sql.Request(transaction);
+    const maxIdResult = await maxIdRequest.query(`
+      SELECT ISNULL(MAX(ProcedureID), 0) + 1 AS NextID FROM Procedures
+    `);
+    const procedureId = maxIdResult.recordset[0].NextID;
 
     const request = new sql.Request(transaction);
+    request.input('procedureID', sql.Int, procedureId);
     request.input('providerID', sql.Int, providerId);
     request.input('procedureName', sql.NVarChar, procedureData.ProcedureName);
     request.input('categoryID', sql.Int, categoryId);
-    request.input('specialtyID', sql.Int, specialtyId);
     request.input('averageCost', sql.Decimal(10, 2), procedureData.AverageCost || null);
     request.input('locationID', sql.Int, null); // Can be set later if needed
 
     await request.query(`
       INSERT INTO Procedures (
-        ProviderID, ProcedureName, CategoryID, SpecialtyID,
+        ProcedureID, ProviderID, ProcedureName, CategoryID,
         AverageCost, LocationID
       )
       VALUES (
-        @providerID, @procedureName, @categoryID, @specialtyID,
+        @procedureID, @providerID, @procedureName, @categoryID,
         @averageCost, @locationID
       )
     `);
@@ -433,6 +435,7 @@ class ClinicCreationService {
 
   /**
    * Get or create category
+   * Note: CategoryID may NOT be an IDENTITY column, so we handle both cases
    */
   async getOrCreateCategory(categoryName, transaction) {
     const findRequest = new sql.Request(transaction);
@@ -448,47 +451,24 @@ class ClinicCreationService {
       return findResult.recordset[0].CategoryID;
     }
 
-    // Create new category
+    // CategoryID may not be an IDENTITY column, so we manually get the next ID
+    const maxIdRequest = new sql.Request(transaction);
+    const maxIdResult = await maxIdRequest.query(`
+      SELECT ISNULL(MAX(CategoryID), 0) + 1 AS NextID FROM Categories
+    `);
+    const nextCategoryId = maxIdResult.recordset[0].NextID;
+
+    // Create new category with manually generated ID
     const createRequest = new sql.Request(transaction);
+    createRequest.input('categoryId', sql.Int, nextCategoryId);
     createRequest.input('category', sql.NVarChar, categoryName);
 
-    const createResult = await createRequest.query(`
-      INSERT INTO Categories (Category)
-      OUTPUT INSERTED.CategoryID
-      VALUES (@category)
+    await createRequest.query(`
+      INSERT INTO Categories (CategoryID, Category)
+      VALUES (@categoryId, @category)
     `);
 
-    return createResult.recordset[0].CategoryID;
-  }
-
-  /**
-   * Get or create specialty
-   */
-  async getOrCreateSpecialty(specialtyName, transaction) {
-    const findRequest = new sql.Request(transaction);
-    findRequest.input('specialty', sql.NVarChar, specialtyName);
-
-    const findResult = await findRequest.query(`
-      SELECT TOP 1 SpecialtyID
-      FROM Specialties
-      WHERE Specialty = @specialty
-    `);
-
-    if (findResult.recordset.length > 0) {
-      return findResult.recordset[0].SpecialtyID;
-    }
-
-    // Create new specialty
-    const createRequest = new sql.Request(transaction);
-    createRequest.input('specialty', sql.NVarChar, specialtyName);
-
-    const createResult = await createRequest.query(`
-      INSERT INTO Specialties (Specialty)
-      OUTPUT INSERTED.SpecialtyID
-      VALUES (@specialty)
-    `);
-
-    return createResult.recordset[0].SpecialtyID;
+    return nextCategoryId;
   }
 
   /**

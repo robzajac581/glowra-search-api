@@ -3,14 +3,6 @@
  * Single source of truth for provider data validation and form generation
  */
 
-const PROVIDER_SPECIALTIES = [
-  'Plastic Surgery',
-  'Med Spa / Aesthetics',
-  'Medical',
-  'Dermatology',
-  'Other'
-];
-
 const providerFields = {
   providerName: {
     type: 'string',
@@ -20,15 +12,6 @@ const providerFields = {
     description: 'Full name and credentials (e.g., Dr. Jane Smith, MD)',
     example: 'Dr. Sarah Johnson',
     placeholder: 'Enter provider name...'
-  },
-  
-  specialty: {
-    type: 'string',
-    required: false,
-    enum: PROVIDER_SPECIALTIES,
-    label: 'Specialty',
-    description: 'Provider\'s area of specialization',
-    example: 'Plastic Surgery'
   },
   
   photoData: {
@@ -50,7 +33,6 @@ const providerFields = {
 };
 
 module.exports = {
-  providerFields,
-  PROVIDER_SPECIALTIES
+  providerFields
 };
 
