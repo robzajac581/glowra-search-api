@@ -15,6 +15,13 @@ const {
   fetchPlacePhotos,
   searchPlaceByText 
 } = require('../../utils/googlePlaces');
+const { 
+  normalizeResponse, 
+  normalizeClinic, 
+  normalizeProviders, 
+  normalizeProcedures,
+  flattenProcedures 
+} = require('../../utils/responseNormalizer');
 
 // ============================================
 // AUTHENTICATION ROUTES (Public)
@@ -414,14 +421,16 @@ router.get('/drafts/:draftId', requireAdminAuth, async (req, res) => {
       });
     }
     
-    // If this is an adjustment, get the existing clinic info
+    // If this is an adjustment, get the existing clinic info with providers and procedures
+    // Note: draft is now normalized to camelCase by draftService.getDraftById
     let existingClinic = null;
-    if (draft.DuplicateClinicID || draft.SubmissionFlow === 'add_to_existing') {
+    if (draft.duplicateClinicId || draft.submissionFlow === 'add_to_existing') {
       const { db, sql } = require('../../db');
       const pool = await db.getConnection();
-      const clinicId = draft.DuplicateClinicID;
+      const clinicId = draft.duplicateClinicId;
       
       if (clinicId) {
+        // Get clinic info
         const clinicResult = await pool.request()
           .input('clinicId', sql.Int, clinicId)
           .query(`
@@ -433,20 +442,82 @@ router.get('/drafts/:draftId', requireAdminAuth, async (req, res) => {
               c.Website,
               c.GoogleRating,
               c.GoogleReviewCount,
+              c.Latitude,
+              c.Longitude,
+              c.PlaceID,
               g.Category,
               g.City,
-              g.State
+              g.State,
+              g.PostalCode,
+              g.Email,
+              g.Description
             FROM Clinics c
             LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
             WHERE c.ClinicID = @clinicId
           `);
         
-        existingClinic = clinicResult.recordset[0] || null;
+        if (clinicResult.recordset[0]) {
+          // Get providers for the clinic
+          const providersResult = await pool.request()
+            .input('clinicId', sql.Int, clinicId)
+            .query(`
+              SELECT 
+                ProviderID,
+                ProviderName,
+                CASE WHEN PhotoData IS NOT NULL THEN 1 ELSE 0 END as HasPhotoData
+              FROM Providers
+              WHERE ClinicID = @clinicId
+            `);
+          
+          // Get procedures for the clinic (deduplicated by name and category)
+          const proceduresResult = await pool.request()
+            .input('clinicId', sql.Int, clinicId)
+            .query(`
+              SELECT 
+                ProcedureID,
+                ProcedureName,
+                AverageCost,
+                Category,
+                CategoryID
+              FROM (
+                SELECT 
+                  p.ProcedureID,
+                  p.ProcedureName,
+                  p.AverageCost,
+                  c.Category,
+                  c.CategoryID,
+                  ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
+                FROM Procedures p
+                JOIN Categories c ON p.CategoryID = c.CategoryID
+                JOIN Providers pr ON p.ProviderID = pr.ProviderID
+                WHERE pr.ClinicID = @clinicId
+              ) AS RankedProcedures
+              WHERE RowNum = 1
+              ORDER BY Category, ProcedureName
+            `);
+          
+          // Build photo URLs for providers
+          const apiBaseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+          const providers = providersResult.recordset.map(p => ({
+            providerId: p.ProviderID,
+            providerName: p.ProviderName,
+            photoUrl: p.HasPhotoData ? `${apiBaseUrl}/api/provider-photos/${p.ProviderID}` : null,
+            hasPhoto: !!p.HasPhotoData
+          }));
+          
+          // Normalize and structure the existing clinic data
+          existingClinic = {
+            ...normalizeClinic(clinicResult.recordset[0]),
+            providers: providers,
+            procedures: normalizeProcedures(proceduresResult.recordset)
+          };
+        }
       }
     }
     
     // Calculate default photo source based on user photos count
-    const userPhotoCount = draft.photos ? draft.photos.filter(p => p.Source !== 'google').length : 0;
+    // Note: draft.photos is now normalized to camelCase
+    const userPhotoCount = draft.photos ? draft.photos.filter(p => p.source !== 'google').length : 0;
     let defaultPhotoSource = 'google';
     if (userPhotoCount >= 3) {
       defaultPhotoSource = 'user';

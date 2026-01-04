@@ -1,5 +1,6 @@
 const { db, sql } = require('../../db');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
+const { normalizeDraft, normalizeProviders, normalizeProcedures, normalizePhotos } = require('../../utils/responseNormalizer');
 
 /**
  * Draft management service
@@ -189,12 +190,15 @@ class DraftService {
         ORDER BY DisplayOrder, CreatedAt
       `);
 
-    return {
+    // Normalize the response to camelCase for frontend consistency
+    const normalizedDraft = normalizeDraft({
       ...draft,
-      providers: providersResult.recordset,
-      procedures: proceduresResult.recordset,
-      photos: photosResult.recordset
-    };
+      providers: normalizeProviders(providersResult.recordset),
+      procedures: normalizeProcedures(proceduresResult.recordset),
+      photos: normalizePhotos(photosResult.recordset)
+    });
+
+    return normalizedDraft;
   }
 
   /**
@@ -266,7 +270,9 @@ class DraftService {
     }
 
     const result = await request.query(query);
-    return result.recordset;
+    
+    // Normalize all drafts in the list to camelCase
+    return result.recordset.map(draft => normalizeDraft(draft));
   }
 
   /**
@@ -462,6 +468,7 @@ class DraftService {
   /**
    * Check if draft has all required fields for approval
    * Only Category is truly required - others are optional but recommended
+   * Note: Draft is now normalized to camelCase by getDraftById
    */
   async validateForApproval(draftId) {
     const draft = await this.getDraftById(draftId);
@@ -472,11 +479,11 @@ class DraftService {
     const errors = [];
     const warnings = [];
     
-    // Truly required fields (PascalCase to match DB column names)
-    const requiredFields = ['Category'];
+    // Truly required fields (camelCase to match normalized response)
+    const requiredFields = ['category'];
     
-    // Recommended but optional fields
-    const recommendedFields = ['Website', 'Phone', 'Email', 'PlaceID'];
+    // Recommended but optional fields (camelCase)
+    const recommendedFields = ['website', 'phone', 'email', 'placeId'];
 
     for (const field of requiredFields) {
       if (!draft[field] || String(draft[field]).trim() === '') {

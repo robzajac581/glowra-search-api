@@ -45,20 +45,22 @@ class ClinicCreationService {
       await transaction.begin();
 
       // Check if this is an update to existing clinic (merge scenario)
-      if (draft.DuplicateClinicID) {
+      // Note: draft is now normalized to camelCase by draftService.getDraftById
+      if (draft.duplicateClinicId) {
         const result = await this.updateExistingClinic(draft, transaction, reviewedBy, { photoSource, ratingSource, manualRating, manualReviewCount });
         await transaction.commit();
         return result;
       }
 
       // Fetch Google data if needed for ratings
+      // Note: draft is now normalized to camelCase by draftService.getDraftById
       let googleRating = null;
       let googleReviewCount = null;
       let googleReviews = null;
       
-      if (ratingSource === 'google' && draft.PlaceID) {
+      if (ratingSource === 'google' && draft.placeId) {
         try {
-          const googleData = await fetchGooglePlaceDetails(draft.PlaceID, false);
+          const googleData = await fetchGooglePlaceDetails(draft.placeId, false);
           if (googleData) {
             googleRating = googleData.rating;
             googleReviewCount = googleData.reviewCount;
@@ -66,8 +68,8 @@ class ClinicCreationService {
           }
         } catch (error) {
           console.warn('Failed to fetch Google rating, using draft values:', error.message);
-          googleRating = draft.GoogleRating;
-          googleReviewCount = draft.GoogleReviewCount;
+          googleRating = draft.googleRating;
+          googleReviewCount = draft.googleReviewCount;
         }
       } else if (ratingSource === 'manual') {
         googleRating = manualRating;
@@ -84,13 +86,13 @@ class ClinicCreationService {
 
       const clinicRequest = new sql.Request(transaction);
       clinicRequest.input('clinicID', sql.Int, clinicId);
-      clinicRequest.input('clinicName', sql.NVarChar, draft.ClinicName);
-      clinicRequest.input('address', sql.NVarChar, draft.Address);
-      clinicRequest.input('phone', sql.NVarChar, draft.Phone || null);
-      clinicRequest.input('website', sql.NVarChar, draft.Website || null);
-      clinicRequest.input('latitude', sql.Decimal(10, 7), draft.Latitude || null);
-      clinicRequest.input('longitude', sql.Decimal(11, 7), draft.Longitude || null);
-      clinicRequest.input('placeID', sql.NVarChar, draft.PlaceID || null);
+      clinicRequest.input('clinicName', sql.NVarChar, draft.clinicName);
+      clinicRequest.input('address', sql.NVarChar, draft.address);
+      clinicRequest.input('phone', sql.NVarChar, draft.phone || null);
+      clinicRequest.input('website', sql.NVarChar, draft.website || null);
+      clinicRequest.input('latitude', sql.Decimal(10, 7), draft.latitude || null);
+      clinicRequest.input('longitude', sql.Decimal(11, 7), draft.longitude || null);
+      clinicRequest.input('placeID', sql.NVarChar, draft.placeId || null);
       clinicRequest.input('googleRating', sql.Decimal(2, 1), googleRating);
       clinicRequest.input('googleReviewCount', sql.Int, googleReviewCount);
       clinicRequest.input('googleReviewsJSON', sql.NVarChar(sql.MAX), googleReviews ? JSON.stringify(googleReviews) : null);
@@ -109,7 +111,7 @@ class ClinicCreationService {
       `);
 
       // Get or create LocationID
-      const locationId = await this.getOrCreateLocation(draft.City, draft.State, transaction);
+      const locationId = await this.getOrCreateLocation(draft.city, draft.state, transaction);
 
       // Update clinic with LocationID
       await transaction.request()
@@ -124,20 +126,22 @@ class ClinicCreationService {
       await this.handlePhotos(clinicId, draft, photoSource, transaction);
 
       // Create providers and store their IDs
+      // Note: draft.providers is now normalized to camelCase
       const providerMap = new Map(); // Maps provider name to provider ID
       if (draft.providers && draft.providers.length > 0) {
         for (const providerData of draft.providers) {
           const providerId = await this.createProvider(clinicId, providerData, transaction);
-          providerMap.set(providerData.ProviderName, providerId);
+          providerMap.set(providerData.providerName, providerId);
         }
       }
 
       // Create procedures
+      // Note: draft.procedures is now normalized to camelCase
       if (draft.procedures && draft.procedures.length > 0) {
         for (const procedureData of draft.procedures) {
           // Get provider ID
-          let providerId = procedureData.ProviderName 
-            ? providerMap.get(procedureData.ProviderName) 
+          let providerId = procedureData.providerName 
+            ? providerMap.get(procedureData.providerName) 
             : null;
           
           // If no provider specified, use first provider
@@ -156,7 +160,7 @@ class ClinicCreationService {
 
       return {
         clinicId,
-        clinicName: draft.ClinicName,
+        clinicName: draft.clinicName,
         status: 'approved'
       };
     } catch (error) {
@@ -168,12 +172,13 @@ class ClinicCreationService {
   /**
    * Handle photos based on photoSource option
    * @param {number} clinicId - Clinic ID
-   * @param {Object} draft - Draft object with photos
+   * @param {Object} draft - Draft object with photos (now normalized to camelCase)
    * @param {string} photoSource - 'user' | 'google' | 'both'
    * @param {Object} transaction - SQL transaction
    */
   async handlePhotos(clinicId, draft, photoSource, transaction) {
-    const userPhotos = draft.photos ? draft.photos.filter(p => p.Source !== 'google') : [];
+    // Note: draft.photos is now normalized to camelCase
+    const userPhotos = draft.photos ? draft.photos.filter(p => p.source !== 'google') : [];
     let displayOrder = 0;
 
     // Add user photos first if using 'user' or 'both'
@@ -181,10 +186,10 @@ class ClinicCreationService {
       for (const photo of userPhotos) {
         const request = new sql.Request(transaction);
         request.input('clinicId', sql.Int, clinicId);
-        request.input('photoURL', sql.NVarChar(2000), photo.PhotoURL);
+        request.input('photoURL', sql.NVarChar(2000), photo.photoUrl);
         request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
         request.input('displayOrder', sql.Int, displayOrder);
-        request.input('photoType', sql.NVarChar(50), photo.PhotoType || 'clinic');
+        request.input('photoType', sql.NVarChar(50), photo.photoType || 'clinic');
 
         await request.query(`
           INSERT INTO ClinicPhotos (ClinicID, PhotoURL, IsPrimary, DisplayOrder, LastUpdated)
@@ -196,9 +201,9 @@ class ClinicCreationService {
     }
 
     // Add Google photos if using 'google' or 'both'
-    if ((photoSource === 'google' || photoSource === 'both') && draft.PlaceID) {
+    if ((photoSource === 'google' || photoSource === 'both') && draft.placeId) {
       try {
-        const googlePhotos = await fetchPlacePhotos(draft.PlaceID);
+        const googlePhotos = await fetchPlacePhotos(draft.placeId);
         
         // Limit Google photos based on source
         const maxGooglePhotos = photoSource === 'both' ? 5 : 10;
@@ -250,36 +255,37 @@ class ClinicCreationService {
 
   /**
    * Update existing clinic (for merge scenarios)
+   * Note: draft is now normalized to camelCase by draftService.getDraftById
    */
   async updateExistingClinic(draft, transaction, reviewedBy) {
-    const clinicId = draft.DuplicateClinicID;
+    const clinicId = draft.duplicateClinicId;
     const request = new sql.Request(transaction);
 
-    // Update clinic fields
+    // Update clinic fields (using camelCase from normalized draft)
     const updates = [];
-    if (draft.Phone) {
+    if (draft.phone) {
       updates.push('Phone = @phone');
-      request.input('phone', sql.NVarChar, draft.Phone);
+      request.input('phone', sql.NVarChar, draft.phone);
     }
-    if (draft.Website) {
+    if (draft.website) {
       updates.push('Website = @website');
-      request.input('website', sql.NVarChar, draft.Website);
+      request.input('website', sql.NVarChar, draft.website);
     }
-    if (draft.Address) {
+    if (draft.address) {
       updates.push('Address = @address');
-      request.input('address', sql.NVarChar, draft.Address);
+      request.input('address', sql.NVarChar, draft.address);
     }
-    if (draft.PlaceID) {
+    if (draft.placeId) {
       updates.push('PlaceID = @placeID');
-      request.input('placeID', sql.NVarChar, draft.PlaceID);
+      request.input('placeID', sql.NVarChar, draft.placeId);
     }
-    if (draft.Latitude) {
+    if (draft.latitude) {
       updates.push('Latitude = @latitude');
-      request.input('latitude', sql.Decimal(10, 7), draft.Latitude);
+      request.input('latitude', sql.Decimal(10, 7), draft.latitude);
     }
-    if (draft.Longitude) {
+    if (draft.longitude) {
       updates.push('Longitude = @longitude');
-      request.input('longitude', sql.Decimal(11, 7), draft.Longitude);
+      request.input('longitude', sql.Decimal(11, 7), draft.longitude);
     }
 
     if (updates.length > 0) {
@@ -291,13 +297,13 @@ class ClinicCreationService {
       `);
     }
 
-    // Add new providers if they don't exist
+    // Add new providers if they don't exist (using camelCase from normalized draft)
     if (draft.providers && draft.providers.length > 0) {
       for (const providerData of draft.providers) {
         // Check if provider already exists
         const existingProvider = await transaction.request()
           .input('clinicID', sql.Int, clinicId)
-          .input('providerName', sql.NVarChar, providerData.ProviderName)
+          .input('providerName', sql.NVarChar, providerData.providerName)
           .query(`
             SELECT ProviderID FROM Providers
             WHERE ClinicID = @clinicID AND ProviderName = @providerName
@@ -309,7 +315,7 @@ class ClinicCreationService {
       }
     }
 
-    // Add new procedures
+    // Add new procedures (using camelCase from normalized draft)
     if (draft.procedures && draft.procedures.length > 0) {
       // Get existing providers for this clinic
       const existingProviders = await transaction.request()
@@ -320,8 +326,8 @@ class ClinicCreationService {
       existingProviders.recordset.forEach(p => providerMap.set(p.ProviderName, p.ProviderID));
 
       for (const procedureData of draft.procedures) {
-        const providerId = procedureData.ProviderName 
-          ? providerMap.get(procedureData.ProviderName) 
+        const providerId = procedureData.providerName 
+          ? providerMap.get(procedureData.providerName) 
           : (existingProviders.recordset[0]?.ProviderID || null);
 
         if (providerId) {
@@ -331,11 +337,11 @@ class ClinicCreationService {
     }
 
     // Update draft status
-    await draftService.updateStatus(draft.DraftID, 'merged', reviewedBy);
+    await draftService.updateStatus(draft.draftId, 'merged', reviewedBy);
 
     return {
       clinicId,
-      clinicName: draft.ClinicName,
+      clinicName: draft.clinicName,
       status: 'merged'
     };
   }
@@ -375,12 +381,14 @@ class ClinicCreationService {
 
   /**
    * Create provider
+   * Accepts both camelCase (from normalized draft) and PascalCase (for backward compatibility)
    */
   async createProvider(clinicId, providerData, transaction) {
     const request = new sql.Request(transaction);
     request.input('clinicID', sql.Int, clinicId);
-    request.input('providerName', sql.NVarChar, providerData.ProviderName);
-    request.input('photoURL', sql.NVarChar, providerData.PhotoURL || null);
+    // Support both camelCase and PascalCase for backward compatibility
+    request.input('providerName', sql.NVarChar, providerData.providerName || providerData.ProviderName);
+    request.input('photoURL', sql.NVarChar, providerData.photoUrl || providerData.PhotoURL || null);
 
     const result = await request.query(`
       INSERT INTO Providers (ClinicID, ProviderName, PhotoURL)
@@ -394,6 +402,7 @@ class ClinicCreationService {
   /**
    * Create procedure
    * Note: ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
+   * Accepts both camelCase (from normalized draft) and PascalCase (for backward compatibility)
    * @param {number} providerId - Provider ID
    * @param {Object} procedureData - Procedure data
    * @param {Object} transaction - SQL transaction
@@ -403,8 +412,13 @@ class ClinicCreationService {
       throw new Error('ProviderID is required to create procedure');
     }
 
+    // Support both camelCase and PascalCase for backward compatibility
+    const category = procedureData.category || procedureData.Category;
+    const procedureName = procedureData.procedureName || procedureData.ProcedureName;
+    const averageCost = procedureData.averageCost || procedureData.AverageCost;
+
     // Get or create CategoryID
-    const categoryId = await this.getOrCreateCategory(procedureData.Category, transaction);
+    const categoryId = await this.getOrCreateCategory(category, transaction);
 
     // ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
     const maxIdRequest = new sql.Request(transaction);
@@ -416,9 +430,9 @@ class ClinicCreationService {
     const request = new sql.Request(transaction);
     request.input('procedureID', sql.Int, procedureId);
     request.input('providerID', sql.Int, providerId);
-    request.input('procedureName', sql.NVarChar, procedureData.ProcedureName);
+    request.input('procedureName', sql.NVarChar, procedureName);
     request.input('categoryID', sql.Int, categoryId);
-    request.input('averageCost', sql.Decimal(10, 2), procedureData.AverageCost || null);
+    request.input('averageCost', sql.Decimal(10, 2), averageCost || null);
     request.input('locationID', sql.Int, null); // Can be set later if needed
 
     await request.query(`
@@ -473,18 +487,19 @@ class ClinicCreationService {
 
   /**
    * Create GooglePlacesData entry
+   * Note: draft is now normalized to camelCase by draftService.getDraftById
    */
   async createGooglePlacesData(clinicId, draft, transaction) {
     const request = new sql.Request(transaction);
     request.input('clinicID', sql.Int, clinicId);
-    request.input('placeID', sql.NVarChar, draft.PlaceID);
-    request.input('businessName', sql.NVarChar, draft.ClinicName);
-    request.input('fullAddress', sql.NVarChar, draft.Address);
-    request.input('city', sql.NVarChar, draft.City);
-    request.input('state', sql.NVarChar, draft.State);
-    request.input('website', sql.NVarChar, draft.Website || null);
-    request.input('email', sql.NVarChar, draft.Email || null);
-    request.input('category', sql.NVarChar, normalizeCategory(draft.Category));
+    request.input('placeID', sql.NVarChar, draft.placeId);
+    request.input('businessName', sql.NVarChar, draft.clinicName);
+    request.input('fullAddress', sql.NVarChar, draft.address);
+    request.input('city', sql.NVarChar, draft.city);
+    request.input('state', sql.NVarChar, draft.state);
+    request.input('website', sql.NVarChar, draft.website || null);
+    request.input('email', sql.NVarChar, draft.email || null);
+    request.input('category', sql.NVarChar, normalizeCategory(draft.category));
 
     await request.query(`
       INSERT INTO GooglePlacesData (

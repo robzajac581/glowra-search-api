@@ -1345,13 +1345,27 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
   }
 });
 
-// Get specific clinic details with cached Google Places ratings and rich metadata
-// Note: This endpoint only reads from the database cache and never calls Google Places API
-// The scheduled job (runs daily at 2 AM) keeps the rating data fresh
+/**
+ * Get specific clinic details with cached Google Places ratings and rich metadata
+ * GET /api/clinics/:clinicId
+ * 
+ * Query Parameters:
+ *   - include: Comma-separated list of related data to include
+ *              Options: 'providers', 'procedures', or 'providers,procedures'
+ * 
+ * Note: This endpoint only reads from the database cache and never calls Google Places API
+ * The scheduled job (runs daily at 2 AM) keeps the rating data fresh
+ */
 app.get('/api/clinics/:clinicId', async (req, res) => {
   let pool;
   try {
     const { clinicId } = req.params;
+    const { include } = req.query;
+    
+    // Parse include parameter
+    const includeProviders = include && include.includes('providers');
+    const includeProcedures = include && include.includes('procedures');
+    
     pool = await db.getConnection();
 
     const request = pool.request();
@@ -1395,7 +1409,10 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         g.Category,
         g.Subtypes,
         g.BusinessName,
-        g.Email
+        g.Email,
+        g.City,
+        g.State,
+        g.PostalCode
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       WHERE c.ClinicID = @clinicId;
@@ -1416,64 +1433,146 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         console.error('Error parsing reviews JSON:', parseError);
       }
     }
+    
+    // Parse WorkingHours if available
+    let workingHours = clinic.WorkingHours;
+    if (workingHours && typeof workingHours === 'string') {
+      try {
+        workingHours = JSON.parse(workingHours);
+      } catch (e) {
+        // Keep as string if parsing fails
+      }
+    }
+    
+    // Parse AboutJSON if available
+    let about = null;
+    if (clinic.AboutJSON) {
+      try {
+        about = JSON.parse(clinic.AboutJSON);
+      } catch (e) {
+        // Keep as null if parsing fails
+      }
+    }
 
-    // Return complete clinic info with all Google Places data
-    // Note: WorkingHours and AboutJSON are kept as JSON strings - frontend will parse them
-    res.json({
-      // Core clinic data
-      ClinicID: clinic.ClinicID,
-      ClinicName: clinic.ClinicName,
-      Address: clinic.Address,
-      Phone: clinic.Phone,
-      Website: clinic.Website,
-      Latitude: clinic.Latitude,
-      Longitude: clinic.Longitude,
-      LocationID: clinic.LocationID,
-      PlaceID: clinic.PlaceID,
+    // Build base response with camelCase field names
+    const response = {
+      // Core clinic data (camelCase)
+      clinicId: clinic.ClinicID,
+      clinicName: clinic.ClinicName,
+      address: clinic.Address,
+      phone: clinic.Phone,
+      website: clinic.Website,
+      latitude: clinic.Latitude,
+      longitude: clinic.Longitude,
+      locationId: clinic.LocationID,
+      placeId: clinic.PlaceID,
+      city: clinic.City,
+      state: clinic.State,
+      zipCode: clinic.PostalCode,
       
-      // Google ratings (from Clinics table)
-      GoogleRating: clinic.GoogleRating || 0,
-      GoogleReviewCount: clinic.GoogleReviewCount || 0,
+      // Google ratings (camelCase)
+      googleRating: clinic.GoogleRating || 0,
+      googleReviewCount: clinic.GoogleReviewCount || 0,
       
-      // Legacy fields for backward compatibility
+      // Convenience aliases
       rating: clinic.GoogleRating || 0,
       reviewCount: clinic.GoogleReviewCount || 0,
       reviews: reviews,
-      GoogleReviewsJSON: clinic.GoogleReviewsJSON, // Raw JSON string if needed
       lastRatingUpdate: clinic.LastRatingUpdate,
       
-      // Rich Google Places data (may be null if not available)
-      Photo: clinic.Photo,
-      Logo: clinic.Logo,
-      StreetView: clinic.StreetView,
-      Description: clinic.Description,
-      WorkingHours: clinic.WorkingHours, // JSON string - parse on frontend
-      AboutJSON: clinic.AboutJSON, // JSON string - parse on frontend
-      Verified: clinic.Verified,
+      // Rich Google Places data (camelCase)
+      photo: clinic.Photo,
+      logo: clinic.Logo,
+      streetView: clinic.StreetView,
+      description: clinic.Description,
+      workingHours: workingHours,
+      about: about,
+      verified: clinic.Verified,
       
-      // Social media links
-      Facebook: clinic.Facebook,
-      Instagram: clinic.Instagram,
-      LinkedIn: clinic.LinkedIn,
-      Twitter: clinic.Twitter,
-      YouTube: clinic.YouTube,
+      // Social media links (camelCase)
+      facebook: clinic.Facebook,
+      instagram: clinic.Instagram,
+      linkedin: clinic.LinkedIn,
+      twitter: clinic.Twitter,
+      youtube: clinic.YouTube,
       
-      // Google links
-      GoogleProfileLink: clinic.GoogleProfileLink,
-      ReviewsLink: clinic.ReviewsLink,
-      BookingAppointmentLink: clinic.BookingAppointmentLink,
-      MenuLink: clinic.MenuLink,
+      // Google links (camelCase)
+      googleProfileLink: clinic.GoogleProfileLink,
+      reviewsLink: clinic.ReviewsLink,
+      bookingAppointmentLink: clinic.BookingAppointmentLink,
+      menuLink: clinic.MenuLink,
       
-      // Business info
-      BusinessStatus: clinic.BusinessStatus,
-      Category: normalizeCategory(clinic.Category),
-      Subtypes: clinic.Subtypes,
-      BusinessName: clinic.BusinessName,
-      Email: clinic.Email,
+      // Business info (camelCase)
+      businessStatus: clinic.BusinessStatus,
+      category: normalizeCategory(clinic.Category),
+      subtypes: clinic.Subtypes,
+      businessName: clinic.BusinessName,
+      email: clinic.Email
+    };
+    
+    // Optionally include providers
+    if (includeProviders) {
+      const providersResult = await pool.request()
+        .input('clinicId', sql.Int, clinicId)
+        .query(`
+          SELECT DISTINCT
+            p.ProviderID,
+            p.ProviderName,
+            CASE WHEN p.PhotoData IS NOT NULL THEN 1 ELSE 0 END as HasPhotoData
+          FROM Providers p
+          WHERE p.ClinicID = @clinicId
+            AND p.ProviderName NOT LIKE '%Please Request Consult%'
+        `);
       
-      // Deprecated field (kept for backward compatibility)
-      isOpen: null // Opening hours would require real-time API call, kept null for performance
-    });
+      const apiBaseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      
+      response.providers = providersResult.recordset.map(p => ({
+        providerId: p.ProviderID,
+        providerName: p.ProviderName,
+        photoUrl: p.HasPhotoData ? `${apiBaseUrl}/api/provider-photos/${p.ProviderID}` : null,
+        hasPhoto: !!p.HasPhotoData
+      }));
+    }
+    
+    // Optionally include procedures
+    if (includeProcedures) {
+      const proceduresResult = await pool.request()
+        .input('clinicId', sql.Int, clinicId)
+        .query(`
+          SELECT 
+            ProcedureID,
+            ProcedureName,
+            AverageCost,
+            Category,
+            CategoryID
+          FROM (
+            SELECT 
+              p.ProcedureID,
+              p.ProcedureName,
+              p.AverageCost,
+              c.Category,
+              c.CategoryID,
+              ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
+            FROM Procedures p
+            JOIN Categories c ON p.CategoryID = c.CategoryID
+            JOIN Providers pr ON p.ProviderID = pr.ProviderID
+            WHERE pr.ClinicID = @clinicId
+          ) AS RankedProcedures
+          WHERE RowNum = 1
+          ORDER BY Category, ProcedureName
+        `);
+      
+      response.procedures = proceduresResult.recordset.map(p => ({
+        procedureId: p.ProcedureID,
+        procedureName: p.ProcedureName,
+        price: p.AverageCost,
+        averageCost: p.AverageCost,
+        category: p.Category,
+        categoryId: p.CategoryID
+      }));
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Error in /api/clinics/:clinicId:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -1553,7 +1652,12 @@ app.get('/api/clinics/:clinicId/photos', async (req, res) => {
   }
 });
 
-// Get providers/doctors for a specific clinic
+/**
+ * Get providers/doctors for a specific clinic
+ * GET /api/clinics/:clinicId/providers
+ * 
+ * Returns camelCase field names: providerId, providerName, photoUrl, hasPhoto
+ */
 app.get('/api/clinics/:clinicId/providers', async (req, res) => {
   let pool;
   try {
@@ -1582,15 +1686,16 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
     // Construct base URL from the request to automatically work in any environment
     const apiBaseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
     
+    // Return camelCase field names for consistency with other endpoints
     const providers = result.recordset
       .filter(p => !p.ProviderName.includes('Please Request Consult')) // Filter out placeholder providers
       .map(provider => ({
-        ProviderID: provider.ProviderID,
-        ProviderName: provider.ProviderName,
-        PhotoURL: provider.HasPhotoData 
+        providerId: provider.ProviderID,
+        providerName: provider.ProviderName,
+        photoUrl: provider.HasPhotoData 
           ? `${apiBaseUrl}/api/provider-photos/${provider.ProviderID}`
-          : null, // Return null if no photo
-        hasPhoto: !!provider.HasPhotoData // Boolean flag for frontend convenience
+          : null,
+        hasPhoto: !!provider.HasPhotoData
       }));
     
     // Return response with flag indicating if clinic requires consult request
@@ -1607,10 +1712,23 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
   }
 });
 
+/**
+ * Get procedures for a specific clinic
+ * GET /api/clinics/:clinicId/procedures
+ * 
+ * Query Parameters:
+ *   - flat: If 'true', returns a flat array of procedures instead of grouped by category
+ * 
+ * Response Formats:
+ *   Grouped (default): { "Face": { categoryId: 1, procedures: [...] }, ... }
+ *   Flat (?flat=true): [{ procedureId, procedureName, price, category, categoryId }, ...]
+ */
 app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   let pool;
   try {
     const { clinicId } = req.params;
+    const { flat } = req.query;
+    
     pool = await db.getConnection();
 
     const request = pool.request();
@@ -1640,7 +1758,20 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
       ORDER BY Category, ProcedureName;
     `);
 
-    // Group procedures by category
+    // Return flat array if requested
+    if (flat === 'true' || flat === '1') {
+      const flatProcedures = result.recordset.map(proc => ({
+        procedureId: proc.ProcedureID,
+        procedureName: proc.ProcedureName,
+        price: proc.AverageCost,
+        averageCost: proc.AverageCost, // Include both for compatibility
+        category: proc.Category,
+        categoryId: proc.CategoryID
+      }));
+      return res.json(flatProcedures);
+    }
+
+    // Group procedures by category (default behavior)
     const groupedProcedures = result.recordset.reduce((acc, proc) => {
       if (!acc[proc.Category]) {
         acc[proc.Category] = {
