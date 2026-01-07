@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { sql, db } = require('../db');
 const { batchFetchPlaceDetails, fetchPlacePhotos } = require('../utils/googlePlaces');
+const clinicDeletionService = require('../clinic-management/services/clinicDeletionService');
 
 // Configuration for refresh intervals (in days)
 const PHOTO_REFRESH_INTERVAL_DAYS = 14; // Bi-weekly
@@ -10,6 +11,7 @@ const RATING_REFRESH_INTERVAL_DAYS = 1; // Daily
  * Scheduled job to refresh Google Places ratings and photos for all clinics
  * - Ratings: Daily at 2 AM
  * - Photos: Bi-weekly (1st & 15th of month) at 2 AM
+ * - Deleted clinics cleanup: Daily at 3 AM
  * 
  * IMPORTANT: This also runs a startup check to catch missed jobs!
  * Since in-process cron jobs don't persist state across restarts,
@@ -24,6 +26,9 @@ function initRatingRefreshJob() {
   console.log(`Schedule: Daily at 2:00 AM (${cronSchedule})`);
   console.log('  - Ratings: Daily');
   console.log('  - Photos: Bi-weekly (1st & 15th of month)');
+  
+  // Initialize deleted clinics cleanup job (runs at 3 AM)
+  initDeletedClinicsCleanupJob();
 
   // Run startup check for overdue jobs (delayed to allow DB connection to establish)
   setTimeout(() => {
@@ -375,11 +380,46 @@ async function refreshAllClinicPhotos() {
   }
 }
 
+/**
+ * Initialize scheduled job to permanently delete clinics older than 30 days
+ * Runs daily at 3 AM
+ */
+function initDeletedClinicsCleanupJob() {
+  // Schedule: Run every day at 3 AM (0 3 * * *)
+  const cronSchedule = '0 3 * * *';
+  
+  console.log('Initializing deleted clinics cleanup cron job...');
+  console.log(`Schedule: Daily at 3:00 AM (${cronSchedule})`);
+  console.log('  - Permanently deletes clinics deleted more than 30 days ago');
+  
+  const job = cron.schedule(cronSchedule, async () => {
+    console.log('\n=== Starting deleted clinics cleanup ===');
+    console.log(`Time: ${new Date().toISOString()}`);
+    
+    try {
+      const result = await clinicDeletionService.permanentlyDeleteOldClinics();
+      console.log(`✓ ${result.message}`);
+      console.log('=== Deleted clinics cleanup completed ===\n');
+    } catch (error) {
+      console.error('Error in deleted clinics cleanup:', error);
+      // Don't crash the app, just log the error
+    }
+  }, {
+    scheduled: true,
+    timezone: process.env.TZ || 'America/New_York'
+  });
+  
+  console.log('Deleted clinics cleanup cron job initialized successfully');
+  
+  return job;
+}
+
 module.exports = {
   initRatingRefreshJob,
   refreshAllClinicRatings,
   refreshAllClinicPhotos,
   checkAndRunOverdueJobs,
-  manualRefresh
+  manualRefresh,
+  initDeletedClinicsCleanupJob
 };
 

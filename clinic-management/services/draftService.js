@@ -129,6 +129,10 @@ class DraftService {
         ReviewedAt,
         Notes,
         DuplicateClinicID,
+        GoogleRating,
+        GoogleReviewCount,
+        GoogleDataJSON,
+        Description,
         CreatedAt,
         UpdatedAt
       FROM ClinicDrafts
@@ -330,9 +334,11 @@ class DraftService {
         updates.push('Longitude = @longitude');
         request.input('longitude', sql.Decimal(11, 7), updateData.longitude || null);
       }
-      if (updateData.placeID !== undefined) {
+      // Accept both placeId (camelCase from frontend) and placeID (legacy)
+      const placeIdValue = updateData.placeId !== undefined ? updateData.placeId : updateData.placeID;
+      if (placeIdValue !== undefined) {
         updates.push('PlaceID = @placeID');
-        request.input('placeID', sql.NVarChar, updateData.placeID || null);
+        request.input('placeID', sql.NVarChar, placeIdValue || null);
       }
       if (updateData.category !== undefined) {
         updates.push('Category = @category');
@@ -345,6 +351,18 @@ class DraftService {
       if (updateData.notes !== undefined) {
         updates.push('Notes = @notes');
         request.input('notes', sql.NVarChar(sql.MAX), updateData.notes || null);
+      }
+      if (updateData.googleRating !== undefined) {
+        updates.push('GoogleRating = @googleRating');
+        request.input('googleRating', sql.Decimal(2, 1), updateData.googleRating || null);
+      }
+      if (updateData.googleReviewCount !== undefined) {
+        updates.push('GoogleReviewCount = @googleReviewCount');
+        request.input('googleReviewCount', sql.Int, updateData.googleReviewCount || null);
+      }
+      if (updateData.description !== undefined) {
+        updates.push('Description = @description');
+        request.input('description', sql.NVarChar(sql.MAX), updateData.description || null);
       }
 
       updates.push('UpdatedAt = GETDATE()');

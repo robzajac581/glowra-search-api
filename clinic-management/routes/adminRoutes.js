@@ -9,6 +9,7 @@ const router = express.Router();
 const adminService = require('../services/adminService');
 const draftService = require('../services/draftService');
 const clinicCreationService = require('../services/clinicCreationService');
+const clinicDeletionService = require('../services/clinicDeletionService');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 const { 
   fetchGooglePlaceDetails, 
@@ -1010,9 +1011,9 @@ router.post('/drafts/:draftId/lookup-placeid', requireAdminAuth, async (req, res
       });
     }
     
-    // Use provided overrides or draft values
-    const clinicName = req.body.clinicName || draft.ClinicName;
-    const address = req.body.address || `${draft.Address}, ${draft.City}, ${draft.State}`;
+    // Use provided overrides or draft values (draft is normalized to camelCase)
+    const clinicName = req.body.clinicName || draft.clinicName;
+    const address = req.body.address || `${draft.address}, ${draft.city}, ${draft.state}`;
     
     // Search for place
     const searchResult = await searchPlaceByText(clinicName, address);
@@ -1059,6 +1060,10 @@ router.post('/drafts/:draftId/lookup-placeid', requireAdminAuth, async (req, res
  * /admin/drafts/{draftId}/fetch-google-data:
  *   post:
  *     summary: Fetch Google Places data (ratings, reviews) for a draft
+ *     description: |
+ *       Fetches Google Places data including ratings, reviews, and business info.
+ *       You can optionally provide a placeId in the request body to use instead of
+ *       the stored draft's placeId - useful for previewing data before saving.
  *     tags: [Admin Google]
  *     security:
  *       - bearerAuth: []
@@ -1068,11 +1073,23 @@ router.post('/drafts/:draftId/lookup-placeid', requireAdminAuth, async (req, res
  *         required: true
  *         schema:
  *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               placeId:
+ *                 type: string
+ *                 description: Optional Google PlaceID. If provided, uses this instead of the draft's stored placeId.
+ *               save:
+ *                 type: boolean
+ *                 description: If true, saves the fetched data to the draft
  *     responses:
  *       200:
  *         description: Google data fetched
  *       400:
- *         description: No PlaceID available
+ *         description: No PlaceID available (neither in request body nor stored in draft)
  */
 router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, res) => {
   try {
@@ -1094,15 +1111,18 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
       });
     }
     
-    if (!draft.PlaceID) {
+    // Accept placeId from request body, falling back to stored draft's placeId
+    const placeId = req.body.placeId || draft.placeId;
+    
+    if (!placeId) {
       return res.status(400).json({
         success: false,
-        error: 'No PlaceID available. Please lookup PlaceID first.'
+        error: 'No PlaceID available. Please provide placeId in request body or lookup PlaceID first.'
       });
     }
     
     // Fetch Google data
-    const googleData = await fetchGooglePlaceDetails(draft.PlaceID, false);
+    const googleData = await fetchGooglePlaceDetails(placeId, false);
     
     if (!googleData) {
       return res.status(404).json({
@@ -1129,6 +1149,21 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
               UpdatedAt = GETDATE()
           WHERE DraftID = @draftId
         `);
+      
+      // Fetch and return the updated draft
+      const updatedDraft = await draftService.getDraftById(draftId);
+      
+      return res.json({
+        success: true,
+        googleData: {
+          rating: googleData.rating,
+          reviewCount: googleData.reviewCount,
+          reviews: googleData.reviews,
+          openingHours: googleData.openingHours,
+          businessStatus: googleData.businessStatus
+        },
+        draft: updatedDraft
+      });
     }
     
     res.json({
@@ -1156,6 +1191,10 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
  * /admin/drafts/{draftId}/google-photos:
  *   get:
  *     summary: Get Google Photos for a draft
+ *     description: |
+ *       Fetches Google Place photos for the draft.
+ *       You can optionally provide a placeId as a query parameter to use instead of
+ *       the stored draft's placeId - useful for previewing photos before saving.
  *     tags: [Admin Google]
  *     security:
  *       - bearerAuth: []
@@ -1165,13 +1204,65 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: placeId
+ *         schema:
+ *           type: string
+ *         description: Optional Google PlaceID. If provided, uses this instead of the draft's stored placeId.
  *     responses:
  *       200:
- *         description: Google photos
+ *         description: Google photos fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 placeId:
+ *                   type: string
+ *                   description: The PlaceID that was used to fetch photos
+ *                 photos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: No PlaceID available (neither in query params nor stored in draft)
+ *   post:
+ *     summary: Get Google Photos for a draft (POST method)
+ *     description: |
+ *       Same as GET but allows placeId to be passed in the request body.
+ *       Useful for immediate use after looking up a placeId without saving to draft first.
+ *     tags: [Admin Google]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: draftId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               placeId:
+ *                 type: string
+ *                 description: Optional Google PlaceID. If provided, uses this instead of the draft's stored placeId.
+ *     responses:
+ *       200:
+ *         description: Google photos fetched
  *       400:
  *         description: No PlaceID available
  */
-router.get('/drafts/:draftId/google-photos', requireAdminAuth, async (req, res) => {
+// Support both GET and POST for backwards compatibility
+// POST allows placeId to be passed in request body
+router.get('/drafts/:draftId/google-photos', requireAdminAuth, handleDraftGooglePhotos);
+router.post('/drafts/:draftId/google-photos', requireAdminAuth, handleDraftGooglePhotos);
+
+async function handleDraftGooglePhotos(req, res) {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -1191,18 +1282,22 @@ router.get('/drafts/:draftId/google-photos', requireAdminAuth, async (req, res) 
       });
     }
     
-    if (!draft.PlaceID) {
+    // Accept placeId from request body (POST) or query params (GET), falling back to stored draft's placeId
+    const placeId = req.body.placeId || req.query.placeId || draft.placeId;
+    
+    if (!placeId) {
       return res.status(400).json({
         success: false,
-        error: 'No PlaceID available. Please lookup PlaceID first.'
+        error: 'No PlaceID available. Please provide placeId in request body or lookup PlaceID first.'
       });
     }
     
     // Fetch Google photos
-    const photos = await fetchPlacePhotos(draft.PlaceID);
+    const photos = await fetchPlacePhotos(placeId);
     
     res.json({
       success: true,
+      placeId, // Include the placeId used for transparency
       photos
     });
   } catch (error) {
@@ -1213,7 +1308,7 @@ router.get('/drafts/:draftId/google-photos', requireAdminAuth, async (req, res) 
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-});
+}
 
 /**
  * @swagger
@@ -1291,6 +1386,218 @@ router.post('/drafts/:draftId/update-placeid', requireAdminAuth, async (req, res
     res.status(500).json({
       success: false,
       error: 'Internal server error'
+    });
+  }
+});
+
+// ============================================
+// CLINIC DELETION ROUTES
+// ============================================
+
+/**
+ * @swagger
+ * /admin/clinics/{clinicId}:
+ *   delete:
+ *     summary: Delete a clinic (soft delete)
+ *     tags: [Admin Clinics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Clinic deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 deletedClinicId:
+ *                   type: integer
+ *                 deletedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 clinicName:
+ *                   type: string
+ *       404:
+ *         description: Clinic not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/clinics/:clinicId', requireAdminAuth, async (req, res) => {
+  try {
+    const clinicId = parseInt(req.params.clinicId);
+    
+    if (isNaN(clinicId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid clinic ID'
+      });
+    }
+
+    // Get admin email from token (stored in req.adminUser by requireAdminAuth middleware)
+    const deletedBy = req.adminUser?.email || 'unknown';
+
+    const result = await clinicDeletionService.deleteClinic(clinicId, deletedBy);
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('Delete clinic error:', error);
+    
+    if (error.message === 'Clinic not found') {
+      return res.status(404).json({
+        success: false,
+        error: 'Clinic not found'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/clinics/deleted:
+ *   get:
+ *     summary: List deleted clinics
+ *     tags: [Admin Clinics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of deleted clinics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 clinics:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ */
+router.get('/clinics/deleted', requireAdminAuth, async (req, res) => {
+  try {
+    const { page, limit, search } = req.query;
+    
+    const result = await clinicDeletionService.getDeletedClinics({
+      page,
+      limit,
+      search
+    });
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('List deleted clinics error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/clinics/deleted/{deletedClinicId}/restore:
+ *   post:
+ *     summary: Restore a deleted clinic
+ *     tags: [Admin Clinics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: deletedClinicId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Clinic restored successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 clinicId:
+ *                   type: integer
+ *                 clinicName:
+ *                   type: string
+ *                 restoredAt:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Deleted clinic not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/clinics/deleted/:deletedClinicId/restore', requireAdminAuth, async (req, res) => {
+  try {
+    const deletedClinicId = parseInt(req.params.deletedClinicId);
+    
+    if (isNaN(deletedClinicId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid deleted clinic ID'
+      });
+    }
+
+    const result = await clinicDeletionService.restoreClinic(deletedClinicId);
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('Restore clinic error:', error);
+    
+    if (error.message === 'Deleted clinic not found') {
+      return res.status(404).json({
+        success: false,
+        error: 'Deleted clinic not found'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

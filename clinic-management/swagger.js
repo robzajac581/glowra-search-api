@@ -37,6 +37,12 @@ const options = {
           in: 'header',
           name: 'X-API-Key',
           description: 'API key for authentication'
+        },
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'JWT token for admin authentication. Format: Bearer <token>'
         }
       }
     },
@@ -64,6 +70,14 @@ const options = {
       {
         name: 'Health',
         description: 'Health check endpoint'
+      },
+      {
+        name: 'Admin Clinics',
+        description: 'Clinic deletion and restoration endpoints'
+      },
+      {
+        name: 'Admin Dashboard',
+        description: 'Admin dashboard statistics and clinic management'
       }
     ]
   },
