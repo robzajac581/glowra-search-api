@@ -647,26 +647,24 @@ app.get('/api/procedures/search-index', async (req, res) => {
 
 // Get all clinics with their procedures for clinic-based search
 // This endpoint returns a clinic-centric data structure for client-side search
-// Supports optional filtering by location and procedure
+// Supports optional filtering by location, procedure, and clinic name
 // Query parameters:
 //   - location: city name, state abbreviation, or zip code
 //   - procedure: procedure name (case-insensitive, partial match)
 //   - radius: radius in miles for location searches (default: 20-30 for cities, 20 for zip)
+//   - clinicName: clinic name (case-insensitive, partial match) - filters at database level
 app.get('/api/clinics/search-index', async (req, res) => {
   let pool;
   try {
-    const { location, procedure, radius } = req.query;
+    const { location, procedure, radius, clinicName } = req.query;
     
     pool = await db.getConnection();
     if (!pool) {
       throw new Error('Could not establish database connection');
     }
 
-    // Query to get all clinics with their procedures
-    // Includes Latitude and Longitude for distance calculations
-    // Excludes providers that are placeholder "Please Request Consult" entries
-    // Excludes clinics without photos from any source (temporary filter until photo data is complete)
-    const result = await pool.request().query(`
+    // Build the SQL query with optional clinicName filtering
+    let query = `
       SELECT 
         c.ClinicID,
         c.ClinicName,
@@ -697,11 +695,24 @@ app.get('/api/clinics/search-index', async (req, res) => {
       JOIN Categories cat ON p.CategoryID = cat.CategoryID
       WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
         AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
-      ORDER BY c.ClinicID, p.ProcedureName
-    `);
+    `;
+
+    const request = pool.request();
+    
+    // Add clinicName filtering if provided (case-insensitive, partial matching)
+    if (clinicName && clinicName.trim()) {
+      const clinicNamePattern = `%${clinicName.trim()}%`;
+      query += ` AND c.ClinicName LIKE @clinicName`;
+      request.input('clinicName', sql.NVarChar, clinicNamePattern);
+    }
+
+    query += ` ORDER BY c.ClinicID, p.ProcedureName`;
+
+    const result = await request.query(query);
 
     // Query to get gallery photos for all clinics (up to 5 photos per clinic)
-    const photosResult = await pool.request().query(`
+    // Filter by clinicName if provided for efficiency
+    let photosQuery = `
       SELECT 
         ClinicID,
         PhotoID,
@@ -712,9 +723,21 @@ app.get('/api/clinics/search-index', async (req, res) => {
         FROM Clinics c
         JOIN Providers pr ON c.ClinicID = pr.ClinicID
         WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+    `;
+    
+    const photosRequest = pool.request();
+    if (clinicName && clinicName.trim()) {
+      const clinicNamePattern = `%${clinicName.trim()}%`;
+      photosQuery += ` AND c.ClinicName LIKE @clinicName`;
+      photosRequest.input('clinicName', sql.NVarChar, clinicNamePattern);
+    }
+    
+    photosQuery += `
       )
       ORDER BY ClinicID, DisplayOrder ASC
-    `);
+    `;
+    
+    const photosResult = await photosRequest.query(photosQuery);
 
     // Build a map of clinic gallery photos
     const galleryPhotosMap = new Map();
@@ -797,7 +820,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
         filters: {
           location: location || null,
           procedure: procedure || null,
-          radius: radius || null
+          radius: radius || null,
+          clinicName: clinicName || null
         }
       }
     });
