@@ -1226,13 +1226,30 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
  *                   type: array
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       photoUrl:
+ *                         type: string
+ *                       source:
+ *                         type: string
+ *                         enum: [google]
+ *                       isPrimary:
+ *                         type: boolean
+ *                       photoType:
+ *                         type: string
+ *                       width:
+ *                         type: integer
+ *                       height:
+ *                         type: integer
+ *                       displayOrder:
+ *                         type: integer
  *       400:
  *         description: No PlaceID available (neither in query params nor stored in draft)
  *   post:
  *     summary: Get Google Photos for a draft (POST method)
  *     description: |
  *       Same as GET but allows placeId to be passed in the request body.
- *       Useful for immediate use after looking up a placeId without saving to draft first.
+ *       If save=true, photos will be persisted to the draft. If placeId is provided
+ *       and different from draft's placeId, it will also be updated.
  *     tags: [Admin Google]
  *     security:
  *       - bearerAuth: []
@@ -1251,9 +1268,29 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
  *               placeId:
  *                 type: string
  *                 description: Optional Google PlaceID. If provided, uses this instead of the draft's stored placeId.
+ *               save:
+ *                 type: boolean
+ *                 default: false
+ *                 description: If true, persists fetched photos to the draft. User photos are preserved.
  *     responses:
  *       200:
- *         description: Google photos fetched
+ *         description: Google photos fetched (and optionally saved)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 placeId:
+ *                   type: string
+ *                 photos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 draft:
+ *                   type: object
+ *                   description: Updated draft object (only included if save=true)
  *       400:
  *         description: No PlaceID available
  */
@@ -1293,12 +1330,55 @@ async function handleDraftGooglePhotos(req, res) {
     }
     
     // Fetch Google photos
-    const photos = await fetchPlacePhotos(placeId);
+    const googlePhotos = await fetchPlacePhotos(placeId);
+    
+    // Transform Google photos to match draft photo format
+    // Include reference field for later use when inserting into ClinicPhotos
+    const formattedPhotos = googlePhotos.map((photo, index) => ({
+      photoUrl: photo.urls?.large || photo.url,
+      source: 'google',
+      isPrimary: index === 0,
+      photoType: 'clinic',
+      width: photo.width || null,
+      height: photo.height || null,
+      displayOrder: index,
+      reference: photo.reference || null // Include reference for Google photos
+    }));
+    
+    // If save is requested (or if placeId was provided and different from draft's placeId), persist photos
+    const shouldSave = req.body.save !== undefined ? req.body.save : (req.body.placeId && req.body.placeId !== draft.placeId);
+    
+    if (shouldSave) {
+      // Update placeId if it was provided and different
+      if (req.body.placeId && req.body.placeId !== draft.placeId) {
+        await draftService.updateDraft(draftId, { placeId: req.body.placeId });
+      }
+      
+      // Get existing photos to preserve user photos
+      const existingPhotos = draft.photos || [];
+      const userPhotos = existingPhotos.filter(p => p.source !== 'google');
+      
+      // Combine user photos with new Google photos
+      const allPhotos = [...userPhotos, ...formattedPhotos];
+      
+      // Update draft with photos
+      await draftService.updateDraft(draftId, { photos: allPhotos });
+      
+      // Fetch updated draft to return
+      const updatedDraft = await draftService.getDraftById(draftId);
+      
+      return res.json({
+        success: true,
+        placeId,
+        photos: formattedPhotos,
+        draft: updatedDraft
+      });
+    }
     
     res.json({
       success: true,
       placeId, // Include the placeId used for transparency
-      photos
+      photos: formattedPhotos
     });
   } catch (error) {
     console.error('Get Google photos error:', error);

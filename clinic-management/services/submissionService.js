@@ -152,27 +152,31 @@ class SubmissionService {
 
       // Insert photos
       if (submission.photos && submission.photos.length > 0) {
-        for (const photo of submission.photos) {
+        for (let i = 0; i < submission.photos.length; i++) {
+          const photo = submission.photos[i];
           const photoRequest = new sql.Request(transaction);
           photoRequest.input('draftID', sql.Int, draftId);
           photoRequest.input('photoType', sql.NVarChar, photo.photoType || 'clinic');
           photoRequest.input('photoData', sql.NVarChar(sql.MAX), photo.photoData || null);
-          photoRequest.input('photoURL', sql.NVarChar, photo.photoURL || null);
+          // Support both photoURL and photoUrl (camelCase)
+          photoRequest.input('photoURL', sql.NVarChar, photo.photoURL || photo.photoUrl || null);
           photoRequest.input('fileName', sql.NVarChar, photo.fileName || null);
           photoRequest.input('mimeType', sql.NVarChar, photo.mimeType || null);
           photoRequest.input('fileSize', sql.Int, photo.fileSize || null);
           photoRequest.input('isPrimary', sql.Bit, photo.isPrimary ? 1 : 0);
-          photoRequest.input('displayOrder', sql.Int, photo.displayOrder || 0);
+          photoRequest.input('displayOrder', sql.Int, photo.displayOrder ?? i);
           photoRequest.input('caption', sql.NVarChar, photo.caption || null);
+          // Support source field for Google photos
+          photoRequest.input('source', sql.NVarChar, photo.source || 'user');
 
           await photoRequest.query(`
             INSERT INTO DraftPhotos (
               DraftID, PhotoType, PhotoData, PhotoURL, FileName, MimeType,
-              FileSize, IsPrimary, DisplayOrder, Caption
+              FileSize, IsPrimary, DisplayOrder, Caption, Source
             )
             VALUES (
               @draftID, @photoType, @photoData, @photoURL, @fileName, @mimeType,
-              @fileSize, @isPrimary, @displayOrder, @caption
+              @fileSize, @isPrimary, @displayOrder, @caption, @source
             )
           `);
         }

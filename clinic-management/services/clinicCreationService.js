@@ -170,6 +170,24 @@ class ClinicCreationService {
   }
 
   /**
+   * Extract photo reference from Google photo URL
+   * @param {string} photoUrl - Google photo URL
+   * @returns {string|null} - Photo reference or null if not found
+   */
+  extractPhotoReference(photoUrl) {
+    if (!photoUrl) return null;
+    try {
+      const url = new URL(photoUrl);
+      const photoRef = url.searchParams.get('photoreference');
+      return photoRef || null;
+    } catch {
+      // If URL parsing fails, try regex extraction
+      const match = photoUrl.match(/[?&]photoreference=([^&]+)/);
+      return match ? match[1] : null;
+    }
+  }
+
+  /**
    * Handle photos based on photoSource option
    * @param {number} clinicId - Clinic ID
    * @param {Object} draft - Draft object with photos (now normalized to camelCase)
@@ -179,6 +197,7 @@ class ClinicCreationService {
   async handlePhotos(clinicId, draft, photoSource, transaction) {
     // Note: draft.photos is now normalized to camelCase
     const userPhotos = draft.photos ? draft.photos.filter(p => p.source !== 'google') : [];
+    const googlePhotosFromDraft = draft.photos ? draft.photos.filter(p => p.source === 'google') : [];
     let displayOrder = 0;
 
     // Add user photos first if using 'user' or 'both'
@@ -186,14 +205,16 @@ class ClinicCreationService {
       for (const photo of userPhotos) {
         const request = new sql.Request(transaction);
         request.input('clinicId', sql.Int, clinicId);
+        // User photos don't have Google photo references, use placeholder
+        request.input('photoReference', sql.NVarChar(1000), `user-upload-${Date.now()}-${displayOrder}`);
         request.input('photoURL', sql.NVarChar(2000), photo.photoUrl);
         request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
         request.input('displayOrder', sql.Int, displayOrder);
         request.input('photoType', sql.NVarChar(50), photo.photoType || 'clinic');
 
         await request.query(`
-          INSERT INTO ClinicPhotos (ClinicID, PhotoURL, IsPrimary, DisplayOrder, LastUpdated)
-          VALUES (@clinicId, @photoURL, @isPrimary, @displayOrder, GETDATE())
+          INSERT INTO ClinicPhotos (ClinicID, PhotoReference, PhotoURL, IsPrimary, DisplayOrder, LastUpdated)
+          VALUES (@clinicId, @photoReference, @photoURL, @isPrimary, @displayOrder, GETDATE())
         `);
         
         displayOrder++;
@@ -201,21 +222,22 @@ class ClinicCreationService {
     }
 
     // Add Google photos if using 'google' or 'both'
-    if ((photoSource === 'google' || photoSource === 'both') && draft.placeId) {
-      try {
-        const googlePhotos = await fetchPlacePhotos(draft.placeId);
-        
+    if (photoSource === 'google' || photoSource === 'both') {
+      // First try to use Google photos from draft
+      if (googlePhotosFromDraft.length > 0) {
         // Limit Google photos based on source
-        const maxGooglePhotos = photoSource === 'both' ? 5 : 10;
-        const photosToAdd = googlePhotos.slice(0, maxGooglePhotos);
+        const maxGooglePhotos = photoSource === 'both' ? Math.max(0, 5 - userPhotos.length) : 10;
+        const photosToAdd = googlePhotosFromDraft.slice(0, maxGooglePhotos);
 
         for (const photo of photosToAdd) {
           const request = new sql.Request(transaction);
           request.input('clinicId', sql.Int, clinicId);
-          request.input('photoReference', sql.NVarChar(1000), photo.reference);
-          request.input('photoURL', sql.NVarChar(2000), photo.urls?.large || photo.url);
-          request.input('width', sql.Int, photo.width);
-          request.input('height', sql.Int, photo.height);
+          // Extract photo reference from URL or use photo.reference if available
+          const photoReference = photo.reference || this.extractPhotoReference(photo.photoUrl) || `google-${Date.now()}-${displayOrder}`;
+          request.input('photoReference', sql.NVarChar(1000), photoReference);
+          request.input('photoURL', sql.NVarChar(2000), photo.photoUrl);
+          request.input('width', sql.Int, photo.width || null);
+          request.input('height', sql.Int, photo.height || null);
           request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
           request.input('displayOrder', sql.Int, displayOrder);
 
@@ -226,9 +248,38 @@ class ClinicCreationService {
           
           displayOrder++;
         }
-      } catch (error) {
-        console.warn('Failed to fetch Google photos:', error.message);
-        // Continue without Google photos
+      } else if (draft.placeId) {
+        // Fallback: fetch from Google API if no photos in draft
+        try {
+          const googlePhotos = await fetchPlacePhotos(draft.placeId);
+          
+          // Limit Google photos based on source
+          const maxGooglePhotos = photoSource === 'both' ? Math.max(0, 5 - userPhotos.length) : 10;
+          const photosToAdd = googlePhotos.slice(0, maxGooglePhotos);
+
+          for (const photo of photosToAdd) {
+            const request = new sql.Request(transaction);
+            request.input('clinicId', sql.Int, clinicId);
+            // Google photos from API have reference field
+            const photoReference = photo.reference || this.extractPhotoReference(photo.urls?.large || photo.url) || `google-${Date.now()}-${displayOrder}`;
+            request.input('photoReference', sql.NVarChar(1000), photoReference);
+            request.input('photoURL', sql.NVarChar(2000), photo.urls?.large || photo.url);
+            request.input('width', sql.Int, photo.width || null);
+            request.input('height', sql.Int, photo.height || null);
+            request.input('isPrimary', sql.Bit, displayOrder === 0 ? 1 : 0);
+            request.input('displayOrder', sql.Int, displayOrder);
+
+            await request.query(`
+              INSERT INTO ClinicPhotos (ClinicID, PhotoReference, PhotoURL, Width, Height, IsPrimary, DisplayOrder, LastUpdated)
+              VALUES (@clinicId, @photoReference, @photoURL, @width, @height, @isPrimary, @displayOrder, GETDATE())
+            `);
+            
+            displayOrder++;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch Google photos:', error.message);
+          // Continue without Google photos
+        }
       }
     }
 
@@ -257,7 +308,14 @@ class ClinicCreationService {
    * Update existing clinic (for merge scenarios)
    * Note: draft is now normalized to camelCase by draftService.getDraftById
    */
-  async updateExistingClinic(draft, transaction, reviewedBy) {
+  async updateExistingClinic(draft, transaction, reviewedBy, options = {}) {
+    const {
+      photoSource = 'user',
+      ratingSource = 'google',
+      manualRating = null,
+      manualReviewCount = null
+    } = options;
+    
     const clinicId = draft.duplicateClinicId;
     const request = new sql.Request(transaction);
 
@@ -288,6 +346,38 @@ class ClinicCreationService {
       request.input('longitude', sql.Decimal(11, 7), draft.longitude);
     }
 
+    // Update ratings if provided
+    if (ratingSource === 'google' && draft.placeId) {
+      try {
+        const googleData = await fetchGooglePlaceDetails(draft.placeId, false);
+        if (googleData) {
+          updates.push('GoogleRating = @googleRating');
+          updates.push('GoogleReviewCount = @googleReviewCount');
+          request.input('googleRating', sql.Decimal(2, 1), googleData.rating);
+          request.input('googleReviewCount', sql.Int, googleData.reviewCount);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch Google rating, using draft values:', error.message);
+        if (draft.googleRating) {
+          updates.push('GoogleRating = @googleRating');
+          request.input('googleRating', sql.Decimal(2, 1), draft.googleRating);
+        }
+        if (draft.googleReviewCount) {
+          updates.push('GoogleReviewCount = @googleReviewCount');
+          request.input('googleReviewCount', sql.Int, draft.googleReviewCount);
+        }
+      }
+    } else if (ratingSource === 'manual') {
+      if (manualRating !== null) {
+        updates.push('GoogleRating = @googleRating');
+        request.input('googleRating', sql.Decimal(2, 1), manualRating);
+      }
+      if (manualReviewCount !== null) {
+        updates.push('GoogleReviewCount = @googleReviewCount');
+        request.input('googleReviewCount', sql.Int, manualReviewCount);
+      }
+    }
+
     if (updates.length > 0) {
       request.input('clinicID', sql.Int, clinicId);
       await request.query(`
@@ -295,6 +385,27 @@ class ClinicCreationService {
         SET ${updates.join(', ')}
         WHERE ClinicID = @clinicID
       `);
+    }
+
+    // Handle photos based on photoSource option
+    // Delete existing photos first if we're replacing them
+    if (photoSource === 'google' || photoSource === 'both') {
+      await transaction.request()
+        .input('clinicId', sql.Int, clinicId)
+        .query('DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId');
+      
+      // Use the same handlePhotos method to add photos
+      await this.handlePhotos(clinicId, draft, photoSource, transaction);
+    } else if (photoSource === 'user' && draft.photos && draft.photos.length > 0) {
+      // Only update if there are user photos in the draft
+      const userPhotos = draft.photos.filter(p => p.source !== 'google');
+      if (userPhotos.length > 0) {
+        await transaction.request()
+          .input('clinicId', sql.Int, clinicId)
+          .query('DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId');
+        
+        await this.handlePhotos(clinicId, draft, photoSource, transaction);
+      }
     }
 
     // Add new providers if they don't exist (using camelCase from normalized draft)

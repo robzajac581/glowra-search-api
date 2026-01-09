@@ -105,9 +105,14 @@ const providerPhotoFields = {
 function validatePhoto(photo) {
   const errors = [];
   
-  // Must have either photoData or photoURL
-  if (!photo.photoData && !photo.photoURL) {
-    errors.push({ field: 'photo', message: 'Either photoData or photoURL is required' });
+  // Support both camelCase (photoUrl) and PascalCase (photoURL) for backward compatibility
+  const photoUrl = photo.photoUrl || photo.photoURL;
+  const photoData = photo.photoData;
+  
+  // Must have either photoData or photoURL/photoUrl
+  // Google photos (source: 'google') only need photoUrl, user photos need either photoData or photoUrl
+  if (!photoData && !photoUrl) {
+    errors.push({ field: 'photoUrl', message: 'Either photoData or photoUrl is required' });
   }
   
   // Validate MIME type if provided
@@ -119,10 +124,10 @@ function validatePhoto(photo) {
   }
   
   // Validate base64 data if provided
-  if (photo.photoData) {
+  if (photoData) {
     // Check if it's a valid data URL
     const dataUrlRegex = /^data:image\/(jpeg|png|webp|gif);base64,/;
-    if (!dataUrlRegex.test(photo.photoData)) {
+    if (!dataUrlRegex.test(photoData)) {
       errors.push({ 
         field: 'photoData', 
         message: 'Invalid image data. Must be base64 encoded with data URL prefix' 
@@ -130,7 +135,7 @@ function validatePhoto(photo) {
     }
     
     // Rough size check (base64 is ~33% larger than original)
-    const base64Data = photo.photoData.split(',')[1] || '';
+    const base64Data = photoData.split(',')[1] || '';
     const estimatedSize = (base64Data.length * 3) / 4;
     if (estimatedSize > MAX_FILE_SIZE) {
       errors.push({ 
@@ -140,12 +145,12 @@ function validatePhoto(photo) {
     }
   }
   
-  // Validate URL if provided
-  if (photo.photoURL) {
+  // Validate URL if provided (support both camelCase and PascalCase)
+  if (photoUrl) {
     try {
-      new URL(photo.photoURL);
+      new URL(photoUrl);
     } catch {
-      errors.push({ field: 'photoURL', message: 'Invalid URL format' });
+      errors.push({ field: 'photoUrl', message: 'Invalid URL format' });
     }
   }
   
