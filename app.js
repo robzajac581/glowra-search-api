@@ -11,6 +11,7 @@ const { initRatingRefreshJob } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
+const { matchesProcedureSearch, matchesClinicNameSearch, calculateRelevanceScore } = require('./utils/searchUtils');
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -658,6 +659,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
   try {
     const { location, procedure, radius, clinicName } = req.query;
     
+    
     pool = await db.getConnection();
     if (!pool) {
       throw new Error('Could not establish database connection');
@@ -699,11 +701,21 @@ app.get('/api/clinics/search-index', async (req, res) => {
 
     const request = pool.request();
     
-    // Add clinicName filtering if provided (case-insensitive, partial matching)
+    // Add clinicName filtering if provided (fuzzy matching with normalization)
     if (clinicName && clinicName.trim()) {
-      const clinicNamePattern = `%${clinicName.trim()}%`;
-      query += ` AND c.ClinicName LIKE @clinicName`;
-      request.input('clinicName', sql.NVarChar, clinicNamePattern);
+      const clinicNameSearch = clinicName.trim();
+      const clinicNamePattern = `%${clinicNameSearch.toLowerCase()}%`;
+      const clinicNameNormalized = `%${clinicNameSearch.toLowerCase().replace(/\s+/g, '')}%`;
+      
+      // Fuzzy matching: check both normalized (space-removed) match and partial match
+      // SQL Server doesn't have great fuzzy matching, so we use multiple OR conditions
+      // The actual fuzzy matching will be refined in JavaScript after fetching results
+      query += ` AND (
+        LOWER(c.ClinicName) LIKE @clinicNamePattern
+        OR LOWER(REPLACE(c.ClinicName, ' ', '')) LIKE @clinicNameNormalized
+      )`;
+      request.input('clinicNamePattern', sql.NVarChar, clinicNamePattern);
+      request.input('clinicNameNormalized', sql.NVarChar, clinicNameNormalized);
     }
 
     query += ` ORDER BY c.ClinicID, p.ProcedureName`;
@@ -727,9 +739,17 @@ app.get('/api/clinics/search-index', async (req, res) => {
     
     const photosRequest = pool.request();
     if (clinicName && clinicName.trim()) {
-      const clinicNamePattern = `%${clinicName.trim()}%`;
-      photosQuery += ` AND c.ClinicName LIKE @clinicName`;
-      photosRequest.input('clinicName', sql.NVarChar, clinicNamePattern);
+      const clinicNameSearch = clinicName.trim();
+      const clinicNamePattern = `%${clinicNameSearch.toLowerCase()}%`;
+      const clinicNameNormalized = `%${clinicNameSearch.toLowerCase().replace(/\s+/g, '')}%`;
+      
+      // Use same fuzzy matching logic as main query
+      photosQuery += ` AND (
+        LOWER(c.ClinicName) LIKE @clinicNamePattern
+        OR LOWER(REPLACE(c.ClinicName, ' ', '')) LIKE @clinicNameNormalized
+      )`;
+      photosRequest.input('clinicNamePattern', sql.NVarChar, clinicNamePattern);
+      photosRequest.input('clinicNameNormalized', sql.NVarChar, clinicNameNormalized);
     }
     
     photosQuery += `
@@ -801,32 +821,122 @@ app.get('/api/clinics/search-index', async (req, res) => {
 
     // Convert map to array
     let clinics = Array.from(clinicsMap.values());
+    
+    // Track if location parameter was converted to procedure search
+    let locationConvertedToProcedure = false;
+    let convertedProcedureTerm = null;
+
+    // Apply clinicName fuzzy filtering if provided (refine SQL results with JavaScript fuzzy matching)
+    if (clinicName && clinicName.trim()) {
+      clinics = clinics.filter(clinic => 
+        matchesClinicNameSearch(clinic.clinicName, clinicName)
+      );
+      
+      // Sort by relevance score (exact matches first)
+      clinics.sort((a, b) => {
+        const scoreA = calculateRelevanceScore(a.clinicName, clinicName);
+        const scoreB = calculateRelevanceScore(b.clinicName, clinicName);
+        return scoreB - scoreA; // Higher score first
+      });
+    }
 
     // Apply location filtering if provided
+    // But first check if the location parameter might actually be a procedure name
     if (location) {
-      clinics = await filterByLocation(clinics, location, radius);
+      const locationInfo = parseLocationInput(location);
+      
+      // If parsed as a city (which is the default), check if it might actually be a procedure
+      // This handles cases where frontend sends procedure queries as "location" parameter
+      if (locationInfo.type === 'city') {
+        // Check if any clinics have procedures matching this "location" term
+        const testFiltered = filterByProcedure(clinics, location);
+        if (testFiltered.length > 0) {
+          clinics = testFiltered;
+          locationConvertedToProcedure = true;
+          convertedProcedureTerm = location;
+          
+          // Sort by procedure relevance
+          clinics.sort((a, b) => {
+            const bestMatchA = a.procedures
+              .map(proc => calculateRelevanceScore(proc.procedureName, location))
+              .reduce((max, score) => Math.max(max, score), 0);
+            const bestMatchB = b.procedures
+              .map(proc => calculateRelevanceScore(proc.procedureName, location))
+              .reduce((max, score) => Math.max(max, score), 0);
+            return bestMatchB - bestMatchA;
+          });
+        } else {
+          // No procedure matches found, proceed with location filtering as city
+          clinics = await filterByLocation(clinics, location, radius);
+        }
+      } else if (!locationInfo.type || !locationInfo.value) {
+        // Invalid location parse, check if it's a procedure
+        const testFiltered = filterByProcedure(clinics, location);
+        if (testFiltered.length > 0) {
+          clinics = testFiltered;
+          locationConvertedToProcedure = true;
+          convertedProcedureTerm = location;
+          
+          // Sort by procedure relevance
+          clinics.sort((a, b) => {
+            const bestMatchA = a.procedures
+              .map(proc => calculateRelevanceScore(proc.procedureName, location))
+              .reduce((max, score) => Math.max(max, score), 0);
+            const bestMatchB = b.procedures
+              .map(proc => calculateRelevanceScore(proc.procedureName, location))
+              .reduce((max, score) => Math.max(max, score), 0);
+            return bestMatchB - bestMatchA;
+          });
+        } else {
+          // No procedure matches found, try location filtering anyway (will return empty)
+          clinics = await filterByLocation(clinics, location, radius);
+        }
+      } else {
+        // Valid location (state or zip), proceed with location filtering
+        clinics = await filterByLocation(clinics, location, radius);
+      }
     }
 
     // Apply procedure filtering if provided
-    if (procedure) {
-      clinics = filterByProcedure(clinics, procedure);
+    if (procedure && procedure.trim()) {
+      const procedureSearchTerm = procedure.trim();
+      clinics = filterByProcedure(clinics, procedureSearchTerm);
+      
+      // Sort by procedure relevance if procedure filter is applied
+      clinics.sort((a, b) => {
+        // Find best matching procedure in each clinic
+        const bestMatchA = a.procedures
+          .map(proc => calculateRelevanceScore(proc.procedureName, procedureSearchTerm))
+          .reduce((max, score) => Math.max(max, score), 0);
+        const bestMatchB = b.procedures
+          .map(proc => calculateRelevanceScore(proc.procedureName, procedureSearchTerm))
+          .reduce((max, score) => Math.max(max, score), 0);
+        return bestMatchB - bestMatchA; // Higher score first
+      });
     }
 
-    res.json({
+    // Build response with correct filter metadata
+    // If location was converted to procedure search, reflect that in the response
+    const responseFilters = {
+      location: locationConvertedToProcedure ? null : (location || null),
+      procedure: locationConvertedToProcedure ? convertedProcedureTerm : (procedure || null),
+      radius: radius || null,
+      clinicName: clinicName || null
+    };
+    
+    const response = {
       clinics,
       meta: {
         totalClinics: clinics.length,
         timestamp: new Date().toISOString(),
-        filters: {
-          location: location || null,
-          procedure: procedure || null,
-          radius: radius || null,
-          clinicName: clinicName || null
-        }
+        filters: responseFilters
       }
-    });
+    };
+    
+    res.json(response);
   } catch (error) {
-    console.error('Error in /api/clinics/search-index:', error);
+    console.error('[ENDPOINT DEBUG] Error in /api/clinics/search-index:', error);
+    console.error('[ENDPOINT DEBUG] Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Internal server error',
       message: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -1068,9 +1178,10 @@ async function filterByZipRadius(clinics, zipCode, radius) {
 }
 
 /**
- * Filter clinics by procedure name
+ * Filter clinics by procedure name with fuzzy matching
+ * Supports word splits (e.g., "micro blading" matches "microblading")
  * @param {Array} clinics - Array of clinic objects
- * @param {string} procedureName - Procedure name to search for (case-insensitive, partial match)
+ * @param {string} procedureName - Procedure name to search for (case-insensitive, fuzzy match)
  * @returns {Array} Filtered clinics array
  */
 function filterByProcedure(clinics, procedureName) {
@@ -1092,22 +1203,24 @@ function filterByProcedure(clinics, procedureName) {
   return clinics.filter(clinic => {
     // Check if clinic has any procedure matching the search term
     return clinic.procedures.some(proc => {
-      const procName = proc.procedureName.toLowerCase();
-      // Direct match
-      if (procName.includes(lowerProcedure)) {
+      // Use fuzzy matching utility (handles word splits like "micro blading" vs "microblading")
+      if (matchesProcedureSearch(proc.procedureName, procedureName)) {
         return true;
       }
+      
       // Abbreviation match (e.g., "BBL" matches "Brazilian Butt Lift")
-      if (expandedTerm && procName.includes(expandedTerm)) {
+      if (expandedTerm && matchesProcedureSearch(proc.procedureName, expandedTerm)) {
         return true;
       }
+      
       // Reverse: if search term is full name, check if procedure name contains abbreviation
       // (e.g., "Brazilian Butt Lift" matches "BBL")
       for (const [abbr, fullName] of Object.entries(procedureAbbreviations)) {
-        if (lowerProcedure.includes(fullName) && procName.includes(abbr)) {
+        if (lowerProcedure.includes(fullName) && matchesProcedureSearch(proc.procedureName, abbr)) {
           return true;
         }
       }
+      
       return false;
     });
   });
