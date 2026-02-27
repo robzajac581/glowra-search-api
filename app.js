@@ -7,7 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
-const { initRatingRefreshJob } = require('./jobs/scheduledRefresh');
+const { initRatingRefreshJob, refreshAllClinicPhotos } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
@@ -292,14 +292,15 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
 });
 
 /**
- * Photo Proxy Endpoint for Individual Photos - Handles Google Places photos by PhotoID with caching
+ * Photo Proxy Endpoint for Individual Photos - Handles Google Places and user-uploaded photos by PhotoID with caching
  * GET /api/photos/proxy/:photoId
  * 
  * This endpoint:
- * - Proxies individual Google Places photos from ClinicPhotos table
- * - Supports size parameter: thumbnail (400px), medium (800px), large (1600px)
+ * - Proxies photos from ClinicPhotos table (Google Places or user-uploaded)
+ * - User-uploaded photos: uses PhotoURL directly (PhotoReference starts with "user-upload" or "google-")
+ * - Google photos: constructs Places API URL from PhotoReference
+ * - Supports size parameter for Google photos: thumbnail (400px), medium (800px), large (1600px)
  * - Caches images locally for 7 days
- * - Uses authenticated API requests to Google
  * - Returns actual image binary data with proper headers
  */
 app.get('/api/photos/proxy/:photoId', async (req, res) => {
@@ -346,10 +347,27 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
     }
 
     const photo = result.recordset[0];
-    
-    // Construct the Google Places Photo URL with the appropriate size
-    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-    const photoURL = `https://maps.googleapis.com/maps/api/place/photo?key=${apiKey}&photoreference=${photo.PhotoReference}&maxwidth=${maxWidth}`;
+
+    // User-uploaded photos have PhotoReference like "user-upload-123-0" or "google-123-0" (invalid for Google API)
+    // Google photos have long alphanumeric references from Places API
+    const isUserUpload = !photo.PhotoReference ||
+      photo.PhotoReference.startsWith('user-upload') ||
+      photo.PhotoReference.startsWith('google-');
+
+    let photoURL;
+    if (isUserUpload && photo.PhotoURL && /^https?:\/\//i.test(photo.PhotoURL)) {
+      // Use PhotoURL directly for user-uploaded photos (S3, CDN, etc.)
+      photoURL = photo.PhotoURL;
+    } else if (photo.PhotoReference) {
+      // Google Places photo - construct API URL
+      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+      photoURL = `https://maps.googleapis.com/maps/api/place/photo?key=${apiKey}&photoreference=${photo.PhotoReference}&maxwidth=${maxWidth}`;
+    } else {
+      return res.status(404).json({
+        error: 'Photo not available',
+        message: 'No valid photo reference or URL'
+      });
+    }
 
     // Generate cache key based on photo ID and size
     const cacheKey = crypto.createHash('md5').update(`${photoId}-${size}`).digest('hex');
@@ -1928,6 +1946,82 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   } catch (error) {
     console.error('Error in /api/clinics/:clinicId/procedures:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Health/status endpoint for photo refresh monitoring
+ * GET /api/health/photo-status
+ *
+ * Returns last photo refresh time and whether refresh is overdue.
+ * Useful for monitoring and external schedulers (e.g., cron-job.org).
+ */
+app.get('/api/health/photo-status', async (req, res) => {
+  let pool;
+  try {
+    pool = await db.getConnection();
+    if (!pool) {
+      return res.status(503).json({
+        status: 'unavailable',
+        error: 'Database connection failed'
+      });
+    }
+
+    const photoResult = await pool.request().query(`
+      SELECT TOP 1 LastUpdated 
+      FROM ClinicPhotos 
+      ORDER BY LastUpdated DESC
+    `);
+
+    const lastPhotoUpdate = photoResult.recordset[0]?.LastUpdated;
+    const now = new Date();
+    const PHOTO_REFRESH_INTERVAL_DAYS = 7;
+    const daysSinceUpdate = lastPhotoUpdate
+      ? (now - new Date(lastPhotoUpdate)) / (1000 * 60 * 60 * 24)
+      : null;
+    const isOverdue = lastPhotoUpdate
+      ? daysSinceUpdate > PHOTO_REFRESH_INTERVAL_DAYS
+      : true;
+
+    res.json({
+      status: isOverdue ? 'overdue' : 'ok',
+      lastPhotoRefresh: lastPhotoUpdate ? lastPhotoUpdate.toISOString() : null,
+      daysSinceRefresh: daysSinceUpdate !== null ? Math.round(daysSinceUpdate * 10) / 10 : null,
+      refreshIntervalDays: PHOTO_REFRESH_INTERVAL_DAYS,
+      message: isOverdue
+        ? 'Photo refresh is overdue. Consider triggering manually via POST /api/admin/refresh-photos'
+        : 'Photos are within refresh interval'
+    });
+  } catch (error) {
+    console.error('Error in /api/health/photo-status:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * Admin endpoint to manually trigger photo refresh
+ * POST /api/admin/refresh-photos
+ *
+ * For use by external schedulers (cron-job.org, GitHub Actions) when in-process
+ * cron may not run reliably (e.g., serverless, frequent restarts).
+ * TODO: add auth (e.g., X-API-Key) for production use
+ */
+app.post('/api/admin/refresh-photos', async (req, res) => {
+  try {
+    const result = await refreshAllClinicPhotos();
+    res.json({
+      message: 'Photo refresh completed',
+      ...result
+    });
+  } catch (error) {
+    console.error('Error in /api/admin/refresh-photos:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
   }
 });
 

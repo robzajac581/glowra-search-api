@@ -4,7 +4,7 @@ const { batchFetchPlaceDetails, fetchPlacePhotos } = require('../utils/googlePla
 const clinicDeletionService = require('../clinic-management/services/clinicDeletionService');
 
 // Configuration for refresh intervals (in days)
-const PHOTO_REFRESH_INTERVAL_DAYS = 14; // Bi-weekly
+const PHOTO_REFRESH_INTERVAL_DAYS = 7; // Weekly - Google photo references expire in 30-60 days
 const RATING_REFRESH_INTERVAL_DAYS = 1; // Daily
 
 /**
@@ -25,7 +25,7 @@ function initRatingRefreshJob() {
   console.log('Initializing rating and photo refresh cron job...');
   console.log(`Schedule: Daily at 2:00 AM (${cronSchedule})`);
   console.log('  - Ratings: Daily');
-  console.log('  - Photos: Bi-weekly (1st & 15th of month)');
+  console.log('  - Photos: Weekly (every Sunday)');
   
   // Initialize deleted clinics cleanup job (runs at 3 AM)
   initDeletedClinicsCleanupJob();
@@ -45,11 +45,10 @@ function initRatingRefreshJob() {
       // Always refresh ratings
       await refreshAllClinicRatings();
       
-      // Refresh photos bi-weekly on the 1st and 15th of each month
-      // Google photo references expire after ~30-60 days, so bi-weekly keeps them fresh
+      // Refresh photos weekly (every Sunday) - Google photo references expire after ~30-60 days
       const today = new Date();
-      if (today.getDate() === 1 || today.getDate() === 15) {
-        console.log('\n🖼️  Bi-weekly photo refresh starting...');
+      if (today.getDay() === 0) { // 0 = Sunday
+        console.log('\n🖼️  Weekly photo refresh starting...');
         await refreshAllClinicPhotos();
       }
     } catch (error) {
@@ -269,7 +268,8 @@ async function manualRefresh() {
 /**
  * Refresh photos for all clinics with PlaceIDs
  * Fetches fresh photo references from Google Places API to prevent expiration
- * Google photo references can expire after ~30-60 days, so we refresh bi-weekly
+ * Google photo references can expire after ~30-60 days, so we refresh weekly
+ * Preserves user-uploaded photos (PhotoReference LIKE 'user-upload%')
  */
 async function refreshAllClinicPhotos() {
   let pool;
@@ -306,15 +306,25 @@ async function refreshAllClinicPhotos() {
         
         if (!photos || photos.length === 0) {
           console.log(`   ⊘ No photos available for ${clinic.ClinicName}`);
+          // Still delete expired Google photos even if no new ones (preserves user uploads)
+          await pool.request()
+            .input('clinicId', sql.Int, clinic.ClinicID)
+            .query(`DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId AND PhotoReference NOT LIKE 'user-upload%'`);
           continue;
         }
-        
-        // Delete existing photos for this clinic
+
+        // Delete only Google photos - preserve user-uploaded photos (PhotoReference LIKE 'user-upload%')
         await pool.request()
           .input('clinicId', sql.Int, clinic.ClinicID)
-          .query('DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId');
-        
-        // Insert new photos (limit to 20 per clinic)
+          .query(`DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId AND PhotoReference NOT LIKE 'user-upload%'`);
+
+        // Get current max display order for user photos (to append Google photos after them)
+        const maxOrderResult = await pool.request()
+          .input('clinicId', sql.Int, clinic.ClinicID)
+          .query(`SELECT ISNULL(MAX(DisplayOrder), -1) as MaxOrder FROM ClinicPhotos WHERE ClinicID = @clinicId`);
+        const startDisplayOrder = (maxOrderResult.recordset[0]?.MaxOrder ?? -1) + 1;
+
+        // Insert new Google photos (limit to 20 per clinic)
         const photosToStore = photos.slice(0, 20);
         
         for (let i = 0; i < photosToStore.length; i++) {
@@ -332,8 +342,8 @@ async function refreshAllClinicPhotos() {
             .input('width', sql.Int, photo.width)
             .input('height', sql.Int, photo.height)
             .input('attributionText', sql.NVarChar(500), attributionText)
-            .input('isPrimary', sql.Bit, photo.isPrimary ? 1 : 0)
-            .input('displayOrder', sql.Int, i)
+            .input('isPrimary', sql.Bit, (startDisplayOrder === 0 && i === 0) ? 1 : 0) // First photo is primary only if no user photos
+            .input('displayOrder', sql.Int, startDisplayOrder + i)
             .query(`
               INSERT INTO ClinicPhotos (
                 ClinicID, PhotoReference, PhotoURL, Width, Height, 

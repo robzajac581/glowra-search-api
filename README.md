@@ -8,7 +8,7 @@ Backend API for the Glowra clinic search and rating system.
 - Google Places API integration for clinic ratings, reviews, and photos
 - Gallery photos included in search index (up to 5 photos per clinic)
 - Automatic rating cache with configurable expiration
-- Scheduled daily rating refresh and monthly photo refresh
+- Scheduled daily rating refresh and weekly photo refresh
 - Admin endpoints for manual rating and photo updates
 - Photo proxy with server-side caching to prevent rate limiting
 
@@ -222,6 +222,42 @@ Manually trigger a rating refresh for one or all clinics.
   "updated": 8,
   "failed": 2,
   "details": [...]
+}
+```
+
+#### Photo Refresh Status (Monitoring)
+```
+GET /api/health/photo-status
+```
+
+Returns last photo refresh time for monitoring. Useful for external schedulers.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "lastPhotoRefresh": "2025-02-27T12:00:00.000Z",
+  "daysSinceRefresh": 2.5,
+  "refreshIntervalDays": 7,
+  "message": "Photos are within refresh interval"
+}
+```
+
+#### Manual Photo Refresh
+```
+POST /api/admin/refresh-photos
+```
+
+Manually trigger a photo refresh for all clinics. For use by external schedulers (cron-job.org, GitHub Actions) when in-process cron may not run reliably. Google photo references expire after ~30-60 days; weekly refresh prevents broken images.
+
+**Response:**
+```json
+{
+  "message": "Photo refresh completed",
+  "total": 150,
+  "updated": 148,
+  "failed": 2,
+  "totalPhotos": 2500
 }
 ```
 
