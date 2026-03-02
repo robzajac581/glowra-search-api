@@ -407,18 +407,31 @@ class DraftService {
           .input('draftID', sql.Int, draftId)
           .query('DELETE FROM DraftProcedures WHERE DraftID = @draftID');
 
-        // Insert new procedures
+        // Insert new procedures (including price fields: priceMin, priceMax, averagePrice, priceUnit)
         for (const procedure of updateData.procedures) {
+          // Accept averagePrice (FE) or averageCost (legacy)
+          const averageCost = procedure.averagePrice ?? procedure.averageCost;
+          // Accept providerNames (FE array) or providerName (legacy singular)
+          const providerNames = procedure.providerNames ?? (procedure.providerName ? [procedure.providerName] : []);
+          const providerName = Array.isArray(providerNames) && providerNames.length > 0
+            ? providerNames[0]
+            : (procedure.providerName || null);
+
           const procedureRequest = new sql.Request(transaction);
           procedureRequest.input('draftID', sql.Int, draftId);
           procedureRequest.input('procedureName', sql.NVarChar, procedure.procedureName);
           procedureRequest.input('category', sql.NVarChar, procedure.category);
-          procedureRequest.input('averageCost', sql.Decimal(10, 2), procedure.averageCost || null);
-          procedureRequest.input('providerName', sql.NVarChar, procedure.providerName || null);
+          procedureRequest.input('averageCost', sql.Decimal(10, 2), averageCost ?? null);
+          procedureRequest.input('priceMin', sql.Decimal(10, 2), procedure.priceMin ?? null);
+          procedureRequest.input('priceMax', sql.Decimal(10, 2), procedure.priceMax ?? null);
+          procedureRequest.input('priceUnit', sql.NVarChar, procedure.priceUnit ?? null);
+          procedureRequest.input('providerNames', sql.NVarChar(sql.MAX),
+            Array.isArray(providerNames) ? JSON.stringify(providerNames) : null);
+          procedureRequest.input('providerName', sql.NVarChar, providerName);
 
           await procedureRequest.query(`
-            INSERT INTO DraftProcedures (DraftID, ProcedureName, Category, AverageCost, ProviderName)
-            VALUES (@draftID, @procedureName, @category, @averageCost, @providerName)
+            INSERT INTO DraftProcedures (DraftID, ProcedureName, Category, AverageCost, PriceMin, PriceMax, PriceUnit, ProviderNames, ProviderName)
+            VALUES (@draftID, @procedureName, @category, @averageCost, @priceMin, @priceMax, @priceUnit, @providerNames, @providerName)
           `);
         }
       }

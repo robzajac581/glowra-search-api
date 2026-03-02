@@ -298,10 +298,10 @@ function normalizeProviders(providers) {
  */
 function normalizeProcedures(procedures) {
   if (!procedures || !Array.isArray(procedures)) return [];
-  
+
   return procedures.map(proc => {
     const normalized = normalizeResponse(proc);
-    
+
     // Parse providerNames if it's a JSON string
     if (normalized.providerNames && typeof normalized.providerNames === 'string') {
       try {
@@ -310,7 +310,14 @@ function normalizeProcedures(procedures) {
         // Keep as string if parsing fails
       }
     }
-    
+
+    // FE expects averagePrice (DraftProcedure schema); DB stores as averageCost
+    if (normalized.averageCost !== undefined && normalized.averageCost !== null) {
+      normalized.averagePrice = normalized.averageCost;
+    } else {
+      normalized.averagePrice = null;
+    }
+
     return normalized;
   });
 }

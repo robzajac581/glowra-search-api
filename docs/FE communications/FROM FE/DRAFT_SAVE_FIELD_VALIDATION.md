@@ -324,7 +324,7 @@ The frontend validates the following field categories:
 
 ### Array Fields
 - [x] `providers` - Working
-- [x] `procedures` - Working
+- [x] `procedures` - Working (including `priceMin`, `priceMax`, `averagePrice`, `priceUnit` per procedure)
 - [x] `photos` - Working
 
 ---
