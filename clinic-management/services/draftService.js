@@ -409,8 +409,11 @@ class DraftService {
 
         // Insert new procedures (including price fields: priceMin, priceMax, averagePrice, priceUnit)
         for (const procedure of updateData.procedures) {
-          // Accept averagePrice (FE) or averageCost (legacy)
-          const averageCost = procedure.averagePrice ?? procedure.averageCost;
+          // Accept averagePrice (FE) or averageCost (legacy). When averagePrice is explicitly null
+          // (user cleared the field), persist null - do not fall back to averageCost.
+          const averageCost = procedure.averagePrice !== undefined
+            ? procedure.averagePrice
+            : procedure.averageCost;
           // Accept providerNames (FE array) or providerName (legacy singular)
           const providerNames = procedure.providerNames ?? (procedure.providerName ? [procedure.providerName] : []);
           const providerName = Array.isArray(providerNames) && providerNames.length > 0
