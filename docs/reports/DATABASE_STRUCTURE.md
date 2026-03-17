@@ -26,7 +26,10 @@ Primary clinic table with essential information and frequently-displayed Google 
 |--------|------|-------------|-------|
 | `ClinicID` | INT (PK) | Unique clinic identifier | Primary key, used in JOINs |
 | `ClinicName` | NVARCHAR(255) | Clinic display name | Show in listings |
-| `Address` | NVARCHAR(500) | Full street address | Display on cards/details |
+| `Address` | NVARCHAR(500) | Street address only (no city/state/zip) | Display on cards/details |
+| `City` | NVARCHAR(100) | City | Address component |
+| `State` | NVARCHAR(100) | State/Province | Address component |
+| `PostalCode` | NVARCHAR(20) | ZIP/Postal code | Address component |
 | `Latitude` | DECIMAL(10,7) | Geographic latitude | Map pins, location search |
 | `Longitude` | DECIMAL(11,7) | Geographic longitude | Map pins, location search |
 | `PlaceID` | NVARCHAR(500) | Google Places ID | Unique Google identifier |

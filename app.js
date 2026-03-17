@@ -11,6 +11,7 @@ const { initRatingRefreshJob, refreshAllClinicPhotos } = require('./jobs/schedul
 const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
+const { mergeAddressForResponse } = require('./utils/addressUtils');
 const { matchesProcedureSearch, matchesClinicNameSearch, calculateRelevanceScore } = require('./utils/searchUtils');
 const app = express();
 const port = process.env.PORT || 3001;
@@ -684,14 +685,16 @@ app.get('/api/clinics/search-index', async (req, res) => {
     }
 
     // Build the SQL query with optional clinicName filtering
+    // Address: street only - prefer GooglePlacesData.Street when available
+    // City/State/Zip: prefer Clinics columns, then GooglePlacesData, then Locations
     let query = `
       SELECT 
         c.ClinicID,
         c.ClinicName,
-        c.Address,
-        COALESCE(l.City, g.City) as City,
-        COALESCE(l.State, g.State) as State,
-        g.PostalCode,
+        COALESCE(g.Street, c.Address) as Address,
+        COALESCE(c.City, g.City, l.City) as City,
+        COALESCE(c.State, g.State, l.State) as State,
+        COALESCE(c.PostalCode, g.PostalCode) as PostalCode,
         c.Latitude,
         c.Longitude,
         c.GoogleRating,
@@ -1367,7 +1370,10 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
       SELECT TOP (@limit)
         c.ClinicID,
         c.ClinicName,
-        c.Address,
+        COALESCE(g.Street, c.Address) as Address,
+        COALESCE(c.City, g.City, l.City) as City,
+        COALESCE(c.State, g.State, l.State) as State,
+        COALESCE(c.PostalCode, g.PostalCode) as PostalCode,
         c.Latitude,
         c.Longitude,
         c.GoogleRating,
@@ -1399,6 +1405,7 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         ) AS DistanceMiles
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID
       LEFT JOIN (
         SELECT ClinicID, PhotoURL,
           ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
@@ -1456,6 +1463,9 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         clinicId: clinic.ClinicID,
         clinicName: clinic.ClinicName,
         address: clinic.Address,
+        city: clinic.City,
+        state: clinic.State,
+        zipCode: clinic.PostalCode,
         phone: clinic.Phone,
         website: clinic.Website,
         rating: clinic.GoogleRating,
@@ -1532,6 +1542,9 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         c.ClinicID,
         c.ClinicName,
         c.Address,
+        c.City,
+        c.State,
+        c.PostalCode,
         c.Phone,
         c.Website,
         c.Latitude,
@@ -1546,6 +1559,7 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         -- Google Places Data fields (LEFT JOIN handles clinics without this data)
         g.Photo,
         g.Logo,
+        g.Street,
         g.StreetView,
         g.Description,
         g.WorkingHours,
@@ -1565,11 +1579,15 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         g.Subtypes,
         g.BusinessName,
         g.Email,
-        g.City,
-        g.State,
-        g.PostalCode
+        g.City as GpCity,
+        g.State as GpState,
+        g.PostalCode as GpPostalCode,
+        
+        l.City as LCity,
+        l.State as LState
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID
       WHERE c.ClinicID = @clinicId;
     `);
 
@@ -1609,21 +1627,28 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
       }
     }
 
+    // Merge address components: prefer GooglePlacesData.Street for street; Clinics/GooglePlacesData/Locations for city/state/zip
+    const { address, city, state, zipCode } = mergeAddressForResponse(
+      { Address: clinic.Address, City: clinic.City, State: clinic.State, PostalCode: clinic.PostalCode },
+      { Street: clinic.Street, City: clinic.GpCity, State: clinic.GpState, PostalCode: clinic.GpPostalCode },
+      { City: clinic.LCity, State: clinic.LState }
+    );
+
     // Build base response with camelCase field names
     const response = {
       // Core clinic data (camelCase)
       clinicId: clinic.ClinicID,
       clinicName: clinic.ClinicName,
-      address: clinic.Address,
+      address,
       phone: clinic.Phone,
       website: clinic.Website,
       latitude: clinic.Latitude,
       longitude: clinic.Longitude,
       locationId: clinic.LocationID,
       placeId: clinic.PlaceID,
-      city: clinic.City,
-      state: clinic.State,
-      zipCode: clinic.PostalCode,
+      city,
+      state,
+      zipCode,
       
       // Google ratings (camelCase)
       googleRating: clinic.GoogleRating || 0,

@@ -345,12 +345,13 @@ router.get('/clinics/search', async (req, res) => {
       SELECT TOP (@limit)
         c.ClinicID as clinicId,
         c.ClinicName as clinicName,
-        c.Address as address,
+        COALESCE(g.Street, c.Address) as address,
         c.GoogleRating as rating,
         c.GoogleReviewCount as reviewCount,
         g.Category as category,
-        g.City as city,
-        g.State as state
+        COALESCE(c.City, g.City) as city,
+        COALESCE(c.State, g.State) as state,
+        COALESCE(c.PostalCode, g.PostalCode) as zipCode
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       WHERE c.ClinicName LIKE @searchTerm
@@ -364,10 +365,7 @@ router.get('/clinics/search', async (req, res) => {
 
     res.json({
       success: true,
-      results: result.recordset.map(clinic => ({
-        ...clinic,
-        address: [clinic.address, clinic.city, clinic.state].filter(Boolean).join(', ')
-      }))
+      results: result.recordset
     });
   } catch (error) {
     console.error('Error searching clinics:', error);
@@ -419,15 +417,15 @@ router.get('/clinics/:clinicId', async (req, res) => {
       SELECT
         c.ClinicID as clinicId,
         c.ClinicName as clinicName,
-        c.Address as address,
+        COALESCE(g.Street, c.Address) as address,
         c.Phone as phone,
         c.Website as website,
         c.GoogleRating as rating,
         c.GoogleReviewCount as reviewCount,
         g.Category as category,
-        g.City as city,
-        g.State as state,
-        g.PostalCode as zipCode,
+        COALESCE(c.City, g.City) as city,
+        COALESCE(c.State, g.State) as state,
+        COALESCE(c.PostalCode, g.PostalCode) as zipCode,
         g.Email as email
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID

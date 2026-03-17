@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { sql, db } = require('../db');
+const { normalizeAddressForStorage } = require('../utils/addressUtils');
 
 async function consolidateData() {
   let pool;
@@ -71,6 +72,14 @@ async function consolidateData() {
       console.log(`   Confidence: ${bestMatch.confidence}%\n`);
       
       try {
+        // Normalize address: prefer excelRow.street when available; else parse full_address
+        const addr = normalizeAddressForStorage({
+          address: excelRow.street || excelRow.full_address || bestMatch.dbClinic.Address,
+          city: excelRow.city,
+          state: excelRow.state,
+          zipCode: excelRow.postal_code
+        });
+
         // Update Clinics table (Excel data as source of truth)
         await pool.request()
           .input('clinicId', sql.Int, clinicId)
@@ -80,7 +89,10 @@ async function consolidateData() {
           .input('latitude', sql.Decimal(10, 7), parseFloat(excelRow.latitude) || null)
           .input('longitude', sql.Decimal(11, 7), parseFloat(excelRow.longitude) || null)
           .input('phone', sql.NVarChar, excelRow.phone)
-          .input('address', sql.NVarChar, excelRow.full_address || bestMatch.dbClinic.Address)
+          .input('address', sql.NVarChar, addr.street)
+          .input('city', sql.NVarChar, addr.city || null)
+          .input('state', sql.NVarChar, addr.state || null)
+          .input('postalCode', sql.NVarChar, addr.postalCode || null)
           .input('website', sql.NVarChar, excelRow.site || bestMatch.dbClinic.Website)
           .query(`
             UPDATE Clinics 
@@ -91,6 +103,9 @@ async function consolidateData() {
                 Longitude = @longitude,
                 Phone = @phone,
                 Address = @address,
+                City = @city,
+                State = @state,
+                PostalCode = @postalCode,
                 Website = @website,
                 LastRatingUpdate = GETDATE()
             WHERE ClinicID = @clinicId
@@ -223,11 +238,22 @@ async function consolidateData() {
       try {
         // Insert new clinic with manual ClinicID
         const newClinicId = nextClinicId++;
+
+        // Normalize address: prefer excelRow.street when available; else parse full_address
+        const addr = normalizeAddressForStorage({
+          address: excelRow.street || excelRow.full_address,
+          city: excelRow.city || noMatch.city,
+          state: excelRow.state || noMatch.state,
+          zipCode: excelRow.postal_code
+        });
         
         await pool.request()
           .input('clinicId', sql.Int, newClinicId)
           .input('clinicName', sql.NVarChar, excelName)
-          .input('address', sql.NVarChar, excelRow.full_address)
+          .input('address', sql.NVarChar, addr.street)
+          .input('city', sql.NVarChar, addr.city || null)
+          .input('state', sql.NVarChar, addr.state || null)
+          .input('postalCode', sql.NVarChar, addr.postalCode || null)
           .input('placeId', sql.NVarChar, excelRow.place_id)
           .input('rating', sql.Decimal(2, 1), parseFloat(excelRow.rating) || null)
           .input('reviewCount', sql.Int, parseInt(excelRow.reviews) || null)
@@ -237,11 +263,11 @@ async function consolidateData() {
           .input('website', sql.NVarChar, excelRow.site)
           .query(`
             INSERT INTO Clinics (
-              ClinicID, ClinicName, Address, PlaceID, GoogleRating, GoogleReviewCount,
+              ClinicID, ClinicName, Address, City, State, PostalCode, PlaceID, GoogleRating, GoogleReviewCount,
               Latitude, Longitude, Phone, Website, LastRatingUpdate
             )
             VALUES (
-              @clinicId, @clinicName, @address, @placeId, @rating, @reviewCount,
+              @clinicId, @clinicName, @address, @city, @state, @postalCode, @placeId, @rating, @reviewCount,
               @latitude, @longitude, @phone, @website, GETDATE()
             )
           `);

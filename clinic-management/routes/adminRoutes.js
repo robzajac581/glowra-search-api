@@ -204,13 +204,15 @@ router.get('/clinics', requireAdminAuth, async (req, res) => {
     }
     
     // Get clinics with pagination
+    // Address: street only - prefer GooglePlacesData.Street when available
     const clinicsResult = await request.query(`
       SELECT 
         c.ClinicID as id,
         c.ClinicName as clinicName,
-        c.Address as address,
-        COALESCE(g.City, l.City) as city,
-        COALESCE(g.State, l.State) as state,
+        COALESCE(g.Street, c.Address) as address,
+        COALESCE(c.City, g.City, l.City) as city,
+        COALESCE(c.State, g.State, l.State) as state,
+        COALESCE(c.PostalCode, g.PostalCode) as zipCode,
         COALESCE(g.Category, 'Medical Spa') as category,
         c.GoogleRating as rating,
         c.GoogleReviewCount as reviewCount,

@@ -2,6 +2,7 @@ const { db, sql } = require('../../db');
 const draftService = require('./draftService');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googlePlaces');
+const { normalizeAddressForStorage } = require('../../utils/addressUtils');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -84,10 +85,21 @@ class ClinicCreationService {
       `);
       const clinicId = maxIdResult.recordset[0].NextID;
 
+      // Normalize address: store street only in Address, city/state/postalCode in separate columns
+      const addr = normalizeAddressForStorage({
+        address: draft.address,
+        city: draft.city,
+        state: draft.state,
+        zipCode: draft.zipCode
+      });
+
       const clinicRequest = new sql.Request(transaction);
       clinicRequest.input('clinicID', sql.Int, clinicId);
       clinicRequest.input('clinicName', sql.NVarChar, draft.clinicName);
-      clinicRequest.input('address', sql.NVarChar, draft.address);
+      clinicRequest.input('address', sql.NVarChar, addr.street);
+      clinicRequest.input('city', sql.NVarChar, addr.city || null);
+      clinicRequest.input('state', sql.NVarChar, addr.state || null);
+      clinicRequest.input('postalCode', sql.NVarChar, addr.postalCode || null);
       clinicRequest.input('phone', sql.NVarChar, draft.phone || null);
       clinicRequest.input('website', sql.NVarChar, draft.website || null);
       clinicRequest.input('latitude', sql.Decimal(10, 7), draft.latitude || null);
@@ -99,19 +111,19 @@ class ClinicCreationService {
 
       await clinicRequest.query(`
         INSERT INTO Clinics (
-          ClinicID, ClinicName, Address, Phone, Website,
+          ClinicID, ClinicName, Address, City, State, PostalCode, Phone, Website,
           Latitude, Longitude, PlaceID, GoogleRating, GoogleReviewCount,
           GoogleReviewsJSON, LastRatingUpdate
         )
         VALUES (
-          @clinicID, @clinicName, @address, @phone, @website,
+          @clinicID, @clinicName, @address, @city, @state, @postalCode, @phone, @website,
           @latitude, @longitude, @placeID, @googleRating, @googleReviewCount,
           @googleReviewsJSON, GETDATE()
         )
       `);
 
       // Get or create LocationID
-      const locationId = await this.getOrCreateLocation(draft.city, draft.state, transaction);
+      const locationId = await this.getOrCreateLocation(addr.city || draft.city, addr.state || draft.state, transaction);
 
       // Update clinic with LocationID
       await transaction.request()
@@ -330,8 +342,20 @@ class ClinicCreationService {
       request.input('website', sql.NVarChar, draft.website);
     }
     if (draft.address) {
+      const addr = normalizeAddressForStorage({
+        address: draft.address,
+        city: draft.city,
+        state: draft.state,
+        zipCode: draft.zipCode
+      });
       updates.push('Address = @address');
-      request.input('address', sql.NVarChar, draft.address);
+      updates.push('City = @city');
+      updates.push('State = @state');
+      updates.push('PostalCode = @postalCode');
+      request.input('address', sql.NVarChar, addr.street);
+      request.input('city', sql.NVarChar, addr.city || null);
+      request.input('state', sql.NVarChar, addr.state || null);
+      request.input('postalCode', sql.NVarChar, addr.postalCode || null);
     }
     if (draft.placeId) {
       updates.push('PlaceID = @placeID');
@@ -599,15 +623,29 @@ class ClinicCreationService {
   /**
    * Create GooglePlacesData entry
    * Note: draft is now normalized to camelCase by draftService.getDraftById
+   * Stores Street (street only), City, State, PostalCode separately to prevent duplication
    */
   async createGooglePlacesData(clinicId, draft, transaction) {
+    const addr = normalizeAddressForStorage({
+      address: draft.address,
+      city: draft.city,
+      state: draft.state,
+      zipCode: draft.zipCode
+    });
+
+    const fullAddress = [addr.street, addr.city, addr.state, addr.postalCode]
+      .filter(Boolean)
+      .join(', ');
+
     const request = new sql.Request(transaction);
     request.input('clinicID', sql.Int, clinicId);
     request.input('placeID', sql.NVarChar, draft.placeId);
     request.input('businessName', sql.NVarChar, draft.clinicName);
-    request.input('fullAddress', sql.NVarChar, draft.address);
-    request.input('city', sql.NVarChar, draft.city);
-    request.input('state', sql.NVarChar, draft.state);
+    request.input('fullAddress', sql.NVarChar, fullAddress || draft.address);
+    request.input('street', sql.NVarChar, addr.street || null);
+    request.input('city', sql.NVarChar, addr.city || null);
+    request.input('state', sql.NVarChar, addr.state || null);
+    request.input('postalCode', sql.NVarChar, addr.postalCode || null);
     request.input('website', sql.NVarChar, draft.website || null);
     request.input('email', sql.NVarChar, draft.email || null);
     request.input('category', sql.NVarChar, normalizeCategory(draft.category));
@@ -615,11 +653,11 @@ class ClinicCreationService {
     await request.query(`
       INSERT INTO GooglePlacesData (
         ClinicID, PlaceID, BusinessName, FullAddress,
-        City, State, Website, Email, Category
+        Street, City, State, PostalCode, Website, Email, Category
       )
       VALUES (
         @clinicID, @placeID, @businessName, @fullAddress,
-        @city, @state, @website, @email, @category
+        @street, @city, @state, @postalCode, @website, @email, @category
       )
     `);
   }
