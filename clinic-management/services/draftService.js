@@ -3,6 +3,53 @@ const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { normalizeDraft, normalizeProviders, normalizeProcedures, normalizePhotos } = require('../../utils/responseNormalizer');
 
 /**
+ * Shared WHERE fragments for ClinicDrafts list + count (same filters, same order of params).
+ * @param {object} request mssql pool request
+ * @param {string} query SQL ending after `WHERE 1=1` or equivalent
+ * @param {object} filters
+ * @returns {string}
+ */
+function appendClinicDraftsListFilters(request, query, filters) {
+  let q = query;
+  if (filters.status) {
+    request.input('status', sql.NVarChar, filters.status);
+    q += ' AND Status = @status';
+  }
+  if (filters.source) {
+    request.input('source', sql.NVarChar, filters.source);
+    q += ' AND Source = @source';
+  }
+  if (filters.submitterKey) {
+    request.input('submitterKey', sql.NVarChar, filters.submitterKey);
+    q += ' AND SubmitterKey = @submitterKey';
+  }
+  if (filters.fromDate) {
+    request.input('fromDate', sql.DateTime, filters.fromDate);
+    q += ' AND SubmittedAt >= @fromDate';
+  }
+  if (filters.toDate) {
+    request.input('toDate', sql.DateTime, filters.toDate);
+    q += ' AND SubmittedAt <= @toDate';
+  }
+  if (filters.submissionFlow) {
+    request.input('submissionFlow', sql.NVarChar, filters.submissionFlow);
+    q += ' AND SubmissionFlow = @submissionFlow';
+  }
+  const searchTerm = typeof filters.search === 'string' ? filters.search.trim() : '';
+  if (searchTerm.length >= 2) {
+    request.input('searchTerm', sql.NVarChar, `%${searchTerm}%`);
+    q += ` AND (
+      ClinicName LIKE @searchTerm
+      OR Address LIKE @searchTerm
+      OR City LIKE @searchTerm
+      OR Email LIKE @searchTerm
+      OR Phone LIKE @searchTerm
+    )`;
+  }
+  return q;
+}
+
+/**
  * Draft management service
  * Handles CRUD operations and status transitions for clinic drafts
  */
@@ -241,42 +288,33 @@ class DraftService {
       WHERE 1=1
     `;
 
-    if (filters.status) {
-      request.input('status', sql.NVarChar, filters.status);
-      query += ' AND Status = @status';
-    }
-
-    if (filters.source) {
-      request.input('source', sql.NVarChar, filters.source);
-      query += ' AND Source = @source';
-    }
-
-    if (filters.submitterKey) {
-      request.input('submitterKey', sql.NVarChar, filters.submitterKey);
-      query += ' AND SubmitterKey = @submitterKey';
-    }
-
-    if (filters.fromDate) {
-      request.input('fromDate', sql.DateTime, filters.fromDate);
-      query += ' AND SubmittedAt >= @fromDate';
-    }
-
-    if (filters.toDate) {
-      request.input('toDate', sql.DateTime, filters.toDate);
-      query += ' AND SubmittedAt <= @toDate';
-    }
+    query = appendClinicDraftsListFilters(request, query, filters);
 
     query += ' ORDER BY SubmittedAt DESC';
 
     if (filters.limit) {
+      const offset = Math.max(0, parseInt(filters.offset, 10) || 0);
+      request.input('offset', sql.Int, offset);
       request.input('limit', sql.Int, filters.limit);
-      query += ' OFFSET 0 ROWS FETCH NEXT @limit ROWS ONLY';
+      query += ' OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY';
     }
 
     const result = await request.query(query);
     
     // Normalize all drafts in the list to camelCase
     return result.recordset.map(draft => normalizeDraft(draft));
+  }
+
+  /**
+   * Total row count for the same filters as {@link listDrafts} (for pagination metadata).
+   */
+  async countDrafts(filters = {}) {
+    const pool = await db.getConnection();
+    const request = pool.request();
+    let query = 'SELECT COUNT(*) as total FROM ClinicDrafts WHERE 1=1';
+    query = appendClinicDraftsListFilters(request, query, filters);
+    const result = await request.query(query);
+    return result.recordset[0].total;
   }
 
   /**

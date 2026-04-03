@@ -27,15 +27,7 @@ function validateClinic(clinic, index) {
     }
   }
 
-  // Validate email format if provided
-  if (clinic.email && !isValidEmail(clinic.email)) {
-    errors.push(`Clinic "${clinic.clinicName || index + 1}": Invalid email format`);
-  }
-
-  // Validate website URL if provided
-  if (clinic.website && !isValidUrl(clinic.website)) {
-    warnings.push(`Clinic "${clinic.clinicName || index + 1}": Website may be invalid (should start with http:// or https://)`);
-  }
+  // Invalid/missing email and website are omitted during parse (normalizeParsedData)
 
   // Validate coordinates if provided
   if (clinic.latitude) {
@@ -205,6 +197,9 @@ module.exports = {
   validateProvider,
   validateProcedure,
   REQUIRED_CLINIC_FIELDS,
-  REQUIRED_FOR_APPROVAL
+  REQUIRED_FOR_APPROVAL,
+  isValidEmail,
+  isValidUrl,
+  isValidPhone
 };
 

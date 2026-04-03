@@ -337,42 +337,36 @@ router.get('/stats', requireAdminAuth, async (req, res) => {
 router.get('/drafts', requireAdminAuth, async (req, res) => {
   try {
     const { status, type, search, page = 1, limit = 20 } = req.query;
-    
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+
     const filters = {};
     if (status) filters.status = status;
     if (type) filters.submissionFlow = type;
     if (search) filters.search = search;
-    filters.limit = Math.min(parseInt(limit), 100);
-    filters.offset = (parseInt(page) - 1) * filters.limit;
-    
+    filters.limit = limitNum;
+    filters.offset = (pageNum - 1) * limitNum;
+
     const drafts = await draftService.listDrafts(filters);
-    
-    // Get total count for pagination
-    const { db, sql } = require('../../db');
-    const pool = await db.getConnection();
-    const countRequest = pool.request();
-    
-    let countQuery = 'SELECT COUNT(*) as total FROM ClinicDrafts WHERE 1=1';
-    if (status) {
-      countRequest.input('status', sql.NVarChar, status);
-      countQuery += ' AND Status = @status';
-    }
-    if (type) {
-      countRequest.input('submissionFlow', sql.NVarChar, type);
-      countQuery += ' AND SubmissionFlow = @submissionFlow';
-    }
-    
-    const countResult = await countRequest.query(countQuery);
-    const total = countResult.recordset[0].total;
-    
+    const total = await draftService.countDrafts(filters);
+
+    console.debug('[GET /admin/drafts]', {
+      queryPage: req.query.page,
+      page: pageNum,
+      limit: limitNum,
+      offset: filters.offset,
+      firstDraftId: drafts[0]?.draftId
+    });
+
     res.json({
       success: true,
       drafts,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        totalPages: Math.ceil(total / parseInt(limit))
+        totalPages: Math.ceil(total / limitNum) || 0
       }
     });
   } catch (error) {
