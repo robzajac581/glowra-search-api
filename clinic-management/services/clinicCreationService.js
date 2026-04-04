@@ -143,24 +143,35 @@ class ClinicCreationService {
       if (draft.providers && draft.providers.length > 0) {
         for (const providerData of draft.providers) {
           const providerId = await this.createProvider(clinicId, providerData, transaction);
-          providerMap.set(providerData.providerName, providerId);
+          const mapKey = providerData.providerName || providerData.ProviderName;
+          if (mapKey) {
+            providerMap.set(mapKey, providerId);
+          }
         }
+      }
+
+      // Procedures require a ProviderID; drafts may list procedures without any DraftProviders rows
+      if (draft.procedures && draft.procedures.length > 0 && providerMap.size === 0) {
+        const defaultName = (draft.clinicName && String(draft.clinicName).trim()) || 'Practice';
+        const defaultProviderId = await this.createProvider(
+          clinicId,
+          { providerName: defaultName },
+          transaction
+        );
+        providerMap.set(defaultName, defaultProviderId);
       }
 
       // Create procedures
       // Note: draft.procedures is now normalized to camelCase
       if (draft.procedures && draft.procedures.length > 0) {
         for (const procedureData of draft.procedures) {
-          // Get provider ID
-          let providerId = procedureData.providerName 
-            ? providerMap.get(procedureData.providerName) 
-            : null;
-          
-          // If no provider specified, use first provider
-          if (!providerId && providerMap.size > 0) {
-            providerId = Array.from(providerMap.values())[0];
+          const providerId = this.resolveProviderIdForProcedure(procedureData, providerMap);
+          if (!providerId) {
+            throw new Error(
+              'Could not resolve a provider for procedure: ' +
+                (procedureData.procedureName || procedureData.ProcedureName || 'unknown')
+            );
           }
-          
           await this.createProcedure(providerId, procedureData, transaction);
         }
       }
@@ -461,9 +472,7 @@ class ClinicCreationService {
       existingProviders.recordset.forEach(p => providerMap.set(p.ProviderName, p.ProviderID));
 
       for (const procedureData of draft.procedures) {
-        const providerId = procedureData.providerName 
-          ? providerMap.get(procedureData.providerName) 
-          : (existingProviders.recordset[0]?.ProviderID || null);
+        const providerId = this.resolveProviderIdForProcedure(procedureData, providerMap);
 
         if (providerId) {
           await this.createProcedure(providerId, procedureData, transaction);
@@ -482,7 +491,54 @@ class ClinicCreationService {
   }
 
   /**
+   * Map a draft procedure to a ProviderID using providerName, ProviderNames (array / JSON),
+   * trim-aware key lookup, then the first provider in the map (merge path relies on this).
+   * @param {Object} procedureData
+   * @param {Map<string, number>} providerMap ProviderName -> ProviderID
+   * @returns {number|null}
+   */
+  resolveProviderIdForProcedure(procedureData, providerMap) {
+    const getFromMap = (name) => {
+      if (name == null || name === '') return null;
+      const s = String(name).trim();
+      if (!s) return null;
+      if (providerMap.has(s)) return providerMap.get(s);
+      for (const [k, v] of providerMap) {
+        if (k != null && String(k).trim() === s) return v;
+      }
+      return null;
+    };
+
+    let providerId = getFromMap(procedureData.providerName || procedureData.ProviderName);
+
+    if (!providerId && procedureData.providerNames != null) {
+      let names = procedureData.providerNames;
+      if (typeof names === 'string') {
+        try {
+          names = JSON.parse(names);
+        } catch {
+          names = [];
+        }
+      }
+      if (Array.isArray(names)) {
+        for (const n of names) {
+          providerId = getFromMap(n);
+          if (providerId) break;
+        }
+      }
+    }
+
+    if (!providerId && providerMap.size > 0) {
+      providerId = Array.from(providerMap.values())[0];
+    }
+
+    return providerId || null;
+  }
+
+  /**
    * Get or create location
+   * Note: LocationID is NOT an IDENTITY column in production, so we assign the next ID manually
+   * (same pattern as getOrCreateCategory).
    */
   async getOrCreateLocation(city, state, transaction) {
     // Try to find existing location
@@ -500,38 +556,50 @@ class ClinicCreationService {
       return findResult.recordset[0].LocationID;
     }
 
-    // Create new location
+    const maxIdRequest = new sql.Request(transaction);
+    const maxIdResult = await maxIdRequest.query(`
+      SELECT ISNULL(MAX(LocationID), 0) + 1 AS NextID FROM Locations
+    `);
+    const nextLocationId = maxIdResult.recordset[0].NextID;
+
     const createRequest = new sql.Request(transaction);
+    createRequest.input('locationId', sql.Int, nextLocationId);
     createRequest.input('city', sql.NVarChar, city);
     createRequest.input('state', sql.NVarChar, state);
 
-    const createResult = await createRequest.query(`
-      INSERT INTO Locations (City, State)
-      OUTPUT INSERTED.LocationID
-      VALUES (@city, @state)
+    await createRequest.query(`
+      INSERT INTO Locations (LocationID, City, State)
+      VALUES (@locationId, @city, @state)
     `);
 
-    return createResult.recordset[0].LocationID;
+    return nextLocationId;
   }
 
   /**
    * Create provider
+   * Note: ProviderID is NOT an IDENTITY column in production; assign next ID manually (same as ClinicID / Locations).
    * Accepts both camelCase (from normalized draft) and PascalCase (for backward compatibility)
    */
   async createProvider(clinicId, providerData, transaction) {
+    const maxIdRequest = new sql.Request(transaction);
+    const maxIdResult = await maxIdRequest.query(`
+      SELECT ISNULL(MAX(ProviderID), 0) + 1 AS NextID FROM Providers
+    `);
+    const nextProviderId = maxIdResult.recordset[0].NextID;
+
     const request = new sql.Request(transaction);
+    request.input('providerID', sql.Int, nextProviderId);
     request.input('clinicID', sql.Int, clinicId);
     // Support both camelCase and PascalCase for backward compatibility
     request.input('providerName', sql.NVarChar, providerData.providerName || providerData.ProviderName);
     request.input('photoURL', sql.NVarChar, providerData.photoUrl || providerData.PhotoURL || null);
 
-    const result = await request.query(`
-      INSERT INTO Providers (ClinicID, ProviderName, PhotoURL)
-      OUTPUT INSERTED.ProviderID
-      VALUES (@clinicID, @providerName, @photoURL)
+    await request.query(`
+      INSERT INTO Providers (ProviderID, ClinicID, ProviderName, PhotoURL)
+      VALUES (@providerID, @clinicID, @providerName, @photoURL)
     `);
 
-    return result.recordset[0].ProviderID;
+    return nextProviderId;
   }
 
   /**
