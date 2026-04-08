@@ -398,6 +398,10 @@ class DraftService {
         updates.push('GoogleReviewCount = @googleReviewCount');
         request.input('googleReviewCount', sql.Int, updateData.googleReviewCount || null);
       }
+      if (updateData.googleDataJSON !== undefined) {
+        updates.push('GoogleDataJSON = @googleDataJSON');
+        request.input('googleDataJSON', sql.NVarChar(sql.MAX), updateData.googleDataJSON || null);
+      }
       if (updateData.description !== undefined) {
         updates.push('Description = @description');
         request.input('description', sql.NVarChar(sql.MAX), updateData.description || null);

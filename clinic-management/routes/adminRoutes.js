@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const adminService = require('../services/adminService');
 const draftService = require('../services/draftService');
+const draftGoogleEnrichmentService = require('../services/draftGoogleEnrichmentService');
 const clinicCreationService = require('../services/clinicCreationService');
 const clinicDeletionService = require('../services/clinicDeletionService');
 const { requireAdminAuth } = require('../middleware/adminAuth');
@@ -1462,6 +1463,96 @@ router.post('/drafts/:draftId/update-placeid', requireAdminAuth, async (req, res
     res.status(500).json({
       success: false,
       error: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /admin/drafts/bulk-enrich-google:
+ *   post:
+ *     summary: Bulk enrich pending drafts missing PlaceID from Google (lookup, rating, photos)
+ *     description: |
+ *       Processes `pending_review` drafts with empty PlaceID: Find Place from Text, one Place Details
+ *       call (ratings + photos), then updates the draft. User (non-Google) photos are preserved.
+ *       Use a conservative `limit` for large queues to avoid HTTP timeouts; prefer the CLI script for huge batches.
+ *     tags: [Admin Google]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               dryRun:
+ *                 type: boolean
+ *                 description: If true, no DB writes (still calls Google APIs)
+ *               minConfidence:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 1
+ *                 description: Minimum name/address lookup confidence to accept (default 0)
+ *               limit:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 1000
+ *                 description: Max drafts to process (default 500)
+ *               draftId:
+ *                 type: integer
+ *                 description: Optional — only this draft (must match status/missing PlaceID filters)
+ *               delayMs:
+ *                 type: integer
+ *                 description: Delay between drafts in ms (default 200)
+ *     responses:
+ *       200:
+ *         description: Summary and per-draft results
+ *       400:
+ *         description: Invalid parameters
+ */
+router.post('/drafts/bulk-enrich-google', requireAdminAuth, async (req, res) => {
+  try {
+    const dryRun = req.body.dryRun === true;
+    const rawMc = parseFloat(req.body.minConfidence);
+    const minConfidence = Number.isFinite(rawMc)
+      ? Math.min(1, Math.max(0, rawMc))
+      : 0;
+    const rawLimit = parseInt(req.body.limit, 10);
+    const limit = Math.min(1000, Math.max(1, Number.isFinite(rawLimit) ? rawLimit : 500));
+    const rawDraft = req.body.draftId;
+    let draftId = null;
+    if (rawDraft !== undefined && rawDraft !== null && rawDraft !== '') {
+      const parsed = parseInt(rawDraft, 10);
+      if (Number.isNaN(parsed)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid draftId'
+        });
+      }
+      draftId = parsed;
+    }
+    const rawDelay = parseInt(req.body.delayMs, 10);
+    const delayMs = Math.min(5000, Math.max(0, Number.isFinite(rawDelay) ? rawDelay : 200));
+
+    const result = await draftGoogleEnrichmentService.bulkEnrichPendingDraftsMissingPlaceId({
+      dryRun,
+      minConfidence,
+      limit,
+      draftId,
+      delayMs
+    });
+
+    res.json({
+      success: true,
+      summary: result.summary,
+      results: result.results
+    });
+  } catch (error) {
+    console.error('Bulk enrich Google error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to bulk enrich drafts',
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

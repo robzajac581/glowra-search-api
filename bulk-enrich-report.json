@@ -1,0 +1,2446 @@
+{
+  "finishedAt": "2026-04-08T15:13:37.321Z",
+  "options": {
+    "dryRun": false,
+    "minConfidence": 0.8,
+    "limit": 500,
+    "draftId": null,
+    "delayMs": 200
+  },
+  "summary": {
+    "processed": 264,
+    "updated": 193,
+    "dry_run": 0,
+    "skipped_no_place": 1,
+    "skipped_low_confidence": 70,
+    "skipped_details_not_found": 0,
+    "errors": 0
+  },
+  "results": [
+    {
+      "draftId": 44,
+      "status": "updated",
+      "placeId": "ChIJVT2WYjTBD4gRZenPN6wtZMk",
+      "confidence": 0.9,
+      "businessName": "Aesthetic Beauty Lounge, Inc",
+      "rating": 4.9,
+      "reviewCount": 731,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 45,
+      "status": "updated",
+      "placeId": "ChIJr3Dde1TTD4gR6l6Nb54ihec",
+      "confidence": 1,
+      "businessName": "Aesthetic Skin Chicago",
+      "rating": 4.6,
+      "reviewCount": 20,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 46,
+      "status": "updated",
+      "placeId": "ChIJ3UvpMVLTD4gRxUCJbrA4-74",
+      "confidence": 1,
+      "businessName": "RAM Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 32,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 47,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Late Night Medspa, Chicago",
+      "formattedAddress": "3741 N Halsted St, Chicago, IL 60613, United States"
+    },
+    {
+      "draftId": 48,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "Paul Phelps, MD, FACS",
+      "formattedAddress": "2001 N Halsted St Ste 200, Chicago, IL 60614, United States"
+    },
+    {
+      "draftId": 49,
+      "status": "updated",
+      "placeId": "ChIJVT2WYjTBD4gRZenPN6wtZMk",
+      "confidence": 0.9,
+      "businessName": "Aesthetic Beauty Lounge, Inc",
+      "rating": 4.9,
+      "reviewCount": 731,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 50,
+      "status": "updated",
+      "placeId": "ChIJkexrZoG3D4gRdSCLNYYptb0",
+      "confidence": 1,
+      "businessName": "Bella Sana Med Spa",
+      "rating": 4.5,
+      "reviewCount": 116,
+      "googlePhotosCount": 5
+    },
+    {
+      "draftId": 51,
+      "status": "updated",
+      "placeId": "ChIJj75Z4dPTD4gRBV2oJ1xBIVk",
+      "confidence": 0.9,
+      "businessName": "Chicago Aesthetics",
+      "rating": 4.8,
+      "reviewCount": 202,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 52,
+      "status": "updated",
+      "placeId": "ChIJ6y14aa0sDogROdexWXpgDYI",
+      "confidence": 1,
+      "businessName": "Chicago Breast & Body Aesthetics",
+      "rating": 4.7,
+      "reviewCount": 263,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 53,
+      "status": "updated",
+      "placeId": "ChIJ3UvpMVLTD4gRxUCJbrA4-74",
+      "confidence": 1,
+      "businessName": "RAM Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 32,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 54,
+      "status": "updated",
+      "placeId": "ChIJVT2WYjTBD4gRZenPN6wtZMk",
+      "confidence": 0.9,
+      "businessName": "Aesthetic Beauty Lounge, Inc",
+      "rating": 4.9,
+      "reviewCount": 731,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 55,
+      "status": "updated",
+      "placeId": "ChIJr3Dde1TTD4gR6l6Nb54ihec",
+      "confidence": 1,
+      "businessName": "Aesthetic Skin Chicago",
+      "rating": 4.6,
+      "reviewCount": 20,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 56,
+      "status": "updated",
+      "placeId": "ChIJkexrZoG3D4gRdSCLNYYptb0",
+      "confidence": 1,
+      "businessName": "Bella Sana Med Spa",
+      "rating": 4.5,
+      "reviewCount": 116,
+      "googlePhotosCount": 5
+    },
+    {
+      "draftId": 57,
+      "status": "updated",
+      "placeId": "ChIJj75Z4dPTD4gRBV2oJ1xBIVk",
+      "confidence": 0.9,
+      "businessName": "Chicago Aesthetics",
+      "rating": 4.8,
+      "reviewCount": 202,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 58,
+      "status": "updated",
+      "placeId": "ChIJ6y14aa0sDogROdexWXpgDYI",
+      "confidence": 1,
+      "businessName": "Chicago Breast & Body Aesthetics",
+      "rating": 4.7,
+      "reviewCount": 263,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 59,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "Paul Phelps, MD, FACS",
+      "formattedAddress": "2001 N Halsted St Ste 200, Chicago, IL 60614, United States"
+    },
+    {
+      "draftId": 62,
+      "status": "skipped_no_place",
+      "clinicName": "teste test"
+    },
+    {
+      "draftId": 63,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5142857142857142,
+      "businessName": "63rd Laser & Skin Clinic - Chicago’s Affordable Plastic Surgery. Med Spa. Laser Hair Removal. Fillers",
+      "formattedAddress": "3918 W 63rd St, Chicago, IL 60629, United States"
+    },
+    {
+      "draftId": 64,
+      "status": "updated",
+      "placeId": "ChIJCWmDqnDLD4gRajVLv4WZIXg",
+      "confidence": 1,
+      "businessName": "Revitalize IV Solutions & MedSpa",
+      "rating": 5,
+      "reviewCount": 90,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 65,
+      "status": "updated",
+      "placeId": "ChIJ65MjUNTTD4gRn4hRjSGYMGg",
+      "confidence": 0.9,
+      "businessName": "Innovative MedSpa",
+      "rating": 4.7,
+      "reviewCount": 96,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 68,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "Global Crypto Energy",
+      "formattedAddress": "1 E Erie St, Chicago, IL 60611, United States"
+    },
+    {
+      "draftId": 69,
+      "status": "updated",
+      "placeId": "ChIJAeSLi0fTD4gRw71rtpgpT_w",
+      "confidence": 1,
+      "businessName": "Old Town Med Spa",
+      "rating": 4.7,
+      "reviewCount": 156,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 174,
+      "status": "updated",
+      "placeId": "ChIJVT2WYjTBD4gRZenPN6wtZMk",
+      "confidence": 0.9,
+      "businessName": "Aesthetic Beauty Lounge, Inc",
+      "rating": 4.9,
+      "reviewCount": 731,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 181,
+      "status": "updated",
+      "placeId": "ChIJhZYHXa8tDogRoR9dejc-13E",
+      "confidence": 1,
+      "businessName": "Luxura Med Spa",
+      "rating": 4.9,
+      "reviewCount": 132,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 206,
+      "status": "updated",
+      "placeId": "ChIJ0Wzd5eI1DogRz4_oz7RM7Ys",
+      "confidence": 1,
+      "businessName": "Restorative Medspa & Hair Transplant Center",
+      "rating": 5,
+      "reviewCount": 44,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 210,
+      "status": "updated",
+      "placeId": "ChIJ65sc9B0tDogRPdTZhhNJdJ4",
+      "confidence": 0.9,
+      "businessName": "Tres Jolie Medical Spa and Wellness Center",
+      "rating": 4.8,
+      "reviewCount": 134,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 212,
+      "status": "updated",
+      "placeId": "ChIJnTwW8bQsDogRdXFTSx8J2ss",
+      "confidence": 0.8,
+      "businessName": "IVme Wellness + Aesthetics Old Town",
+      "rating": 4.9,
+      "reviewCount": 208,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 215,
+      "status": "updated",
+      "placeId": "ChIJYXD2NFGvbIgRI67ahVIpg3s",
+      "confidence": 0.9,
+      "businessName": "SHarper Plastic Surgery, Spa + Salt Lounge",
+      "rating": 4.9,
+      "reviewCount": 407,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 217,
+      "status": "updated",
+      "placeId": "ChIJgab7dWKn-4gRXZIPjIsBxJ4",
+      "confidence": 1,
+      "businessName": "Vitali Medspa",
+      "rating": 4.9,
+      "reviewCount": 323,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 221,
+      "status": "updated",
+      "placeId": "ChIJM6ge4H-3D4gR0bNJfSlr8-E",
+      "confidence": 0.9,
+      "businessName": "Zorah Med Spa MD",
+      "rating": 5,
+      "reviewCount": 3,
+      "googlePhotosCount": 0
+    },
+    {
+      "draftId": 223,
+      "status": "updated",
+      "placeId": "ChIJU3LSRXnJD4gR2vOtE2uDhms",
+      "confidence": 0.9,
+      "businessName": "Beautifully New",
+      "rating": 4.9,
+      "reviewCount": 234,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 229,
+      "status": "updated",
+      "placeId": "ChIJl196BGP1DogRCcUc8NZP0OE",
+      "confidence": 0.8,
+      "businessName": "Dream Med Spa & Laser Center",
+      "rating": 4.9,
+      "reviewCount": 130,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 231,
+      "status": "updated",
+      "placeId": "ChIJDRXb6t_TD4gRVcNtOdypxkU",
+      "confidence": 1,
+      "businessName": "Ellehomme Holistic Med Spa",
+      "rating": 4.2,
+      "reviewCount": 59,
+      "googlePhotosCount": 5
+    },
+    {
+      "draftId": 233,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5066666666666667,
+      "businessName": "Prestige Aesthetics & Penny Woods Skincare",
+      "formattedAddress": "217 E Unaka Ave, Johnson City, TN 37601, United States"
+    },
+    {
+      "draftId": 235,
+      "status": "updated",
+      "placeId": "ChIJ5xZ1AbNDDogRG9Rx_N4ZpPs",
+      "confidence": 0.9,
+      "businessName": "Contour Medspa",
+      "rating": 5,
+      "reviewCount": 12,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 249,
+      "status": "updated",
+      "placeId": "ChIJ-Z_4cOh9TYcRNBaP6qz4S9Q",
+      "confidence": 0.9,
+      "businessName": "Botox, Filler, Weight Loss at Angie's Injections",
+      "rating": 5,
+      "reviewCount": 154,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 250,
+      "status": "updated",
+      "placeId": "ChIJHaHVGdEtDogRW1BbaJlAfMU",
+      "confidence": 1,
+      "businessName": "Chicago Aesthetics Club",
+      "rating": 5,
+      "reviewCount": 212,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 268,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Delta Phoenix Aesthetic Medicine",
+      "formattedAddress": "1614 University Ave, Oxford, MS 38655, United States"
+    },
+    {
+      "draftId": 273,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Botox injections by Chicagoland Aesthetics",
+      "formattedAddress": "1995 Springbrook Square Dr #119, Naperville, IL 60564, United States"
+    },
+    {
+      "draftId": 274,
+      "status": "updated",
+      "placeId": "ChIJtQYgLsnxk4cRVRxNCwYd4y8",
+      "confidence": 0.9,
+      "businessName": "Omaha Face & Body",
+      "rating": 4.9,
+      "reviewCount": 194,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 280,
+      "status": "updated",
+      "placeId": "ChIJOQx-CklzIocRwC-RVEuuxi8",
+      "confidence": 1,
+      "businessName": "ABQ Medical Spa",
+      "rating": 5,
+      "reviewCount": 32,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 282,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5857142857142856,
+      "businessName": "Wellness District Medical Weight Loss & Aesthetics",
+      "formattedAddress": "435 32nd Ave E Suite B, West Fargo, ND 58078, United States"
+    },
+    {
+      "draftId": 284,
+      "status": "updated",
+      "placeId": "ChIJ39u7_pbLSIgRbCE99I6qu6w",
+      "confidence": 0.8,
+      "businessName": "Turner Medical and Almost Heaven Spa",
+      "rating": 4.8,
+      "reviewCount": 25,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 288,
+      "status": "updated",
+      "placeId": "ChIJcddJyQQk9ocR-qGtEuOj2FE",
+      "confidence": 1,
+      "businessName": "Metropolitan Skin Clinic",
+      "rating": 4.8,
+      "reviewCount": 435,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 293,
+      "status": "updated",
+      "placeId": "ChIJFW3-F-nFwogRxGHOVpfMKTw",
+      "confidence": 0.9,
+      "businessName": "ÉLAN Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 435,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 295,
+      "status": "updated",
+      "placeId": "ChIJVSyBBFF7ZIgRtm_VH9iq0oI",
+      "confidence": 1,
+      "businessName": "NuBody Concepts",
+      "rating": 4.6,
+      "reviewCount": 158,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 297,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Hello Beautiful Boutique Medspa",
+      "formattedAddress": "407 N Person St, Raleigh, NC 27601, United States"
+    },
+    {
+      "draftId": 298,
+      "status": "updated",
+      "placeId": "ChIJ7yVy21CfToYR-zPHYp9s4G4",
+      "confidence": 0.9,
+      "businessName": "Viva Day Spa + Med Spa | Dallas",
+      "rating": 4.9,
+      "reviewCount": 78,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 304,
+      "status": "updated",
+      "placeId": "ChIJT8XM39G1RIYRkPoEzCcbcfk",
+      "confidence": 1,
+      "businessName": "Maui MedSpa",
+      "rating": 4.9,
+      "reviewCount": 76,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 306,
+      "status": "updated",
+      "placeId": "ChIJtwjL-7ztOIgRv14NtjE_HBo",
+      "confidence": 1,
+      "businessName": "Aesthetics by Kayla",
+      "rating": 5,
+      "reviewCount": 21,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 310,
+      "status": "updated",
+      "placeId": "ChIJQ1fea2B744kRyAQsWZMOWe8",
+      "confidence": 1,
+      "businessName": "Suite Six Medical Aesthetics",
+      "rating": 4.1,
+      "reviewCount": 23,
+      "googlePhotosCount": 2
+    },
+    {
+      "draftId": 312,
+      "status": "updated",
+      "placeId": "ChIJee6LqHNy9asRsBXDBO3P5Xg",
+      "confidence": 1,
+      "businessName": "KORA Aesthetics",
+      "rating": 5,
+      "reviewCount": 71,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 314,
+      "status": "updated",
+      "placeId": "ChIJlyph7BOKXIYRqyRAswl2Xgc",
+      "confidence": 1,
+      "businessName": "INWARD Beauty MedSpa",
+      "rating": 5,
+      "reviewCount": 18,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 317,
+      "status": "updated",
+      "placeId": "ChIJcdgoQZjbmoARiGrt_DxnL5c",
+      "confidence": 1,
+      "businessName": "Be You Medical",
+      "rating": 4.9,
+      "reviewCount": 168,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 319,
+      "status": "updated",
+      "placeId": "ChIJeY9a8_y12IcRTlQKncSC5VQ",
+      "confidence": 0.9,
+      "businessName": "Aesthetically Pleasing",
+      "rating": 5,
+      "reviewCount": 52,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 322,
+      "status": "updated",
+      "placeId": "ChIJK7OIDXn0OIgR2cvHvQVUfjo",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.6,
+      "reviewCount": 213,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 323,
+      "status": "updated",
+      "placeId": "ChIJUbcBWBi8-IcRbPupMnypACA",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.7,
+      "reviewCount": 59,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 325,
+      "status": "updated",
+      "placeId": "ChIJTyr_9DYkAIgRIU1Mlf-TpXg",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.5,
+      "reviewCount": 68,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 326,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7285714285714285,
+      "businessName": "Carlos Spera M.D. | Plastic Surgery Miami",
+      "formattedAddress": "8725 NW 18th Terrace, Miami, FL 33172, United States"
+    },
+    {
+      "draftId": 331,
+      "status": "updated",
+      "placeId": "ChIJNdWN_wYH3IARfSBJ4YvU0zg",
+      "confidence": 1,
+      "businessName": "La Jolla Cosmetic Medical Spa",
+      "rating": 4.8,
+      "reviewCount": 204,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 333,
+      "status": "updated",
+      "placeId": "ChIJafDIXccL3IARV_jl8FcQeLs",
+      "confidence": 1,
+      "businessName": "La Jolla Cosmetic Medical Spa - Carlsbad",
+      "rating": 4.9,
+      "reviewCount": 175,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 335,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "bluepoint medical spa",
+      "formattedAddress": "3320 N Buffalo Dr #103, Las Vegas, NV 89129, United States"
+    },
+    {
+      "draftId": 337,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5222222222222221,
+      "businessName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "formattedAddress": "Pavillion II, 1850 Town Center Pkwy Suite 551, Reston, VA 20190, United States"
+    },
+    {
+      "draftId": 339,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4818181818181818,
+      "businessName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "formattedAddress": "5454 Wisconsin Ave Suite 1655, Chevy Chase, MD 20815, United States"
+    },
+    {
+      "draftId": 341,
+      "status": "updated",
+      "placeId": "ChIJMY_l6dcJ9YgRYn5y8bg16dM",
+      "confidence": 1,
+      "businessName": "ELLEMES Medical Spa",
+      "rating": 4.9,
+      "reviewCount": 395,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 346,
+      "status": "updated",
+      "placeId": "ChIJwVyzY16nlVQRJvN1zZSPFvM",
+      "confidence": 0.8999999999999999,
+      "businessName": "Rivière Med Spa & Lasers",
+      "rating": 5,
+      "reviewCount": 13,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 348,
+      "status": "updated",
+      "placeId": "ChIJX1P90XQJlVQRwBrofbMoYmI",
+      "confidence": 0.9,
+      "businessName": "Rivière Med Spa",
+      "rating": 4.9,
+      "reviewCount": 207,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 350,
+      "status": "updated",
+      "placeId": "ChIJ3SPe5CTAwIcRBYR91Gds0S0",
+      "confidence": 1,
+      "businessName": "Refresh Medical Spa",
+      "rating": 5,
+      "reviewCount": 325,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 355,
+      "status": "updated",
+      "placeId": "ChIJGdqV6wmpVogRpI3M2aq5UeA",
+      "confidence": 1,
+      "businessName": "Lifted Aesthetics Charlotte",
+      "rating": 5,
+      "reviewCount": 934,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 357,
+      "status": "updated",
+      "placeId": "ChIJnZJS8MEq34gRmc2eT9VlwBQ",
+      "confidence": 1,
+      "businessName": "Le Spa Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 145,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 358,
+      "status": "updated",
+      "placeId": "ChIJtYR_14bZ94cRzUjUjsHq6G0",
+      "confidence": 1,
+      "businessName": "The Med Spa Woodbury",
+      "rating": 4.9,
+      "reviewCount": 119,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 359,
+      "status": "updated",
+      "placeId": "ChIJ0Ro6_0tb54YR8HBKEM05rcM",
+      "confidence": 0.9,
+      "businessName": "Top Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 661,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 360,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Jacksonville Dermatology & Cosmetic Surgery",
+      "formattedAddress": "6817 Southpoint Pkwy Ste 101, Jacksonville, FL 32216, United States"
+    },
+    {
+      "draftId": 362,
+      "status": "updated",
+      "placeId": "ChIJDzeqlhClJoYReMVpz-5IaEE",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 1255,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 364,
+      "status": "updated",
+      "placeId": "ChIJt874ANShJoYRwuksrYsGxW8",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 161,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 366,
+      "status": "updated",
+      "placeId": "ChIJeyqSTC4jJ4YRW0VVKW4ArT0",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 616,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 368,
+      "status": "updated",
+      "placeId": "ChIJh9Wcnx6_JoYRj1FvOWlVkVE",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 678,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 370,
+      "status": "updated",
+      "placeId": "ChIJCzfZM1ZdJ4YR4hAc7W9J38Q",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 460,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 371,
+      "status": "updated",
+      "placeId": "ChIJFesyDJedJIYRqCA_RGx_i1c",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 152,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 373,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7285714285714285,
+      "businessName": "Weiler Plastic Surgery - Surgical Center",
+      "formattedAddress": "4906 Ambassador Caffery Pkwy Building M Suite 1, Lafayette, LA 70508, United States"
+    },
+    {
+      "draftId": 375,
+      "status": "updated",
+      "placeId": "ChIJydTpHnSxIIYRbh_krSUDW2E",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 176,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 378,
+      "status": "updated",
+      "placeId": "ChIJEesIEqznnYgREeLX_5TLCO4",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 308,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 379,
+      "status": "updated",
+      "placeId": "ChIJ989PSYi3JoYRmWbjqesqSHw",
+      "confidence": 0.8,
+      "businessName": "Weiler Plastic Surgery Group: Dr. Mary Ghere",
+      "rating": 5,
+      "reviewCount": 8,
+      "googlePhotosCount": 3
+    },
+    {
+      "draftId": 381,
+      "status": "updated",
+      "placeId": "ChIJFW3-F-nFwogRxGHOVpfMKTw",
+      "confidence": 1,
+      "businessName": "ÉLAN Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 435,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 383,
+      "status": "skipped_low_confidence",
+      "confidence": 0.425,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "8686 131st St N, Seminole, FL 33776, United States"
+    },
+    {
+      "draftId": 384,
+      "status": "updated",
+      "placeId": "ChIJWdeQmHfX2IgRAjPTiyPchiM",
+      "confidence": 0.9,
+      "businessName": "L.A. Vinas M.D. Plastic Surgery, Med Spa & Skin Care Centers",
+      "rating": 4.7,
+      "reviewCount": 142,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 385,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "35196 US Hwy 19 N, Palm Harbor, FL 34683, United States"
+    },
+    {
+      "draftId": 387,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "5156 Central Ave, St. Petersburg, FL 33710, United States"
+    },
+    {
+      "draftId": 390,
+      "status": "updated",
+      "placeId": "ChIJn8t3fcmVwogRpRAIhxxR5AY",
+      "confidence": 0.95,
+      "businessName": "Living Young Center Med Spa Odessa",
+      "rating": 5,
+      "reviewCount": 180,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 392,
+      "status": "updated",
+      "placeId": "ChIJzRYe8djN2IcRkREOCNk1SsI",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 5,
+      "reviewCount": 1,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 394,
+      "status": "updated",
+      "placeId": "ChIJKcoXDtHM2IcRRNdypVmyH3g",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 4.9,
+      "reviewCount": 179,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 395,
+      "status": "updated",
+      "placeId": "ChIJXRWjB1ms2YgRGy0aHym4n7I",
+      "confidence": 0.9,
+      "businessName": "Ernest DiGeronimo, MD Advanced Plastic Surgery",
+      "rating": 4.1,
+      "reviewCount": 172,
+      "googlePhotosCount": 2
+    },
+    {
+      "draftId": 396,
+      "status": "updated",
+      "placeId": "ChIJ2wH8gErV2IcRONFtKl-FbMo",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 5,
+      "reviewCount": 7,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 397,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Transform Me Medspa - O'Fallon",
+      "formattedAddress": "741 Insight Ave, O'Fallon, IL 62269, United States"
+    },
+    {
+      "draftId": 399,
+      "status": "updated",
+      "placeId": "ChIJ_eNnMEUN3okRCqK4-y_v8I8",
+      "confidence": 0.9,
+      "businessName": "Prime Facial Plastic Surgery - Dr. Jigar Sitapara, MD",
+      "rating": 4.9,
+      "reviewCount": 123,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 404,
+      "status": "updated",
+      "placeId": "ChIJucjLTH_xNIgR7L6ptbzobu0",
+      "confidence": 1,
+      "businessName": "Pittsburgh Center for Plastic Surgery",
+      "rating": 4.6,
+      "reviewCount": 153,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 408,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "INWARD Beauty MedSpa",
+      "formattedAddress": "14603 Huebner Rd building 9, San Antonio, TX 78230, United States"
+    },
+    {
+      "draftId": 410,
+      "status": "updated",
+      "placeId": "ChIJ765U7lITToYROYCixEzLS6o",
+      "confidence": 1,
+      "businessName": "Forever29 MedSpa",
+      "rating": 4.6,
+      "reviewCount": 78,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 412,
+      "status": "updated",
+      "placeId": "ChIJgcS4tvmJXIYRcX0DjmfEyPA",
+      "confidence": 1,
+      "businessName": "Eterna Cosmetic Surgery",
+      "rating": 4.7,
+      "reviewCount": 199,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 414,
+      "status": "updated",
+      "placeId": "ChIJg9T5pPLNQIYREdcETFYIuz8",
+      "confidence": 0.9,
+      "businessName": "DermaTouch RN",
+      "rating": 4.9,
+      "reviewCount": 1798,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 416,
+      "status": "updated",
+      "placeId": "ChIJfXgwDHxfXIYRkMUqShN5a9w",
+      "confidence": 0.9,
+      "businessName": "DermaTouch RN",
+      "rating": 4.9,
+      "reviewCount": 330,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 419,
+      "status": "updated",
+      "placeId": "ChIJJwL0LMBXQIgRLEIjmRQTRn8",
+      "confidence": 1,
+      "businessName": "Fix Studios",
+      "rating": 5,
+      "reviewCount": 38,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 422,
+      "status": "updated",
+      "placeId": "ChIJo1Da-DSpQYgRgKGMWYeEyI0",
+      "confidence": 1,
+      "businessName": "Dermatology Specialists of Greater Cincinnati",
+      "rating": 3.8,
+      "reviewCount": 66,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 424,
+      "status": "updated",
+      "placeId": "ChIJTW6NNLZ_54gRJr5M9RJvYrs",
+      "confidence": 1,
+      "businessName": "Vado Plastic Surgery",
+      "rating": 4.8,
+      "reviewCount": 711,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 429,
+      "status": "updated",
+      "placeId": "ChIJb39a3-ZYrIkRCk5HA-7Y2Sg",
+      "confidence": 0.9,
+      "businessName": "Lyle Plastic Surgery and Aesthetics Center",
+      "rating": 4.9,
+      "reviewCount": 90,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 431,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Hello Beautiful Boutique Medspa",
+      "formattedAddress": "407 N Person St, Raleigh, NC 27601, United States"
+    },
+    {
+      "draftId": 433,
+      "status": "updated",
+      "placeId": "ChIJHQ2xA_mJUocRn20xzfunNUk",
+      "confidence": 1,
+      "businessName": "Selarom Plastic Surgery & Spa",
+      "rating": 4.9,
+      "reviewCount": 187,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 437,
+      "status": "updated",
+      "placeId": "ChIJ1yXAZws1joAR3K2oCfdLihE",
+      "confidence": 1,
+      "businessName": "Los Gatos Dermatology",
+      "rating": 4.9,
+      "reviewCount": 565,
+      "googlePhotosCount": 3
+    },
+    {
+      "draftId": 444,
+      "status": "updated",
+      "placeId": "ChIJ238AKWgiTIYRX2FFOOfE3xs",
+      "confidence": 0.8,
+      "businessName": "Plano Plastic Surgery",
+      "rating": 4.8,
+      "reviewCount": 154,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 445,
+      "status": "updated",
+      "placeId": "ChIJw5I1L20gTIYRVM3nVv4tmVg",
+      "confidence": 1,
+      "businessName": "Dallas Surgical Arts",
+      "rating": 4.9,
+      "reviewCount": 498,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 451,
+      "status": "updated",
+      "placeId": "ChIJE_EaM48F9YgR1arRiFD0tiE",
+      "confidence": 1,
+      "businessName": "Blue Divine Aesthetics",
+      "rating": 4.6,
+      "reviewCount": 326,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 456,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Armen Vartany, MD, FACS: Plastic Surgery and Laser Center",
+      "formattedAddress": "116 S Buena Vista St #300, Burbank, CA 91505, United States"
+    },
+    {
+      "draftId": 459,
+      "status": "updated",
+      "placeId": "ChIJ964sNk-5woARl5j5Ve8yiaw",
+      "confidence": 1,
+      "businessName": "Beverly Hills Med Spa",
+      "rating": 4.5,
+      "reviewCount": 35,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 462,
+      "status": "skipped_low_confidence",
+      "confidence": 0.425,
+      "businessName": "Shafer Clinic Fifth Avenue",
+      "formattedAddress": "535 5th Ave 33rd Floor, New York, NY 10017, United States"
+    },
+    {
+      "draftId": 463,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5857142857142856,
+      "businessName": "Dr. Jennifer Levine",
+      "formattedAddress": "Ste B, 240 E 79th St, New York, NY 10075, United States"
+    },
+    {
+      "draftId": 464,
+      "status": "updated",
+      "placeId": "ChIJ9UXmL71YwokRWfJUo9Uzzgw",
+      "confidence": 0.8,
+      "businessName": "Dr. Sam Rizk, MD",
+      "rating": 4.7,
+      "reviewCount": 194,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 467,
+      "status": "updated",
+      "placeId": "ChIJaThxbKNYwokR-wekTbuAim8",
+      "confidence": 0.8999999999999999,
+      "businessName": "Zuckerman Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 199,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 468,
+      "status": "updated",
+      "placeId": "ChIJRU0mHZhYwokRERkPwxpRF4A",
+      "confidence": 0.8,
+      "businessName": "Dr. Steven Wallach, MD",
+      "rating": 4.6,
+      "reviewCount": 42,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 469,
+      "status": "updated",
+      "placeId": "ChIJ-Q13HuVYwokRGJvYDhLqYsw",
+      "confidence": 0.9,
+      "businessName": "Smooth Synergy Medical Spa & Laser Center",
+      "rating": 5,
+      "reviewCount": 198,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 470,
+      "status": "updated",
+      "placeId": "ChIJ2QuH14lZwokRzfQWCLiCRy8",
+      "confidence": 0.9,
+      "businessName": "Alchemy 43 Upper East Side",
+      "rating": 4.5,
+      "reviewCount": 62,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 472,
+      "status": "updated",
+      "placeId": "ChIJXfXz5ruJwokRMMQT71QyzGw",
+      "confidence": 0.9,
+      "businessName": "Aristocrat Plastic Surgery: Dr. Kevin Tehrani - Long Island",
+      "rating": 4.8,
+      "reviewCount": 204,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 474,
+      "status": "updated",
+      "placeId": "ChIJ-WFO4f1Ks1IRcuIUr9z9QUU",
+      "confidence": 1,
+      "businessName": "Schweiger Dermatology Group",
+      "rating": 3.8,
+      "reviewCount": 5,
+      "googlePhotosCount": 6
+    },
+    {
+      "draftId": 475,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6,
+      "businessName": "Sheila Nazarian, MD, MMM: Speaker, Activist, TV Personality",
+      "formattedAddress": "120 S Spalding Dr #315, Beverly Hills, CA 90212, United States"
+    },
+    {
+      "draftId": 476,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "MarinaRox Aesthetic Fellows Clinic",
+      "formattedAddress": "4644 Lincoln Blvd #552, Marina Del Rey, CA 90292, United States"
+    },
+    {
+      "draftId": 477,
+      "status": "updated",
+      "placeId": "ChIJYVj9Z0-7woAR4qn2QBt_HUI",
+      "confidence": 1,
+      "businessName": "Skin by Lovely",
+      "rating": 5,
+      "reviewCount": 551,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 478,
+      "status": "updated",
+      "placeId": "ChIJoRhQzfe7woAR--rUlUaJuJ4",
+      "confidence": 1,
+      "businessName": "Lancer Dermatology",
+      "rating": 3.8,
+      "reviewCount": 16,
+      "googlePhotosCount": 2
+    },
+    {
+      "draftId": 479,
+      "status": "updated",
+      "placeId": "ChIJfXSzDKC-woAR-YbmfTVlUQU",
+      "confidence": 0.9,
+      "businessName": "Marc Mani, MD",
+      "rating": 5,
+      "reviewCount": 24,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 480,
+      "status": "updated",
+      "placeId": "ChIJdaHFtOS7woAR1FxwRyGmwPY",
+      "confidence": 1,
+      "businessName": "Beverly Hills Aesthetics",
+      "rating": 4.8,
+      "reviewCount": 94,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 481,
+      "status": "updated",
+      "placeId": "ChIJSyZygqi-woARkNJWDxu7JwA",
+      "confidence": 1,
+      "businessName": "Le Jolie Medi Spa",
+      "rating": 4.8,
+      "reviewCount": 30,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 482,
+      "status": "updated",
+      "placeId": "ChIJS1l5E-10K4cRgSDQyAMlzy8",
+      "confidence": 1,
+      "businessName": "Brown Plastic Surgery",
+      "rating": 4.8,
+      "reviewCount": 143,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 483,
+      "status": "updated",
+      "placeId": "ChIJDXEDczgHK4cRtfnlahdu6zM",
+      "confidence": 1,
+      "businessName": "Natural Results Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 429,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 485,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Laser Aesthetics",
+      "formattedAddress": "9300 E Raintree Dr Suite 130, Room 8, Scottsdale, AZ 85260, United States"
+    },
+    {
+      "draftId": 486,
+      "status": "updated",
+      "placeId": "ChIJheFRYJN0K4cReO6LdDd_6Dg",
+      "confidence": 0.8,
+      "businessName": "About Face Boutique",
+      "rating": 5,
+      "reviewCount": 22,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 487,
+      "status": "updated",
+      "placeId": "ChIJ0US0iey5woARBxQoNciwaaQ",
+      "confidence": 1,
+      "businessName": "LaserAway Beverly Hills",
+      "rating": 4.6,
+      "reviewCount": 401,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 488,
+      "status": "updated",
+      "placeId": "ChIJTdkU1KO-woARHKuUdAe0aPU",
+      "confidence": 1,
+      "businessName": "LaserAway West Hollywood",
+      "rating": 4.6,
+      "reviewCount": 259,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 489,
+      "status": "updated",
+      "placeId": "ChIJhxkXBTFZtVIRVNjxpJ_dTHc",
+      "confidence": 1,
+      "businessName": "LaserAway Santa Monica",
+      "rating": 4.5,
+      "reviewCount": 232,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 490,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5,
+      "businessName": "LaserAway Sherman Oaks",
+      "formattedAddress": "13833 Ventura Blvd Suite 103, Sherman Oaks, CA 91423, United States"
+    },
+    {
+      "draftId": 491,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "LaserAway Los Feliz",
+      "formattedAddress": "4531 Hollywood Blvd Ste F, Los Angeles, CA 90027, United States"
+    },
+    {
+      "draftId": 492,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "LaserAway Sherman Oaks",
+      "formattedAddress": "13833 Ventura Blvd Suite 103, Sherman Oaks, CA 91423, United States"
+    },
+    {
+      "draftId": 493,
+      "status": "updated",
+      "placeId": "ChIJo8ZX-V7DwoARgB3IDxpp1MM",
+      "confidence": 0.8,
+      "businessName": "LaserAway Hermosa Beach",
+      "rating": 4.7,
+      "reviewCount": 355,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 494,
+      "status": "updated",
+      "placeId": "ChIJfdFMCzq_woARKB4hXIBeEeQ",
+      "confidence": 1,
+      "businessName": "Alchemy 43 West Hollywood",
+      "rating": 4.8,
+      "reviewCount": 54,
+      "googlePhotosCount": 6
+    },
+    {
+      "draftId": 495,
+      "status": "updated",
+      "placeId": "ChIJyQt927a-woAR7HWyV9aZ-Ds",
+      "confidence": 0.9,
+      "businessName": "SEV Laser",
+      "rating": 4.8,
+      "reviewCount": 302,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 496,
+      "status": "updated",
+      "placeId": "ChIJyQt927a-woAR7HWyV9aZ-Ds",
+      "confidence": 0.9,
+      "businessName": "SEV Laser",
+      "rating": 4.8,
+      "reviewCount": 302,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 497,
+      "status": "updated",
+      "placeId": "ChIJ6ZhWpa2-woARFT8U2z23R3s",
+      "confidence": 1,
+      "businessName": "Skin Laundry - West Hollywood",
+      "rating": 4.2,
+      "reviewCount": 94,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 498,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Skin Laundry - Santa Monica",
+      "formattedAddress": "1230 Montana Ave # 101, Santa Monica, CA 90403, United States"
+    },
+    {
+      "draftId": 499,
+      "status": "updated",
+      "placeId": "ChIJ6XbExbCkwoARkxeqDaJ0v6w",
+      "confidence": 1,
+      "businessName": "Skin Laundry - Santa Monica",
+      "rating": 4.6,
+      "reviewCount": 292,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 500,
+      "status": "updated",
+      "placeId": "ChIJ76pcU2Xg3IARDVttZxzcQIM",
+      "confidence": 0.9,
+      "businessName": "CosmetiCare Plastic Surgery Newport Beach & Med Spa",
+      "rating": 4.7,
+      "reviewCount": 163,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 501,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "DISC Surgery Center at Newport Beach",
+      "formattedAddress": "3501 Jamboree Rd Suite 1200, Newport Beach, CA 92660, United States"
+    },
+    {
+      "draftId": 502,
+      "status": "updated",
+      "placeId": "ChIJ8dTWDo_g3IARzAzlgBmBwFQ",
+      "confidence": 1,
+      "businessName": "OC Skin Institute",
+      "rating": 4.5,
+      "reviewCount": 23,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 503,
+      "status": "updated",
+      "placeId": "ChIJ5Smss5G_woARlUq1gwr3oQI",
+      "confidence": 1,
+      "businessName": "Beverly Hills Rejuvenation Center - West Hollywood",
+      "rating": 5,
+      "reviewCount": 48,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 506,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5,
+      "businessName": "LaserAway Costa Mesa",
+      "formattedAddress": "369 E 17th St Ste 4, Costa Mesa, CA 92627, United States"
+    },
+    {
+      "draftId": 507,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "LaserAway Glendale",
+      "formattedAddress": "101 N Brand Blvd Suite 145, Glendale, CA 91203, United States"
+    },
+    {
+      "draftId": 508,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "LaserAway Hermosa Beach",
+      "formattedAddress": "1312 Hermosa Ave, Hermosa Beach, CA 90254, United States"
+    },
+    {
+      "draftId": 509,
+      "status": "updated",
+      "placeId": "ChIJRceI1V3BwoARpBy1OJfBPy4",
+      "confidence": 1,
+      "businessName": "LaserAway Glendale",
+      "rating": 4.8,
+      "reviewCount": 223,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 510,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "SkinSpirit at Lasky",
+      "formattedAddress": "153 S Lasky Dr Suite 8, Beverly Hills, CA 90212, United States"
+    },
+    {
+      "draftId": 511,
+      "status": "updated",
+      "placeId": "ChIJuZLPyG3f3IAReuycIMkdbz4",
+      "confidence": 1,
+      "businessName": "SkinSpirit Newport Beach",
+      "rating": 4.9,
+      "reviewCount": 101,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 512,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "The Skin Department",
+      "formattedAddress": "530 Wilshire Blvd Suite 101; Studio 19, Santa Monica, CA 90401, United States"
+    },
+    {
+      "draftId": 513,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5,
+      "businessName": "SkinSpirit at Lasky",
+      "formattedAddress": "153 S Lasky Dr Suite 8, Beverly Hills, CA 90212, United States"
+    },
+    {
+      "draftId": 514,
+      "status": "skipped_low_confidence",
+      "confidence": 0.675,
+      "businessName": "Body of Beverly Hills Wellness - Encino",
+      "formattedAddress": "17609 Ventura Blvd Suite 104, Encino, CA 91316, United States"
+    },
+    {
+      "draftId": 515,
+      "status": "updated",
+      "placeId": "ChIJ5Smss5G_woARlUq1gwr3oQI",
+      "confidence": 0.95,
+      "businessName": "Beverly Hills Rejuvenation Center - West Hollywood",
+      "rating": 5,
+      "reviewCount": 48,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 516,
+      "status": "updated",
+      "placeId": "ChIJiVCbGK7l3IAR3xJmLGd4Rpg",
+      "confidence": 0.95,
+      "businessName": "Laguna Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 132,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 517,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5,
+      "businessName": "OC Beauty Med Spa",
+      "formattedAddress": "496 Old Newport Blvd suite#3B, Newport Beach, CA 92663, United States"
+    },
+    {
+      "draftId": 518,
+      "status": "updated",
+      "placeId": "ChIJY_ZLBdmdwoARxliNScZOknE",
+      "confidence": 0.8,
+      "businessName": "Luminous Medical Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 107,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 519,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "S&E MEDSPA",
+      "formattedAddress": "453 N Lake Ave, Pasadena, CA 91101, United States"
+    },
+    {
+      "draftId": 520,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Elevate Aesthetics",
+      "formattedAddress": "509 1/2 E Broadway, Glendale, CA 91205, United States"
+    },
+    {
+      "draftId": 522,
+      "status": "updated",
+      "placeId": "ChIJSXaVFYxYwokRhm1ANMs3h5k",
+      "confidence": 1,
+      "businessName": "Precision Aesthetics™ MD",
+      "rating": 5,
+      "reviewCount": 36,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 523,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4666666666666667,
+      "businessName": "Pacific Skin Institute",
+      "formattedAddress": "1495 River Park Dr # 200, Sacramento, CA 95815, United States"
+    },
+    {
+      "draftId": 524,
+      "status": "updated",
+      "placeId": "ChIJV75h_qW-woARA02yHxGTCCg",
+      "confidence": 1,
+      "businessName": "Skin Thesis",
+      "rating": 4.8,
+      "reviewCount": 99,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 525,
+      "status": "updated",
+      "placeId": "ChIJWQsyhowXjoAR2yK4mILkAdo",
+      "confidence": 1,
+      "businessName": "Pacific Coast Aesthetics",
+      "rating": 5,
+      "reviewCount": 708,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 528,
+      "status": "updated",
+      "placeId": "ChIJuw1vyKJZwokRnCRZ5Sbl0Vk",
+      "confidence": 1,
+      "businessName": "Alchemy 43 Flatiron",
+      "rating": 4.4,
+      "reviewCount": 168,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 529,
+      "status": "updated",
+      "placeId": "ChIJZSm2NfxZwokRIuBueRLrwYw",
+      "confidence": 0.9,
+      "businessName": "SEV Laser",
+      "rating": 4.7,
+      "reviewCount": 796,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 530,
+      "status": "updated",
+      "placeId": "ChIJc_8u9ylZwokR2WKiJq63dxQ",
+      "confidence": 0.9,
+      "businessName": "SEV Laser",
+      "rating": 4.7,
+      "reviewCount": 258,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 531,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "LaserAway Hoboken",
+      "formattedAddress": "220 Washington St, Hoboken, NJ 07030, United States"
+    },
+    {
+      "draftId": 532,
+      "status": "updated",
+      "placeId": "ChIJPY7rQxtZwokRh04FWci5g_4",
+      "confidence": 1,
+      "businessName": "Skin Laundry - Upper East Side",
+      "rating": 4.6,
+      "reviewCount": 184,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 533,
+      "status": "updated",
+      "placeId": "ChIJaVDBBR9awokRtTzhlY7w7Ck",
+      "confidence": 0.8,
+      "businessName": "Skin Laundry - Tribeca",
+      "rating": 4.6,
+      "reviewCount": 353,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 534,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Skin Laundry - Flatiron",
+      "formattedAddress": "3 W 16th St, New York, NY 10011, United States"
+    },
+    {
+      "draftId": 536,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "The Shephard",
+      "formattedAddress": "275 W 10th St, New York, NY 10014, United States"
+    },
+    {
+      "draftId": 537,
+      "status": "updated",
+      "placeId": "ChIJM7JqI7xYwokRmq9Eu-_DuFc",
+      "confidence": 0.95,
+      "businessName": "Heyday Skincare Upper East Side",
+      "rating": 4.7,
+      "reviewCount": 299,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 538,
+      "status": "updated",
+      "placeId": "ChIJ5aTRZc9ZwokRGrEKBFk8Nl8",
+      "confidence": 0.95,
+      "businessName": "Heyday Skincare Williamsburg",
+      "rating": 5,
+      "reviewCount": 59,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 539,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4666666666666667,
+      "businessName": "Heyday Skincare Cobble Hill",
+      "formattedAddress": "215 Pacific St, Brooklyn, NY 11201, United States"
+    },
+    {
+      "draftId": 540,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5,
+      "businessName": "Chelsea Skin & Laser",
+      "formattedAddress": "245 W 19th St, New York, NY 10011, United States"
+    },
+    {
+      "draftId": 541,
+      "status": "updated",
+      "placeId": "ChIJM4yJRfZZwokR4ISAh7AfTU4",
+      "confidence": 0.8999999999999999,
+      "businessName": "Park Avenue Skin Care",
+      "rating": 5,
+      "reviewCount": 61,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 542,
+      "status": "updated",
+      "placeId": "ChIJjb0icwWDwokRp-rd39RPKxk",
+      "confidence": 0.9,
+      "businessName": "Greenberg Cosmetic Surgery and Dermatology: Plastic Surgery Woodbury",
+      "rating": 4.7,
+      "reviewCount": 605,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 544,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "GLOWDOCS",
+      "formattedAddress": "266 Jericho Tpke, Mineola, NY 11501, United States"
+    },
+    {
+      "draftId": 545,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3909090909090909,
+      "businessName": "NYU Langone Huntington Medical Group —180 East Pulaski Road",
+      "formattedAddress": "180 E Pulaski Rd, Huntington Station, NY 11746, United States"
+    },
+    {
+      "draftId": 546,
+      "status": "skipped_low_confidence",
+      "confidence": 0.55,
+      "businessName": "LaserAway Long Island-Manhasset",
+      "formattedAddress": "1595 Northern Blvd, Manhasset, NY 11030, United States"
+    },
+    {
+      "draftId": 547,
+      "status": "updated",
+      "placeId": "ChIJY7QiyRmXwokRQJMlXyZpVYw",
+      "confidence": 0.8714285714285714,
+      "businessName": "R Michael Koch Plastic Surgery - White Plains",
+      "rating": 4.8,
+      "reviewCount": 16,
+      "googlePhotosCount": 3
+    },
+    {
+      "draftId": 550,
+      "status": "updated",
+      "placeId": "ChIJaS06H7acwYkR1H9DbMadOZI",
+      "confidence": 0.8,
+      "businessName": "Ocean Plastic Surgery",
+      "rating": 4.7,
+      "reviewCount": 79,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 551,
+      "status": "skipped_low_confidence",
+      "confidence": 0.3,
+      "businessName": "Honey Medspa",
+      "formattedAddress": "640 Park Ave, Hoboken, NJ 07030, United States"
+    },
+    {
+      "draftId": 552,
+      "status": "updated",
+      "placeId": "ChIJIQUHI83hw4kRTx0E-3TQPkA",
+      "confidence": 1,
+      "businessName": "Princeton Aesthetics",
+      "rating": 4.8,
+      "reviewCount": 80,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 553,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4666666666666667,
+      "businessName": "LaserAway Marina del Rey",
+      "formattedAddress": "4728 Lincoln Blvd, Marina Del Rey, CA 90292, United States"
+    },
+    {
+      "draftId": 554,
+      "status": "updated",
+      "placeId": "ChIJo8ZX-V7DwoARgB3IDxpp1MM",
+      "confidence": 0.8,
+      "businessName": "LaserAway Hermosa Beach",
+      "rating": 4.7,
+      "reviewCount": 355,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 555,
+      "status": "updated",
+      "placeId": "ChIJNc3sNB5L3YARVVBqr7qzBi8",
+      "confidence": 0.8,
+      "businessName": "South Bay Aesthetics - Plastic Surgery",
+      "rating": 4.7,
+      "reviewCount": 65,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 556,
+      "status": "updated",
+      "placeId": "ChIJZY4U2-BZwokRbUDObUtaZeg",
+      "confidence": 0.9,
+      "businessName": "SEV Laser",
+      "rating": 4.8,
+      "reviewCount": 105,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 557,
+      "status": "updated",
+      "placeId": "ChIJaVDBBR9awokRtTzhlY7w7Ck",
+      "confidence": 1,
+      "businessName": "Skin Laundry - Tribeca",
+      "rating": 4.6,
+      "reviewCount": 353,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 558,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4666666666666667,
+      "businessName": "Heyday Skincare Upper West Side",
+      "formattedAddress": "67 W 71st St, New York, NY 10023, United States"
+    },
+    {
+      "draftId": 559,
+      "status": "updated",
+      "placeId": "ChIJy1HYtD9ZwokRwioJ8qjB3Ys",
+      "confidence": 1,
+      "businessName": "LaserAway Upper East Side",
+      "rating": 4.6,
+      "reviewCount": 375,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 560,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "LaserAway Tribeca",
+      "formattedAddress": "143 Duane St, New York, NY 10013, United States"
+    },
+    {
+      "draftId": 564,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Hermest Hair Clinic | Hair Transplant Turkey Istanbul",
+      "formattedAddress": "Fenerbahçe, Cavit Çıtak Sk. No: 10, 34734 Kadıköy/İstanbul, Türkiye"
+    },
+    {
+      "draftId": 567,
+      "status": "updated",
+      "placeId": "ChIJt-fXGmejyhQRb0NIbIJJAc0",
+      "confidence": 0.9,
+      "businessName": "Hair of Istanbul | Hair Transplant Clinic",
+      "rating": 4.9,
+      "reviewCount": 732,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 644,
+      "status": "updated",
+      "placeId": "ChIJYXD2NFGvbIgRI67ahVIpg3s",
+      "confidence": 0.9,
+      "businessName": "SHarper Plastic Surgery, Spa + Salt Lounge",
+      "rating": 4.9,
+      "reviewCount": 407,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 645,
+      "status": "updated",
+      "placeId": "ChIJgab7dWKn-4gRXZIPjIsBxJ4",
+      "confidence": 1,
+      "businessName": "Vitali Medspa",
+      "rating": 4.9,
+      "reviewCount": 323,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 660,
+      "status": "updated",
+      "placeId": "ChIJ-Z_4cOh9TYcRNBaP6qz4S9Q",
+      "confidence": 0.9,
+      "businessName": "Botox, Filler, Weight Loss at Angie's Injections",
+      "rating": 5,
+      "reviewCount": 154,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 669,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Delta Phoenix Aesthetic Medicine",
+      "formattedAddress": "1614 University Ave, Oxford, MS 38655, United States"
+    },
+    {
+      "draftId": 672,
+      "status": "updated",
+      "placeId": "ChIJtQYgLsnxk4cRVRxNCwYd4y8",
+      "confidence": 0.9,
+      "businessName": "Omaha Face & Body",
+      "rating": 4.9,
+      "reviewCount": 194,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 675,
+      "status": "updated",
+      "placeId": "ChIJOQx-CklzIocRwC-RVEuuxi8",
+      "confidence": 1,
+      "businessName": "ABQ Medical Spa",
+      "rating": 5,
+      "reviewCount": 32,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 676,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5857142857142856,
+      "businessName": "Wellness District Medical Weight Loss & Aesthetics",
+      "formattedAddress": "435 32nd Ave E Suite B, West Fargo, ND 58078, United States"
+    },
+    {
+      "draftId": 677,
+      "status": "updated",
+      "placeId": "ChIJ39u7_pbLSIgRbCE99I6qu6w",
+      "confidence": 0.8,
+      "businessName": "Turner Medical and Almost Heaven Spa",
+      "rating": 4.8,
+      "reviewCount": 25,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 679,
+      "status": "updated",
+      "placeId": "ChIJcddJyQQk9ocR-qGtEuOj2FE",
+      "confidence": 1,
+      "businessName": "Metropolitan Skin Clinic",
+      "rating": 4.8,
+      "reviewCount": 435,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 681,
+      "status": "updated",
+      "placeId": "ChIJFW3-F-nFwogRxGHOVpfMKTw",
+      "confidence": 0.9,
+      "businessName": "ÉLAN Aesthetics",
+      "rating": 4.9,
+      "reviewCount": 435,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 682,
+      "status": "updated",
+      "placeId": "ChIJVSyBBFF7ZIgRtm_VH9iq0oI",
+      "confidence": 1,
+      "businessName": "NuBody Concepts",
+      "rating": 4.6,
+      "reviewCount": 158,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 683,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Hello Beautiful Boutique Medspa",
+      "formattedAddress": "407 N Person St, Raleigh, NC 27601, United States"
+    },
+    {
+      "draftId": 684,
+      "status": "updated",
+      "placeId": "ChIJ7yVy21CfToYR-zPHYp9s4G4",
+      "confidence": 0.9,
+      "businessName": "Viva Day Spa + Med Spa | Dallas",
+      "rating": 4.9,
+      "reviewCount": 78,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 687,
+      "status": "updated",
+      "placeId": "ChIJT8XM39G1RIYRkPoEzCcbcfk",
+      "confidence": 1,
+      "businessName": "Maui MedSpa",
+      "rating": 4.9,
+      "reviewCount": 76,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 688,
+      "status": "updated",
+      "placeId": "ChIJtwjL-7ztOIgRv14NtjE_HBo",
+      "confidence": 1,
+      "businessName": "Aesthetics by Kayla",
+      "rating": 5,
+      "reviewCount": 21,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 690,
+      "status": "updated",
+      "placeId": "ChIJQ1fea2B744kRyAQsWZMOWe8",
+      "confidence": 1,
+      "businessName": "Suite Six Medical Aesthetics",
+      "rating": 4.1,
+      "reviewCount": 23,
+      "googlePhotosCount": 2
+    },
+    {
+      "draftId": 691,
+      "status": "updated",
+      "placeId": "ChIJee6LqHNy9asRsBXDBO3P5Xg",
+      "confidence": 1,
+      "businessName": "KORA Aesthetics",
+      "rating": 5,
+      "reviewCount": 71,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 692,
+      "status": "updated",
+      "placeId": "ChIJlyph7BOKXIYRqyRAswl2Xgc",
+      "confidence": 1,
+      "businessName": "INWARD Beauty MedSpa",
+      "rating": 5,
+      "reviewCount": 18,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 694,
+      "status": "updated",
+      "placeId": "ChIJcdgoQZjbmoARiGrt_DxnL5c",
+      "confidence": 1,
+      "businessName": "Be You Medical",
+      "rating": 4.9,
+      "reviewCount": 168,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 695,
+      "status": "updated",
+      "placeId": "ChIJeY9a8_y12IcRTlQKncSC5VQ",
+      "confidence": 0.9,
+      "businessName": "Aesthetically Pleasing",
+      "rating": 5,
+      "reviewCount": 52,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 696,
+      "status": "updated",
+      "placeId": "ChIJm0qjdFKxQYgRZn5qOcQ_3BY",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.7,
+      "reviewCount": 266,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 697,
+      "status": "updated",
+      "placeId": "ChIJK7OIDXn0OIgR2cvHvQVUfjo",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.6,
+      "reviewCount": 213,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 698,
+      "status": "updated",
+      "placeId": "ChIJUbcBWBi8-IcRbPupMnypACA",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.7,
+      "reviewCount": 59,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 699,
+      "status": "updated",
+      "placeId": "ChIJTyr_9DYkAIgRIU1Mlf-TpXg",
+      "confidence": 1,
+      "businessName": "Juvly Aesthetics",
+      "rating": 4.5,
+      "reviewCount": 68,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 701,
+      "status": "updated",
+      "placeId": "ChIJW3waLUwJ9YgRITtSHNm79_U",
+      "confidence": 0.9,
+      "businessName": "WIFH",
+      "rating": 4.9,
+      "reviewCount": 368,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 702,
+      "status": "updated",
+      "placeId": "ChIJNdWN_wYH3IARfSBJ4YvU0zg",
+      "confidence": 1,
+      "businessName": "La Jolla Cosmetic Medical Spa",
+      "rating": 4.8,
+      "reviewCount": 204,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 703,
+      "status": "updated",
+      "placeId": "ChIJafDIXccL3IARV_jl8FcQeLs",
+      "confidence": 1,
+      "businessName": "La Jolla Cosmetic Medical Spa - Carlsbad",
+      "rating": 4.9,
+      "reviewCount": 175,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 704,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "bluepoint medical spa",
+      "formattedAddress": "3320 N Buffalo Dr #103, Las Vegas, NV 89129, United States"
+    },
+    {
+      "draftId": 705,
+      "status": "skipped_low_confidence",
+      "confidence": 0.5222222222222221,
+      "businessName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "formattedAddress": "Pavillion II, 1850 Town Center Pkwy Suite 551, Reston, VA 20190, United States"
+    },
+    {
+      "draftId": 706,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4818181818181818,
+      "businessName": "The Naderi Center for Plastic Surgery & Dermatology",
+      "formattedAddress": "5454 Wisconsin Ave Suite 1655, Chevy Chase, MD 20815, United States"
+    },
+    {
+      "draftId": 707,
+      "status": "updated",
+      "placeId": "ChIJMY_l6dcJ9YgRYn5y8bg16dM",
+      "confidence": 1,
+      "businessName": "ELLEMES Medical Spa",
+      "rating": 4.9,
+      "reviewCount": 395,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 708,
+      "status": "updated",
+      "placeId": "ChIJ7_rJWXSTMIgRXFTj7acABRA",
+      "confidence": 1,
+      "businessName": "Wellness Center of Greater Cleveland",
+      "rating": 4.8,
+      "reviewCount": 95,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 709,
+      "status": "updated",
+      "placeId": "ChIJwVyzY16nlVQRJvN1zZSPFvM",
+      "confidence": 0.8999999999999999,
+      "businessName": "Rivière Med Spa & Lasers",
+      "rating": 5,
+      "reviewCount": 13,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 710,
+      "status": "updated",
+      "placeId": "ChIJX1P90XQJlVQRwBrofbMoYmI",
+      "confidence": 0.9,
+      "businessName": "Rivière Med Spa",
+      "rating": 4.9,
+      "reviewCount": 207,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 711,
+      "status": "updated",
+      "placeId": "ChIJ3SPe5CTAwIcRBYR91Gds0S0",
+      "confidence": 1,
+      "businessName": "Refresh Medical Spa",
+      "rating": 5,
+      "reviewCount": 325,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 712,
+      "status": "updated",
+      "placeId": "ChIJQWKPVdOqFIgR7xi25ez-48c",
+      "confidence": 1,
+      "businessName": "Fundamentals Med Spa",
+      "rating": 4.9,
+      "reviewCount": 150,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 713,
+      "status": "updated",
+      "placeId": "ChIJGdqV6wmpVogRpI3M2aq5UeA",
+      "confidence": 1,
+      "businessName": "Lifted Aesthetics Charlotte",
+      "rating": 5,
+      "reviewCount": 934,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 714,
+      "status": "updated",
+      "placeId": "ChIJtYR_14bZ94cRzUjUjsHq6G0",
+      "confidence": 1,
+      "businessName": "The Med Spa Woodbury",
+      "rating": 4.9,
+      "reviewCount": 119,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 715,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "Jacksonville Dermatology & Cosmetic Surgery",
+      "formattedAddress": "6817 Southpoint Pkwy Ste 101, Jacksonville, FL 32216, United States"
+    },
+    {
+      "draftId": 716,
+      "status": "updated",
+      "placeId": "ChIJDzeqlhClJoYReMVpz-5IaEE",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 1255,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 717,
+      "status": "updated",
+      "placeId": "ChIJt874ANShJoYRwuksrYsGxW8",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 161,
+      "googlePhotosCount": 9
+    },
+    {
+      "draftId": 718,
+      "status": "updated",
+      "placeId": "ChIJeyqSTC4jJ4YRW0VVKW4ArT0",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 616,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 719,
+      "status": "updated",
+      "placeId": "ChIJh9Wcnx6_JoYRj1FvOWlVkVE",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 678,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 720,
+      "status": "updated",
+      "placeId": "ChIJCzfZM1ZdJ4YR4hAc7W9J38Q",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 460,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 721,
+      "status": "updated",
+      "placeId": "ChIJFesyDJedJIYRqCA_RGx_i1c",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 4.9,
+      "reviewCount": 152,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 722,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7285714285714285,
+      "businessName": "Weiler Plastic Surgery - Surgical Center",
+      "formattedAddress": "4906 Ambassador Caffery Pkwy Building M Suite 1, Lafayette, LA 70508, United States"
+    },
+    {
+      "draftId": 723,
+      "status": "updated",
+      "placeId": "ChIJydTpHnSxIIYRbh_krSUDW2E",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 176,
+      "googlePhotosCount": 8
+    },
+    {
+      "draftId": 724,
+      "status": "updated",
+      "placeId": "ChIJEesIEqznnYgREeLX_5TLCO4",
+      "confidence": 0.9,
+      "businessName": "Weiler Plastic Surgery",
+      "rating": 5,
+      "reviewCount": 308,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 725,
+      "status": "updated",
+      "placeId": "ChIJ989PSYi3JoYRmWbjqesqSHw",
+      "confidence": 0.8,
+      "businessName": "Weiler Plastic Surgery Group: Dr. Mary Ghere",
+      "rating": 5,
+      "reviewCount": 8,
+      "googlePhotosCount": 3
+    },
+    {
+      "draftId": 727,
+      "status": "skipped_low_confidence",
+      "confidence": 0.425,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "8686 131st St N, Seminole, FL 33776, United States"
+    },
+    {
+      "draftId": 728,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "35196 US Hwy 19 N, Palm Harbor, FL 34683, United States"
+    },
+    {
+      "draftId": 729,
+      "status": "skipped_low_confidence",
+      "confidence": 0.4111111111111111,
+      "businessName": "LivingYoung Center for Health & Anti-Aging",
+      "formattedAddress": "5156 Central Ave, St. Petersburg, FL 33710, United States"
+    },
+    {
+      "draftId": 730,
+      "status": "updated",
+      "placeId": "ChIJn8t3fcmVwogRpRAIhxxR5AY",
+      "confidence": 0.95,
+      "businessName": "Living Young Center Med Spa Odessa",
+      "rating": 5,
+      "reviewCount": 180,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 731,
+      "status": "updated",
+      "placeId": "ChIJzRYe8djN2IcRkREOCNk1SsI",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 5,
+      "reviewCount": 1,
+      "googlePhotosCount": 7
+    },
+    {
+      "draftId": 732,
+      "status": "updated",
+      "placeId": "ChIJKcoXDtHM2IcRRNdypVmyH3g",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 4.9,
+      "reviewCount": 179,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 733,
+      "status": "updated",
+      "placeId": "ChIJ2wH8gErV2IcRONFtKl-FbMo",
+      "confidence": 0.9,
+      "businessName": "Avani Derm Spa",
+      "rating": 5,
+      "reviewCount": 7,
+      "googlePhotosCount": 1
+    },
+    {
+      "draftId": 734,
+      "status": "skipped_low_confidence",
+      "confidence": 0.6333333333333333,
+      "businessName": "Transform Me Medspa - O'Fallon",
+      "formattedAddress": "741 Insight Ave, O'Fallon, IL 62269, United States"
+    },
+    {
+      "draftId": 735,
+      "status": "updated",
+      "placeId": "ChIJ_eNnMEUN3okRCqK4-y_v8I8",
+      "confidence": 0.9,
+      "businessName": "Prime Facial Plastic Surgery - Dr. Jigar Sitapara, MD",
+      "rating": 4.9,
+      "reviewCount": 123,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 736,
+      "status": "updated",
+      "placeId": "ChIJs3LXlloXyIkR4ovfsdb9uJ0",
+      "confidence": 1,
+      "businessName": "Aesthetic Center at Woodholme",
+      "rating": 4.7,
+      "reviewCount": 92,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 739,
+      "status": "skipped_low_confidence",
+      "confidence": 0.7,
+      "businessName": "INWARD Beauty MedSpa",
+      "formattedAddress": "14603 Huebner Rd building 9, San Antonio, TX 78230, United States"
+    },
+    {
+      "draftId": 740,
+      "status": "updated",
+      "placeId": "ChIJ765U7lITToYROYCixEzLS6o",
+      "confidence": 1,
+      "businessName": "Forever29 MedSpa",
+      "rating": 4.6,
+      "reviewCount": 78,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 742,
+      "status": "updated",
+      "placeId": "ChIJg9T5pPLNQIYREdcETFYIuz8",
+      "confidence": 0.9,
+      "businessName": "DermaTouch RN",
+      "rating": 4.9,
+      "reviewCount": 1798,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 743,
+      "status": "updated",
+      "placeId": "ChIJfXgwDHxfXIYRkMUqShN5a9w",
+      "confidence": 0.9,
+      "businessName": "DermaTouch RN",
+      "rating": 4.9,
+      "reviewCount": 330,
+      "googlePhotosCount": 10
+    },
+    {
+      "draftId": 745,
+      "status": "updated",
+      "placeId": "ChIJo1Da-DSpQYgRgKGMWYeEyI0",
+      "confidence": 1,
+      "businessName": "Dermatology Specialists of Greater Cincinnati",
+      "rating": 3.8,
+      "reviewCount": 66,
+      "googlePhotosCount": 1
+    }
+  ]
+}

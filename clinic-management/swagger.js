@@ -78,6 +78,10 @@ const options = {
       {
         name: 'Admin Dashboard',
         description: 'Admin dashboard statistics and clinic management'
+      },
+      {
+        name: 'Admin Google',
+        description: 'Google Places lookup and draft enrichment (admin JWT)'
       }
     ]
   },
