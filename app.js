@@ -672,7 +672,7 @@ app.get('/api/procedures/search-index', async (req, res) => {
 //   - location: city name, state abbreviation, or zip code
 //   - procedure: procedure name (case-insensitive, partial match)
 //   - radius: radius in miles for location searches (default: 20-30 for cities, 20 for zip)
-//   - clinicName: clinic name (case-insensitive, partial match) - filters at database level
+//   - clinicName: matches clinic name OR any listed procedure (case-insensitive; DB + JS)
 app.get('/api/clinics/search-index', async (req, res) => {
   let pool;
   try {
@@ -722,21 +722,10 @@ app.get('/api/clinics/search-index', async (req, res) => {
 
     const request = pool.request();
     
-    // Add clinicName filtering if provided (fuzzy matching with normalization)
+    // Add clinicName filtering: match clinic name OR procedure name (SQL pre-filter; JS refines)
     if (clinicName && clinicName.trim()) {
       const clinicNameSearch = clinicName.trim();
-      const clinicNamePattern = `%${clinicNameSearch.toLowerCase()}%`;
-      const clinicNameNormalized = `%${clinicNameSearch.toLowerCase().replace(/\s+/g, '')}%`;
-      
-      // Fuzzy matching: check both normalized (space-removed) match and partial match
-      // SQL Server doesn't have great fuzzy matching, so we use multiple OR conditions
-      // The actual fuzzy matching will be refined in JavaScript after fetching results
-      query += ` AND (
-        LOWER(c.ClinicName) LIKE @clinicNamePattern
-        OR LOWER(REPLACE(c.ClinicName, ' ', '')) LIKE @clinicNameNormalized
-      )`;
-      request.input('clinicNamePattern', sql.NVarChar, clinicNamePattern);
-      request.input('clinicNameNormalized', sql.NVarChar, clinicNameNormalized);
+      query += ` AND ${bindClinicNameOrProcedureSearchSql(request, clinicNameSearch)}`;
     }
 
     query += ` ORDER BY c.ClinicID, p.ProcedureName`;
@@ -761,22 +750,29 @@ app.get('/api/clinics/search-index', async (req, res) => {
     const photosRequest = pool.request();
     if (clinicName && clinicName.trim()) {
       const clinicNameSearch = clinicName.trim();
-      const clinicNamePattern = `%${clinicNameSearch.toLowerCase()}%`;
-      const clinicNameNormalized = `%${clinicNameSearch.toLowerCase().replace(/\s+/g, '')}%`;
-      
-      // Use same fuzzy matching logic as main query
-      photosQuery += ` AND (
-        LOWER(c.ClinicName) LIKE @clinicNamePattern
-        OR LOWER(REPLACE(c.ClinicName, ' ', '')) LIKE @clinicNameNormalized
-      )`;
-      photosRequest.input('clinicNamePattern', sql.NVarChar, clinicNamePattern);
-      photosRequest.input('clinicNameNormalized', sql.NVarChar, clinicNameNormalized);
-    }
-    
-    photosQuery += `
+      // Must join Procedures so procedure-only matches get gallery photos
+      photosQuery = `
+      SELECT 
+        ClinicID,
+        PhotoID,
+        DisplayOrder
+      FROM ClinicPhotos
+      WHERE ClinicID IN (
+        SELECT DISTINCT c.ClinicID
+        FROM Clinics c
+        JOIN Providers pr ON c.ClinicID = pr.ClinicID
+        JOIN Procedures p ON pr.ProviderID = p.ProviderID
+        WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+        AND ${bindClinicNameOrProcedureSearchSql(photosRequest, clinicNameSearch)}
       )
       ORDER BY ClinicID, DisplayOrder ASC
     `;
+    } else {
+      photosQuery += `
+      )
+      ORDER BY ClinicID, DisplayOrder ASC
+    `;
+    }
     
     const photosResult = await photosRequest.query(photosQuery);
 
@@ -847,17 +843,15 @@ app.get('/api/clinics/search-index', async (req, res) => {
     let locationConvertedToProcedure = false;
     let convertedProcedureTerm = null;
 
-    // Apply clinicName fuzzy filtering if provided (refine SQL results with JavaScript fuzzy matching)
+    // Apply clinicName filtering: clinic name OR any procedure (abbreviations via filterByProcedure)
     if (clinicName && clinicName.trim()) {
-      clinics = clinics.filter(clinic => 
-        matchesClinicNameSearch(clinic.clinicName, clinicName)
-      );
-      
-      // Sort by relevance score (exact matches first)
+      const term = clinicName.trim();
+      clinics = clinics.filter((clinic) => clinicMatchesClinicNameOrProcedureSearch(clinic, term));
+
       clinics.sort((a, b) => {
-        const scoreA = calculateRelevanceScore(a.clinicName, clinicName);
-        const scoreB = calculateRelevanceScore(b.clinicName, clinicName);
-        return scoreB - scoreA; // Higher score first
+        const scoreA = bestClinicSearchRelevanceScore(a, term);
+        const scoreB = bestClinicSearchRelevanceScore(b, term);
+        return scoreB - scoreA;
       });
     }
 
@@ -1198,6 +1192,74 @@ async function filterByZipRadius(clinics, zipCode, radius) {
   return clinics.filter(clinic => matchedClinics.has(clinic.clinicId));
 }
 
+/** Common procedure nicknames → canonical phrases (also used for SQL pre-filtering) */
+const PROCEDURE_ABBREVIATIONS = {
+  bbl: 'brazilian butt lift',
+  'tummy tuck': 'abdominoplasty',
+  'nose job': 'rhinoplasty',
+  'boob job': 'breast augmentation',
+  botox: 'botulinum toxin',
+  filler: 'dermal filler'
+};
+
+/**
+ * Adds inputs and returns SQL AND fragment: clinic name OR procedure matches search text.
+ * Coarse SQL filter; JS refines with matchesClinicNameSearch / filterByProcedure.
+ * @param {import('mssql').Request} request
+ * @param {string} clinicNameTrimmed
+ * @returns {string}
+ */
+function bindClinicNameOrProcedureSearchSql(request, clinicNameTrimmed) {
+  const clinicNamePattern = `%${clinicNameTrimmed.toLowerCase()}%`;
+  const clinicNameNormalized = `%${clinicNameTrimmed.toLowerCase().replace(/\s+/g, '')}%`;
+  const lowerSearch = clinicNameTrimmed.toLowerCase();
+  const expandedFull = PROCEDURE_ABBREVIATIONS[lowerSearch];
+  const expandedProcPattern = expandedFull ? `%${expandedFull}%` : null;
+
+  request.input('clinicNamePattern', sql.NVarChar, clinicNamePattern);
+  request.input('clinicNameNormalized', sql.NVarChar, clinicNameNormalized);
+  if (expandedProcPattern) {
+    request.input('expandedProcPattern', sql.NVarChar, expandedProcPattern);
+  }
+
+  let clause = `(
+      LOWER(c.ClinicName) LIKE @clinicNamePattern
+      OR LOWER(REPLACE(c.ClinicName, ' ', '')) LIKE @clinicNameNormalized
+      OR LOWER(p.ProcedureName) LIKE @clinicNamePattern
+      OR LOWER(REPLACE(p.ProcedureName, ' ', '')) LIKE @clinicNameNormalized`;
+  if (expandedProcPattern) {
+    clause += `
+      OR LOWER(p.ProcedureName) LIKE @expandedProcPattern`;
+  }
+  clause += `
+    )`;
+  return clause;
+}
+
+/**
+ * Best relevance score for a clinic when user text may match name or any procedure.
+ * @param {{ clinicName: string, procedures: { procedureName: string }[] }} clinic
+ * @param {string} term
+ */
+function bestClinicSearchRelevanceScore(clinic, term) {
+  const nameScore = calculateRelevanceScore(clinic.clinicName, term);
+  const procScores = (clinic.procedures || []).map((p) =>
+    calculateRelevanceScore(p.procedureName, term)
+  );
+  const bestProc = procScores.length ? Math.max(...procScores) : 0;
+  return Math.max(nameScore, bestProc);
+}
+
+/**
+ * True if clinic name matches OR any procedure matches (including abbreviation expansion).
+ */
+function clinicMatchesClinicNameOrProcedureSearch(clinic, term) {
+  if (matchesClinicNameSearch(clinic.clinicName, term)) {
+    return true;
+  }
+  return filterByProcedure([clinic], term).length > 0;
+}
+
 /**
  * Filter clinics by procedure name with fuzzy matching
  * Supports word splits (e.g., "micro blading" matches "microblading")
@@ -1207,19 +1269,9 @@ async function filterByZipRadius(clinics, zipCode, radius) {
  */
 function filterByProcedure(clinics, procedureName) {
   const lowerProcedure = procedureName.toLowerCase().trim();
-  
-  // Common procedure abbreviations mapping
-  const procedureAbbreviations = {
-    'bbl': 'brazilian butt lift',
-    'tummy tuck': 'abdominoplasty',
-    'nose job': 'rhinoplasty',
-    'boob job': 'breast augmentation',
-    'botox': 'botulinum toxin',
-    'filler': 'dermal filler'
-  };
 
   // Check if search term is an abbreviation
-  const expandedTerm = procedureAbbreviations[lowerProcedure] || null;
+  const expandedTerm = PROCEDURE_ABBREVIATIONS[lowerProcedure] || null;
 
   return clinics.filter(clinic => {
     // Check if clinic has any procedure matching the search term
@@ -1236,7 +1288,7 @@ function filterByProcedure(clinics, procedureName) {
       
       // Reverse: if search term is full name, check if procedure name contains abbreviation
       // (e.g., "Brazilian Butt Lift" matches "BBL")
-      for (const [abbr, fullName] of Object.entries(procedureAbbreviations)) {
+      for (const [abbr, fullName] of Object.entries(PROCEDURE_ABBREVIATIONS)) {
         if (lowerProcedure.includes(fullName) && matchesProcedureSearch(proc.procedureName, abbr)) {
           return true;
         }
