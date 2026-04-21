@@ -119,11 +119,17 @@ class DuplicateDetectionService {
   /**
    * Check for exact PlaceID match
    */
-  async checkPlaceIDMatch(placeID) {
+  async checkPlaceIDMatch(placeID, options = {}) {
     try {
+      const { excludeClinicId = null } = options;
       const pool = await db.getConnection();
       const request = pool.request();
       request.input('placeID', sql.NVarChar, placeID);
+      let excludeClause = '';
+      if (Number.isInteger(excludeClinicId)) {
+        request.input('excludeClinicId', sql.Int, excludeClinicId);
+        excludeClause = ' AND ClinicID <> @excludeClinicId';
+      }
 
       const result = await request.query(`
         SELECT TOP 1
@@ -137,6 +143,7 @@ class DuplicateDetectionService {
           Longitude
         FROM Clinics
         WHERE PlaceID = @placeID
+        ${excludeClause}
       `);
 
       if (result.recordset.length > 0) {
@@ -167,6 +174,17 @@ class DuplicateDetectionService {
       console.error('Error checking PlaceID match:', error);
       return null;
     }
+  }
+
+  /**
+   * Find exact PlaceID duplicate candidate.
+   * Returns a clinic object from checkPlaceIDMatch or null.
+   */
+  async findExactPlaceIdDuplicate(placeID, options = {}) {
+    if (!placeID || !String(placeID).trim()) {
+      return null;
+    }
+    return this.checkPlaceIDMatch(String(placeID).trim(), options);
   }
 
   /**

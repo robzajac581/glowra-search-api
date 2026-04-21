@@ -717,6 +717,11 @@ app.get('/api/clinics/search-index', async (req, res) => {
       JOIN Procedures p ON pr.ProviderID = p.ProviderID
       JOIN Categories cat ON p.CategoryID = cat.CategoryID
       WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM DeletedClinics dc
+          WHERE dc.OriginalClinicID = c.ClinicID
+        )
         AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
     `;
 
@@ -745,6 +750,11 @@ app.get('/api/clinics/search-index', async (req, res) => {
         FROM Clinics c
         JOIN Providers pr ON c.ClinicID = pr.ClinicID
         WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM DeletedClinics dc
+            WHERE dc.OriginalClinicID = c.ClinicID
+          )
     `;
     
     const photosRequest = pool.request();
@@ -763,6 +773,11 @@ app.get('/api/clinics/search-index', async (req, res) => {
         JOIN Providers pr ON c.ClinicID = pr.ClinicID
         JOIN Procedures p ON pr.ProviderID = p.ProviderID
         WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM DeletedClinics dc
+          WHERE dc.OriginalClinicID = c.ClinicID
+        )
         AND ${bindClinicNameOrProcedureSearchSql(photosRequest, clinicNameSearch)}
       )
       ORDER BY ClinicID, DisplayOrder ASC
@@ -1342,13 +1357,20 @@ app.get('/api/clinics/search', async (req, res) => {
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       LEFT JOIN Locations l ON c.LocationID = l.LocationID
-      WHERE 
+      WHERE
+        NOT EXISTS (
+          SELECT 1
+          FROM DeletedClinics dc
+          WHERE dc.OriginalClinicID = c.ClinicID
+        )
+        AND (
         c.ClinicName LIKE @searchTerm
         OR c.Address LIKE @searchTerm
         OR g.City LIKE @searchTerm
         OR l.City LIKE @searchTerm
         OR g.State LIKE @searchTerm
         OR l.State LIKE @searchTerm
+        )
       ORDER BY 
         CASE 
           WHEN c.ClinicName LIKE @searchTerm THEN 0

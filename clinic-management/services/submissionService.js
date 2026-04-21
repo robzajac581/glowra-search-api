@@ -64,7 +64,14 @@ class SubmissionService {
 
       // Check for duplicates (for new clinic flow)
       let duplicateWarning = null;
+      let resolvedDuplicateClinicId = submission.existingClinicId || null;
       if (submission.flow === 'new_clinic' && submission.clinic) {
+        const submittedPlaceId = submission.clinic.placeID || submission.advanced?.placeID || null;
+        const placeIdDuplicate = await duplicateDetectionService.findExactPlaceIdDuplicate(submittedPlaceId);
+        if (placeIdDuplicate?.clinicId) {
+          resolvedDuplicateClinicId = placeIdDuplicate.clinicId;
+        }
+
         const duplicateCheck = await duplicateDetectionService.checkDuplicates({
           clinicName: submission.clinic.clinicName,
           address: submission.clinic.address,
@@ -75,18 +82,19 @@ class SubmissionService {
           placeID: submission.clinic.placeID
         });
 
-        if (duplicateCheck.hasDuplicates) {
+        if (duplicateCheck.hasDuplicates || placeIdDuplicate) {
+          const topMatch = placeIdDuplicate || duplicateCheck.matches[0] || null;
           duplicateWarning = {
             message: 'We found a potential match',
-            existingClinic: duplicateCheck.matches[0] ? {
-              id: duplicateCheck.matches[0].clinicId,
-              name: duplicateCheck.matches[0].clinicName,
-              address: duplicateCheck.matches[0].address,
-              city: duplicateCheck.matches[0].city,
-              state: duplicateCheck.matches[0].state
+            existingClinic: topMatch ? {
+              id: topMatch.clinicId,
+              name: topMatch.clinicName,
+              address: topMatch.address,
+              city: topMatch.city,
+              state: topMatch.state
             } : null,
-            confidence: duplicateCheck.matches[0]?.confidence || 'medium',
-            matchReason: duplicateCheck.matches[0]?.matchReason
+            confidence: topMatch?.confidence || 'high',
+            matchReason: topMatch?.matchReason || 'PlaceID match'
           };
         }
       }
@@ -111,7 +119,7 @@ class SubmissionService {
       request.input('submitterKey', sql.NVarChar, draftData.submitterKey || null);
       request.input('submissionFlow', sql.NVarChar, submission.flow);
       request.input('submissionId', sql.NVarChar, submissionId);
-      request.input('duplicateClinicID', sql.Int, submission.existingClinicId || null);
+      request.input('duplicateClinicID', sql.Int, resolvedDuplicateClinicId);
       request.input('notes', sql.NVarChar(sql.MAX), duplicateWarning ? `Potential duplicate detected: ${JSON.stringify(duplicateWarning)}` : null);
       
       // Advanced fields

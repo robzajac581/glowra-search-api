@@ -1,5 +1,6 @@
 const { db, sql } = require('../../db');
 const draftService = require('./draftService');
+const duplicateDetectionService = require('./duplicateDetectionService');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googlePlaces');
 const { normalizeAddressForStorage } = require('../../utils/addressUtils');
@@ -51,6 +52,25 @@ class ClinicCreationService {
         const result = await this.updateExistingClinic(draft, transaction, reviewedBy, { photoSource, ratingSource, manualRating, manualReviewCount });
         await transaction.commit();
         return result;
+      }
+
+      // Hard guard: if PlaceID already exists, force merge instead of creating a new clinic.
+      if (draft.placeId) {
+        const placeIdDuplicate = await duplicateDetectionService.findExactPlaceIdDuplicate(draft.placeId);
+        if (placeIdDuplicate?.clinicId) {
+          const mergeDraft = {
+            ...draft,
+            duplicateClinicId: placeIdDuplicate.clinicId
+          };
+          const result = await this.updateExistingClinic(
+            mergeDraft,
+            transaction,
+            reviewedBy,
+            { photoSource, ratingSource, manualRating, manualReviewCount }
+          );
+          await transaction.commit();
+          return result;
+        }
       }
 
       // Fetch Google data if needed for ratings

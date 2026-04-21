@@ -44,6 +44,9 @@ class BulkImportService {
       try {
         // Run duplicate detection
         const duplicateCheck = await duplicateDetectionService.checkDuplicates(clinicData);
+        const placeIdDuplicate = await duplicateDetectionService.findExactPlaceIdDuplicate(
+          clinicData.placeID
+        );
 
         // Get providers for this clinic
         const providers = normalizedData.providers.filter(
@@ -71,6 +74,7 @@ class BulkImportService {
           status: 'pending_review',
           source: 'bulk_import',
           submittedBy,
+          duplicateClinicID: placeIdDuplicate?.clinicId || null,
           providers: providers.map(p => ({
             providerName: p.providerName,
             specialty: p.specialty || null

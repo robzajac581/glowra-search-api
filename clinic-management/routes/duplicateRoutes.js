@@ -165,13 +165,13 @@ router.get('/:draftId', async (req, res) => {
     }
 
     const clinicData = {
-      clinicName: draft.ClinicName,
-      address: draft.Address,
-      city: draft.City,
-      state: draft.State,
-      phone: draft.Phone,
-      website: draft.Website,
-      placeID: draft.PlaceID
+      clinicName: draft.clinicName,
+      address: draft.address,
+      city: draft.city,
+      state: draft.state,
+      phone: draft.phone,
+      website: draft.website,
+      placeID: draft.placeId
     };
 
     const result = await duplicateDetectionService.checkDuplicates(clinicData);
