@@ -2303,8 +2303,18 @@ app.post('/api/admin/refresh-ratings', async (req, res) => {
   }
 });
 
+// Blog (public HTML + sitemap at root; JSON under /api/blog; admin under /api/admin/blog)
+const blogAdminRoutes = require('./routes/blogAdminRoutes');
+const blogPublicRoutes = require('./routes/blogPublicRoutes');
+const blogSeoRoutes = require('./routes/blogSeoRoutes');
+app.use(blogSeoRoutes);
+app.use('/api/blog', blogPublicRoutes);
+app.use('/api/blog-posts', blogPublicRoutes);
+
 // Admin routes (mounted directly for cleaner frontend access)
 const adminRoutes = require('./clinic-management/routes/adminRoutes');
+app.use('/api/admin/blog', blogAdminRoutes);
+app.use('/api/admin/blog-posts', blogAdminRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Clinic Management API routes

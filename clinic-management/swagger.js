@@ -82,11 +82,21 @@ const options = {
       {
         name: 'Admin Google',
         description: 'Google Places lookup and draft enrichment (admin JWT)'
+      },
+      {
+        name: 'Admin Blog',
+        description: 'Markdown blog posts (admin JWT)'
+      },
+      {
+        name: 'Blog',
+        description: 'Published blog posts (public JSON)'
       }
     ]
   },
   apis: [
     path.join(__dirname, 'routes', '*.js'),
+    path.join(__dirname, '..', 'routes', 'blogAdminRoutes.js'),
+    path.join(__dirname, '..', 'routes', 'blogPublicRoutes.js'),
     path.join(__dirname, 'index.js')
   ]
 };
