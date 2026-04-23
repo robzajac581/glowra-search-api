@@ -94,9 +94,25 @@ function parseLocationInput(location) {
 
   const trimmed = location.trim();
 
-  // Check if it's a zip code (5 digits)
-  if (/^\d{5}$/.test(trimmed)) {
-    return { type: 'zip', value: trimmed };
+  // ZIP (5 digits or ZIP+4; use first 5 for matching)
+  const zipMatch = trimmed.match(/^(\d{5})(?:-\d{4})?$/);
+  if (zipMatch) {
+    return { type: 'zip', value: zipMatch[1] };
+  }
+
+  // City + state abbreviation (e.g. "Chicago, IL") — must run before bare "XX" state check
+  const citySt = trimmed.match(/^(.+?)\s*,\s*([A-Za-z]{2})\s*$/);
+  if (citySt) {
+    const cityPart = citySt[1].trim();
+    const stateAbbr = citySt[2].toUpperCase();
+    if (cityPart.length > 0) {
+      return {
+        type: 'city',
+        value: trimmed,
+        cityPart,
+        stateAbbr
+      };
+    }
   }
 
   // Check if it's a state abbreviation (2 letters)
@@ -164,8 +180,25 @@ function parseLocationInput(location) {
     return { type: 'state', value: stateNames[lowerTrimmed] };
   }
 
-  // Default to city
+  // Default to city (free text; may be city name only)
   return { type: 'city', value: trimmed };
+}
+
+/**
+ * True when the location string should be treated as geographic, not reinterpreted as a procedure.
+ * (e.g. "Chicago, IL" must not run procedure matching — word "il" matches many procedure names.)
+ * @param {string} location
+ * @returns {boolean}
+ */
+function isLikelyGeographicLocationString(location) {
+  if (!location || typeof location !== 'string') return false;
+  const trimmed = location.trim();
+  if (!trimmed) return false;
+  if (/^(\d{5})(?:-\d{4})?$/.test(trimmed)) return true;
+  if (/^[A-Z]{2}$/i.test(trimmed)) return true;
+  if (/,\s*[A-Z]{2}\s*$/i.test(trimmed)) return true;
+  const info = parseLocationInput(trimmed);
+  return info.type === 'state' || info.type === 'zip';
 }
 
 /**
@@ -300,6 +333,7 @@ module.exports = {
   calculateDistance,
   geocodeLocation,
   parseLocationInput,
+  isLikelyGeographicLocationString,
   findMetroArea,
   stateMatches,
   METRO_AREAS,

@@ -9,7 +9,7 @@ const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob, refreshAllClinicPhotos } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
-const { calculateDistance, geocodeLocation, parseLocationInput, findMetroArea, stateMatches } = require('./utils/locationUtils');
+const { calculateDistance, geocodeLocation, parseLocationInput, isLikelyGeographicLocationString, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
 const { mergeAddressForResponse } = require('./utils/addressUtils');
 const { matchesProcedureSearch, matchesClinicNameSearch, calculateRelevanceScore } = require('./utils/searchUtils');
@@ -670,13 +670,14 @@ app.get('/api/procedures/search-index', async (req, res) => {
 // Supports optional filtering by location, procedure, and clinic name
 // Query parameters:
 //   - location: city name, state abbreviation, or zip code
+//   - lat, lng: optional center for radius search (miles); when both set, they take precedence over `location` for geo filtering
 //   - procedure: procedure name (case-insensitive, partial match)
 //   - radius: radius in miles for location searches (default: 20-30 for cities, 20 for zip)
 //   - clinicName: matches clinic name OR any listed procedure (case-insensitive; DB + JS)
 app.get('/api/clinics/search-index', async (req, res) => {
   let pool;
   try {
-    const { location, procedure, radius, clinicName } = req.query;
+    const { location, procedure, radius, clinicName, lat, lng } = req.query;
     
     
     pool = await db.getConnection();
@@ -857,6 +858,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
     // Track if location parameter was converted to procedure search
     let locationConvertedToProcedure = false;
     let convertedProcedureTerm = null;
+    let geoCenterFromQuery = null;
 
     // Apply clinicName filtering: clinic name OR any procedure (abbreviations via filterByProcedure)
     if (clinicName && clinicName.trim()) {
@@ -870,22 +872,37 @@ app.get('/api/clinics/search-index', async (req, res) => {
       });
     }
 
-    // Apply location filtering if provided
-    // But first check if the location parameter might actually be a procedure name
-    if (location) {
+    const centerLat = parseSearchCoordinate(lat, -90, 90);
+    const centerLng = parseSearchCoordinate(lng, -180, 180);
+    if (centerLat !== null && centerLng !== null) {
+      clinics = filterClinicsByLatLngRadius(clinics, centerLat, centerLng, radius);
+      geoCenterFromQuery = { lat: centerLat, lng: centerLng };
+      clinics.sort((a, b) => {
+        const da = (a.latitude && a.longitude)
+          ? calculateDistance(centerLat, centerLng, a.latitude, a.longitude)
+          : null;
+        const db = (b.latitude && b.longitude)
+          ? calculateDistance(centerLat, centerLng, b.latitude, b.longitude)
+          : null;
+        const na = da ?? Infinity;
+        const nb = db ?? Infinity;
+        return na - nb;
+      });
+    } else if (location) {
+      // If this looks like a place (zip, state, "City, ST"), never reinterpret it as a procedure —
+      // e.g. "Chicago, IL" must not match procedures via the token "il".
+      const treatAsLocationOnly = isLikelyGeographicLocationString(location);
       const locationInfo = parseLocationInput(location);
-      
-      // If parsed as a city (which is the default), check if it might actually be a procedure
-      // This handles cases where frontend sends procedure queries as "location" parameter
-      if (locationInfo.type === 'city') {
-        // Check if any clinics have procedures matching this "location" term
+
+      if (treatAsLocationOnly || locationInfo.type === 'zip' || locationInfo.type === 'state') {
+        clinics = await filterByLocation(clinics, location, radius);
+      } else if (locationInfo.type === 'city') {
         const testFiltered = filterByProcedure(clinics, location);
         if (testFiltered.length > 0) {
           clinics = testFiltered;
           locationConvertedToProcedure = true;
           convertedProcedureTerm = location;
-          
-          // Sort by procedure relevance
+
           clinics.sort((a, b) => {
             const bestMatchA = a.procedures
               .map(proc => calculateRelevanceScore(proc.procedureName, location))
@@ -896,18 +913,15 @@ app.get('/api/clinics/search-index', async (req, res) => {
             return bestMatchB - bestMatchA;
           });
         } else {
-          // No procedure matches found, proceed with location filtering as city
           clinics = await filterByLocation(clinics, location, radius);
         }
       } else if (!locationInfo.type || !locationInfo.value) {
-        // Invalid location parse, check if it's a procedure
         const testFiltered = filterByProcedure(clinics, location);
         if (testFiltered.length > 0) {
           clinics = testFiltered;
           locationConvertedToProcedure = true;
           convertedProcedureTerm = location;
-          
-          // Sort by procedure relevance
+
           clinics.sort((a, b) => {
             const bestMatchA = a.procedures
               .map(proc => calculateRelevanceScore(proc.procedureName, location))
@@ -918,12 +932,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
             return bestMatchB - bestMatchA;
           });
         } else {
-          // No procedure matches found, try location filtering anyway (will return empty)
           clinics = await filterByLocation(clinics, location, radius);
         }
-      } else {
-        // Valid location (state or zip), proceed with location filtering
-        clinics = await filterByLocation(clinics, location, radius);
       }
     }
 
@@ -948,10 +958,12 @@ app.get('/api/clinics/search-index', async (req, res) => {
     // Build response with correct filter metadata
     // If location was converted to procedure search, reflect that in the response
     const responseFilters = {
-      location: locationConvertedToProcedure ? null : (location || null),
+      location: geoCenterFromQuery ? null : (locationConvertedToProcedure ? null : (location || null)),
       procedure: locationConvertedToProcedure ? convertedProcedureTerm : (procedure || null),
       radius: radius || null,
-      clinicName: clinicName || null
+      clinicName: clinicName || null,
+      latitude: geoCenterFromQuery ? geoCenterFromQuery.lat : null,
+      longitude: geoCenterFromQuery ? geoCenterFromQuery.lng : null
     };
     
     const response = {
@@ -973,6 +985,38 @@ app.get('/api/clinics/search-index', async (req, res) => {
     });
   }
 });
+
+/**
+ * @param {string|number|undefined} raw
+ * @param {number} min
+ * @param {number} max
+ * @returns {number|null}
+ */
+function parseSearchCoordinate(raw, min, max) {
+  if (raw === undefined || raw === null || raw === '') return null;
+  const n = typeof raw === 'number' ? raw : parseFloat(String(raw).trim());
+  if (!Number.isFinite(n) || n < min || n > max) return null;
+  return n;
+}
+
+/**
+ * @param {Array} clinics
+ * @param {number} centerLat
+ * @param {number} centerLng
+ * @param {string|number|undefined} radiusQuery
+ * @returns {Array}
+ */
+function filterClinicsByLatLngRadius(clinics, centerLat, centerLng, radiusQuery) {
+  const r = radiusQuery !== undefined && radiusQuery !== null && radiusQuery !== ''
+    ? parseFloat(String(radiusQuery))
+    : 25;
+  const maxMiles = Number.isFinite(r) && r > 0 ? r : 25;
+  return clinics.filter((c) => {
+    if (!c.latitude || !c.longitude) return false;
+    const d = calculateDistance(centerLat, centerLng, c.latitude, c.longitude);
+    return d !== null && d <= maxMiles;
+  });
+}
 
 /**
  * Filter clinics by location (city, state, or zip)
@@ -1028,38 +1072,46 @@ async function filterByLocation(clinics, location, radius) {
  * @param {number|null} radius - Optional radius override
  * @returns {Promise<Array>} Filtered clinics array
  */
-async function filterByCity(clinics, cityName, radius) {
-  const lowerCityName = cityName.toLowerCase().trim();
+async function filterByCity(clinics, locationString, radius) {
+  const parsed = parseLocationInput(locationString);
+  if (!parsed.type || parsed.value == null) {
+    return [];
+  }
+
+  const cityPart = (parsed.cityPart || parsed.value).trim();
+  const stateHint = parsed.stateAbbr || null;
+  const lowerCityName = cityPart.toLowerCase();
   const matchedClinics = new Set();
-  let primaryState = null; // Track the primary state for the city to prevent false positives
+  let primaryState = stateHint ? stateHint.toUpperCase() : null;
 
   // Step 1: Find exact city matches and determine primary state
   const exactMatches = [];
   clinics.forEach(clinic => {
-    if (clinic.city && clinic.city.toLowerCase().trim() === lowerCityName) {
-      exactMatches.push(clinic);
-      matchedClinics.add(clinic.clinicId);
-      // Use the first matched clinic's state as primary state
-      if (!primaryState && clinic.state) {
-        primaryState = clinic.state.toUpperCase();
-      }
+    if (!clinic.city || clinic.city.toLowerCase().trim() !== lowerCityName) {
+      return;
+    }
+    if (stateHint && !stateMatches(clinic.state, stateHint)) {
+      return;
+    }
+    exactMatches.push(clinic);
+    matchedClinics.add(clinic.clinicId);
+    if (!primaryState && clinic.state) {
+      primaryState = clinic.state.toUpperCase();
     }
   });
 
   // If we found exact matches, prefer clinics in the same state to prevent false positives
   // (e.g., "Palo Alto" in CA should not match "Palo Alto" in other states)
-  if (primaryState && exactMatches.length > 0) {
-    // Re-filter to prioritize same-state matches
+  if (primaryState && exactMatches.length > 0 && !stateHint) {
     const sameStateMatches = exactMatches.filter(c => c.state && c.state.toUpperCase() === primaryState);
     if (sameStateMatches.length > 0) {
-      // If we have same-state matches, use those as the primary state
       matchedClinics.clear();
       sameStateMatches.forEach(clinic => matchedClinics.add(clinic.clinicId));
     }
   }
 
   // Step 2: Check if city is in a defined metro area
-  const metroArea = findMetroArea(cityName);
+  const metroArea = findMetroArea(cityPart);
   let searchRadius = radius || (metroArea ? metroArea.radius : 25); // Default 25 miles
   let centerLat = null;
   let centerLng = null;
@@ -1074,7 +1126,6 @@ async function filterByCity(clinics, cityName, radius) {
     metroArea.cities.forEach(metroCity => {
       clinics.forEach(clinic => {
         if (clinic.city && clinic.city.toLowerCase().trim() === metroCity.toLowerCase()) {
-          // If we have a primary state, prefer same-state matches
           if (!primaryState || !clinic.state || clinic.state.toUpperCase() === primaryState) {
             matchedClinics.add(clinic.clinicId);
           }
@@ -1082,21 +1133,17 @@ async function filterByCity(clinics, cityName, radius) {
       });
     });
   } else {
-    // Try to geocode the city to get coordinates
-    // Add state context if available to improve geocoding accuracy
-    const geocodeQuery = primaryState ? `${cityName}, ${primaryState}` : cityName;
+    const geocodeQuery = parsed.value;
     const geocoded = await geocodeLocation(geocodeQuery);
     if (geocoded) {
       centerLat = geocoded.lat;
       centerLng = geocoded.lng;
     } else {
-      // If geocoding fails, try to find a clinic in the city and use its coordinates
-      // Prefer clinics in the primary state if we have one
-      const cityClinic = clinics.find(c => 
-        c.city && c.city.toLowerCase().trim() === lowerCityName && 
+      const cityClinic = clinics.find(c =>
+        c.city && c.city.toLowerCase().trim() === lowerCityName &&
         c.latitude && c.longitude &&
         (!primaryState || !c.state || c.state.toUpperCase() === primaryState)
-      ) || clinics.find(c => 
+      ) || clinics.find(c =>
         c.city && c.city.toLowerCase().trim() === lowerCityName && c.latitude && c.longitude
       );
       if (cityClinic) {

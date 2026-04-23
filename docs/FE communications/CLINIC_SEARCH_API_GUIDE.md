@@ -35,6 +35,17 @@ Returns all clinics with their complete procedure lists in a single response. Th
 - **Response time:** < 2 seconds (typical)
 - **Caching:** Recommended to cache for 5-10 minutes client-side
 
+### Server-side query parameters (`GET /api/clinics/search-index`)
+
+| Parameter | Description |
+|-----------|-------------|
+| `location` | City, `City, ST`, 2-letter state, ZIP (5 or ZIP+4), or full state name. Strings like `City, ST` are always treated as geographic (not as procedure text). |
+| `lat`, `lng` | Optional center point (decimal degrees). When **both** are valid, geo filter uses Haversine distance and **takes precedence** over `location` for area filtering. |
+| `radius` | Radius in miles for geo filtering (city/ZIP radius search, or `lat`/`lng` search). Defaults to 25 when omitted or invalid. |
+| `procedure`, `clinicName` | Unchanged (procedure / name-or-procedure filters). |
+
+`meta.filters` may include `latitude` and `longitude` when the request used `lat`/`lng`; `location` is omitted in that case to reflect that the search center came from coordinates.
+
 ---
 
 ## Section 2: Response Structure
