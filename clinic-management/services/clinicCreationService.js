@@ -4,6 +4,7 @@ const duplicateDetectionService = require('./duplicateDetectionService');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googlePlaces');
 const { normalizeAddressForStorage } = require('../../utils/addressUtils');
+const { proceduresTableHasPriceUnitColumn } = require('../../utils/procedurePriceUnitColumn');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -639,6 +640,10 @@ class ClinicCreationService {
     const category = procedureData.category || procedureData.Category;
     const procedureName = procedureData.procedureName || procedureData.ProcedureName;
     const averageCost = procedureData.averageCost || procedureData.AverageCost;
+    const rawUnit =
+      procedureData.priceUnit ?? procedureData.PriceUnit ?? procedureData.unit ?? null;
+    const priceUnit =
+      rawUnit != null && String(rawUnit).trim() !== '' ? String(rawUnit).trim() : null;
 
     // Get or create CategoryID
     const categoryId = await this.getOrCreateCategory(category, transaction);
@@ -658,16 +663,31 @@ class ClinicCreationService {
     request.input('averageCost', sql.Decimal(10, 2), averageCost || null);
     request.input('locationID', sql.Int, null); // Can be set later if needed
 
-    await request.query(`
-      INSERT INTO Procedures (
-        ProcedureID, ProviderID, ProcedureName, CategoryID,
-        AverageCost, LocationID
-      )
-      VALUES (
-        @procedureID, @providerID, @procedureName, @categoryID,
-        @averageCost, @locationID
-      )
-    `);
+    const hasPriceUnitCol = await proceduresTableHasPriceUnitColumn(transaction);
+    if (hasPriceUnitCol) {
+      request.input('priceUnit', sql.NVarChar(50), priceUnit);
+      await request.query(`
+        INSERT INTO Procedures (
+          ProcedureID, ProviderID, ProcedureName, CategoryID,
+          AverageCost, LocationID, PriceUnit
+        )
+        VALUES (
+          @procedureID, @providerID, @procedureName, @categoryID,
+          @averageCost, @locationID, @priceUnit
+        )
+      `);
+    } else {
+      await request.query(`
+        INSERT INTO Procedures (
+          ProcedureID, ProviderID, ProcedureName, CategoryID,
+          AverageCost, LocationID
+        )
+        VALUES (
+          @procedureID, @providerID, @procedureName, @categoryID,
+          @averageCost, @locationID
+        )
+      `);
+    }
   }
 
   /**

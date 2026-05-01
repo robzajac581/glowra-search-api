@@ -12,6 +12,10 @@ const clinicManagementRouter = require('./clinic-management');
 const { calculateDistance, geocodeLocation, parseLocationInput, isLikelyGeographicLocationString, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
 const { mergeAddressForResponse } = require('./utils/addressUtils');
+const {
+  proceduresTableHasPriceUnitColumn,
+  innerProcedurePriceUnitSelectSql
+} = require('./utils/procedurePriceUnitColumn');
 const { matchesProcedureSearch, matchesClinicNameSearch, calculateRelevanceScore } = require('./utils/searchUtils');
 const app = express();
 const port = process.env.PORT || 3001;
@@ -76,6 +80,17 @@ const PHOTO_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     console.error('Failed to create photo cache directory:', error);
   }
 })();
+
+/**
+ * Optional procedure price unit suffix (e.g. "/unit", "/session"). Omit when empty.
+ * @param {unknown} raw
+ * @returns {Record<string, string>}
+ */
+function optionalPriceUnit(raw) {
+  if (raw == null) return {};
+  const s = String(raw).trim();
+  return s ? { priceUnit: s } : {};
+}
 
 /**
  * Provider Photo Endpoint - Serves provider photos from database
@@ -685,6 +700,9 @@ app.get('/api/clinics/search-index', async (req, res) => {
       throw new Error('Could not establish database connection');
     }
 
+    const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
+    const procPriceUnitSql = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
+
     // Build the SQL query with optional clinicName filtering
     // Address: street only - prefer GooglePlacesData.Street when available
     // City/State/Zip: prefer Clinics columns, then GooglePlacesData, then Locations
@@ -705,6 +723,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
         p.ProcedureID,
         p.ProcedureName,
         p.AverageCost,
+        ${procPriceUnitSql},
         cat.Category as ProcedureCategory
       FROM Clinics c
       LEFT JOIN Locations l ON c.LocationID = l.LocationID
@@ -847,7 +866,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
           procedureId: row.ProcedureID,
           procedureName: row.ProcedureName,
           price: row.AverageCost || 0,
-          category: row.ProcedureCategory
+          category: row.ProcedureCategory,
+          ...optionalPriceUnit(row.PriceUnit)
         });
       }
     });
@@ -1837,6 +1857,9 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
     
     // Optionally include procedures
     if (includeProcedures) {
+      const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
+      const procPriceUnitInner = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
+
       const proceduresResult = await pool.request()
         .input('clinicId', sql.Int, clinicId)
         .query(`
@@ -1845,12 +1868,14 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
             ProcedureName,
             AverageCost,
             Category,
-            CategoryID
+            CategoryID,
+            PriceUnit
           FROM (
             SELECT 
               p.ProcedureID,
               p.ProcedureName,
               p.AverageCost,
+              ${procPriceUnitInner},
               c.Category,
               c.CategoryID,
               ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
@@ -1869,7 +1894,8 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         price: p.AverageCost,
         averageCost: p.AverageCost,
         category: p.Category,
-        categoryId: p.CategoryID
+        categoryId: p.CategoryID,
+        ...optionalPriceUnit(p.PriceUnit)
       }));
     }
 
@@ -2021,8 +2047,10 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
  *   - flat: If 'true', returns a flat array of procedures instead of grouped by category
  * 
  * Response Formats:
- *   Grouped (default): { "Face": { categoryId: 1, procedures: [...] }, ... }
- *   Flat (?flat=true): [{ procedureId, procedureName, price, category, categoryId }, ...]
+ *   Grouped (default): { "Face": { categoryId: 1, procedures: [{ id, name, price, priceUnit? }] }, ... }
+ *   Flat (?flat=true): [{ procedureId, procedureName, price, category, categoryId, priceUnit? }, ...]
+ *
+ * priceUnit is optional (e.g. "/session", "/unit") when stored on the procedure; omitted when empty.
  */
 app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   let pool;
@@ -2031,6 +2059,9 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
     const { flat } = req.query;
     
     pool = await db.getConnection();
+
+    const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
+    const procPriceUnitInner = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
 
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
@@ -2041,12 +2072,14 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
         ProcedureName,
         AverageCost,
         Category,
-        CategoryID
+        CategoryID,
+        PriceUnit
       FROM (
         SELECT 
           p.ProcedureID,
           p.ProcedureName,
           p.AverageCost,
+          ${procPriceUnitInner},
           c.Category,
           c.CategoryID,
           ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
@@ -2067,7 +2100,8 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
         price: proc.AverageCost,
         averageCost: proc.AverageCost, // Include both for compatibility
         category: proc.Category,
-        categoryId: proc.CategoryID
+        categoryId: proc.CategoryID,
+        ...optionalPriceUnit(proc.PriceUnit)
       }));
       return res.json(flatProcedures);
     }
@@ -2083,7 +2117,8 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
       acc[proc.Category].procedures.push({
         id: proc.ProcedureID,
         name: proc.ProcedureName,
-        price: proc.AverageCost
+        price: proc.AverageCost,
+        ...optionalPriceUnit(proc.PriceUnit)
       });
       return acc;
     }, {});

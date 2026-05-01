@@ -197,13 +197,13 @@ With `?include=providers,procedures`:
   "Face": {
     "categoryId": 1,
     "procedures": [
-      { "id": 101, "name": "Facelift", "price": 8500 }
+      { "id": 101, "name": "Facelift", "price": 8500, "priceUnit": "/session" }
     ]
   },
   "Injectables": {
     "categoryId": 5,
     "procedures": [
-      { "id": 102, "name": "Botox", "price": 450 }
+      { "id": 102, "name": "Botox", "price": 450, "priceUnit": "/unit" }
     ]
   }
 }
@@ -218,7 +218,8 @@ With `?include=providers,procedures`:
     "price": 8500,
     "averageCost": 8500,
     "category": "Face",
-    "categoryId": 1
+    "categoryId": 1,
+    "priceUnit": "/session"
   },
   {
     "procedureId": 102,
@@ -226,7 +227,8 @@ With `?include=providers,procedures`:
     "price": 450,
     "averageCost": 450,
     "category": "Injectables",
-    "categoryId": 5
+    "categoryId": 5,
+    "priceUnit": "/unit"
   }
 ]
 ```

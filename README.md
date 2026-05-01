@@ -164,7 +164,7 @@ Returns list of providers/doctors for the specified clinic.
 GET /api/clinics/:clinicId/procedures
 ```
 
-Returns procedures offered by the clinic, grouped by category.
+Returns procedures offered by the clinic, grouped by category (or flat with `?flat=true`). Each procedure may include optional `priceUnit` (string suffix such as `/unit` or `/session`) when stored; otherwise the field is omitted.
 
 #### Get Clinic Photo (Proxy)
 ```

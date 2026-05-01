@@ -99,13 +99,17 @@ interface Procedure {
   procedureName: string;      // Display name of the procedure
   price: number;              // Average cost, defaults to 0 if null
   category: string;           // Procedure category (e.g., "Breast", "Face", "Body", "Injectibles", "Skin", "Other")
+  priceUnit?: string;        // Optional display suffix from clinic (e.g. "/unit", "/session"); omitted if not set
 }
 ```
+
+`priceUnit` values match list-your-clinic submissions (e.g. empty, `/unit`, `/session`, `/injection`, `/area`, `/treatment`, `/syringe`, `/vial`). The same optional field appears on **`GET /api/clinics/:clinicId/procedures`** (grouped, flat, and `?include=procedures` on **`GET /api/clinics/:clinicId`**) for consistency.
 
 ### Field Nullability
 - **Can be null/0:** `rating`, `reviewCount`, `price`, `city`, `state`, `address`, `photoURL`
 - **Always present:** `clinicId`, `clinicName`, `clinicCategory`, `procedures` (array, may be empty)
 - **Procedure array:** Always an array, never null (but can be empty if clinic has no valid procedures)
+- **`priceUnit`:** Optional; omitted when the clinic has no stored unit (treat like empty for display)
 
 ### Example Response
 ```json
@@ -144,7 +148,8 @@ interface Procedure {
           "procedureId": 305,
           "procedureName": "Botox",
           "price": 450,
-          "category": "Injectibles"
+          "category": "Injectibles",
+          "priceUnit": "/unit"
         }
       ]
     },
