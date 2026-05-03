@@ -55,10 +55,9 @@ BestDraft AS (
 UPDATE p
 SET p.PriceUnit = bd.NewPriceUnit
 FROM Procedures p
-INNER JOIN Providers pr ON pr.ProviderID = p.ProviderID
 INNER JOIN Categories cat ON cat.CategoryID = p.CategoryID
 INNER JOIN BestDraft bd
-  ON bd.ClinicID = pr.ClinicID
+  ON bd.ClinicID = p.ClinicID
  AND bd.ProcedureName = p.ProcedureName
  AND bd.DraftCategory = cat.Category
 WHERE (p.PriceUnit IS NULL OR LTRIM(RTRIM(p.PriceUnit)) = '');

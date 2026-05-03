@@ -85,6 +85,8 @@ The following columns are required for the Google Places integration:
 
 Run the provided SQL script in `schema/add_google_ratings.sql` to add these columns automatically.
 
+**Procedures and clinic ownership** (`Procedures.ClinicID`, `Procedures.LocationID`, legacy vs geographic FKs): see `docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`.
+
 ## Clinic Management API
 
 The Clinic Management API provides a complete draft/approval workflow for bulk clinic imports and form submissions. This module is self-contained and can be accessed via Swagger UI.

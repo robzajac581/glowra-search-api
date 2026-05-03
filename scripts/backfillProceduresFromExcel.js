@@ -141,9 +141,8 @@ async function findProcedureIds(pool, clinicId, procedureName, categoryCanonical
     .query(`
       SELECT p.ProcedureID
       FROM Procedures p
-      INNER JOIN Providers pr ON pr.ProviderID = p.ProviderID
       INNER JOIN Categories c ON c.CategoryID = p.CategoryID
-      WHERE pr.ClinicID = @clinicId
+      WHERE p.ClinicID = @clinicId
         AND LTRIM(RTRIM(p.ProcedureName)) = LTRIM(RTRIM(@procName))
         AND c.Category = @cat
     `);

@@ -52,10 +52,9 @@ BestDraft AS (
 SELECT
   COUNT(*) AS procedure_rows_to_update
 FROM Procedures p
-INNER JOIN Providers pr ON pr.ProviderID = p.ProviderID
 INNER JOIN Categories cat ON cat.CategoryID = p.CategoryID
 INNER JOIN BestDraft bd
-  ON bd.ClinicID = pr.ClinicID
+  ON bd.ClinicID = p.ClinicID
  AND bd.ProcedureName = p.ProcedureName
  AND bd.DraftCategory = cat.Category
 WHERE (p.PriceUnit IS NULL OR LTRIM(RTRIM(p.PriceUnit)) = '');
@@ -110,19 +109,18 @@ BestDraft AS (
 )
 SELECT TOP 40
   p.ProcedureID,
-  pr.ClinicID,
+  p.ClinicID,
   p.ProcedureName,
   cat.Category AS LiveCategory,
   p.AverageCost,
   p.PriceUnit AS CurrentPriceUnit,
   bd.NewPriceUnit AS WouldSetTo
 FROM Procedures p
-INNER JOIN Providers pr ON pr.ProviderID = p.ProviderID
 INNER JOIN Categories cat ON cat.CategoryID = p.CategoryID
 INNER JOIN BestDraft bd
-  ON bd.ClinicID = pr.ClinicID
+  ON bd.ClinicID = p.ClinicID
  AND bd.ProcedureName = p.ProcedureName
  AND bd.DraftCategory = cat.Category
 WHERE (p.PriceUnit IS NULL OR LTRIM(RTRIM(p.PriceUnit)) = '')
-ORDER BY pr.ClinicID, p.ProcedureName;
+ORDER BY p.ClinicID, p.ProcedureName;
 GO

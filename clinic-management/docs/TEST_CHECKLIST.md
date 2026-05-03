@@ -203,6 +203,16 @@ This checklist helps verify that all clinic-management endpoints are working cor
 - [ ] Logging configured for production
 - [ ] Monitoring/alerting set up (if applicable)
 
+## Live Procedures (clinic-centric)
+
+After `migrations/addClinicIdToProcedures.sql` is applied, `Procedures` rows are owned by `Clinics` via `ClinicID`; `ProviderID` is optional.
+
+- [ ] `GET /api/clinics/:id/procedures` returns procedures for clinics with no providers (where data exists)
+- [ ] `GET /api/clinics/search-index` includes clinics that have procedures but zero provider rows
+- [ ] Merge duplicate clinics: procedures on the duplicate clinic move to the canonical `ClinicID`
+- [ ] Optional workbook recovery: dry-run then `node scripts/importProceduresFromExcel.js "<file>.xlsx" --apply`
+- [ ] If the database still has **both** `Procedures.LocationID` → `Clinics` and → `Locations`, **`LocationID`** must be nullable for bulk inserts that set it to NULL (clinic ownership via `ClinicID`); see `docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`
+
 ## Notes
 
 - All authenticated endpoints require `X-API-Key` header

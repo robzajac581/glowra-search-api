@@ -1,8 +1,8 @@
 # Glowra Database Structure - Frontend Reference
 
-**Last Updated**: October 13, 2025  
+**Last Updated**: May 1, 2026  
 **Database**: SQL Server (Azure)  
-**Total Clinics**: 130 with complete Google Places data
+**Total Clinics**: 130 with complete Google Places data (snapshot; production counts vary)
 
 ---
 
@@ -157,6 +157,14 @@ ClinicID  ==============  ClinicID (FK)
 **Relationship**: One-to-Many (One clinic can have one GooglePlacesData record)
 - Use `LEFT JOIN` to get all clinics even if GooglePlacesData is missing
 - Use `INNER JOIN` to get only clinics with full Google data
+
+---
+
+## Procedures, Clinics, and Locations
+
+Live **`Procedures`** attach to **`Clinics`** via **`ClinicID`** after migration `migrations/addClinicIdToProcedures.sql` (clinic-centric model; **`ProviderID`** may be NULL). **`Procedures.LocationID`** may reference **`Locations`**, and some databases still enforce a legacy **`LocationID` → `Clinics(ClinicID)`** constraint alongside it—those environments cannot store a single non-NULL value that satisfies both unless ids coincide by design.
+
+The API and import/approval code resolve inserts using catalog metadata (`utils/proceduresClinicFkShape.js`). For the full model, operational rules, and optional DBA cleanup, see **`docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`**.
 
 ---
 

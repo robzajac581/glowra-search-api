@@ -502,8 +502,8 @@ app.get('/api/procedures', async (req, res) => {
         p.ProcedureID,
         p.ProcedureName,
         p.AverageCost,
-        l.City,
-        l.State,
+        COALESCE(l.City, cl.City) AS City,
+        COALESCE(l.State, cl.State) AS State,
         c.Category,
         pr.ProviderName,
         cl.ClinicID,
@@ -511,10 +511,10 @@ app.get('/api/procedures', async (req, res) => {
         cl.Address,
         cl.Website
       FROM Procedures p
-      JOIN Locations l ON p.LocationID = l.LocationID
+      LEFT JOIN Locations l ON p.LocationID = l.LocationID
       JOIN Categories c ON p.CategoryID = c.CategoryID
-      JOIN Providers pr ON p.ProviderID = pr.ProviderID
-      JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
+      LEFT JOIN Providers pr ON p.ProviderID = pr.ProviderID
+      JOIN Clinics cl ON p.ClinicID = cl.ClinicID
       WHERE 1=1
     `;
     
@@ -550,7 +550,9 @@ app.get('/api/procedures', async (req, res) => {
 
     // Add other filter conditions as before
     if (location) {
-      conditions.push(`(l.City LIKE @location OR l.State LIKE @location)`);
+      conditions.push(
+        `(COALESCE(l.City, cl.City) LIKE @location OR COALESCE(l.State, cl.State) LIKE @location)`
+      );
       parameters.location = `%${location}%`;
     }
 
@@ -609,10 +611,10 @@ app.get('/api/procedures', async (req, res) => {
     const countQuery = `
       SELECT COUNT(*) as total
       FROM Procedures p
-      JOIN Locations l ON p.LocationID = l.LocationID
+      LEFT JOIN Locations l ON p.LocationID = l.LocationID
       JOIN Categories c ON p.CategoryID = c.CategoryID
-      JOIN Providers pr ON p.ProviderID = pr.ProviderID
-      JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
+      LEFT JOIN Providers pr ON p.ProviderID = pr.ProviderID
+      JOIN Clinics cl ON p.ClinicID = cl.ClinicID
       WHERE ${conditions.length > 0 ? conditions.join(' AND ') : '1=1'}
     `;
 
@@ -658,8 +660,8 @@ app.get('/api/procedures/search-index', async (req, res) => {
         p.ProcedureID,
         p.ProcedureName,
         p.AverageCost,
-        l.City,
-        l.State,
+        COALESCE(l.City, cl.City) AS City,
+        COALESCE(l.State, cl.State) AS State,
         c.Category,
         pr.ProviderName,
         cl.ClinicID,
@@ -667,10 +669,10 @@ app.get('/api/procedures/search-index', async (req, res) => {
         cl.Address,
         cl.Website
       FROM Procedures p
-      JOIN Locations l ON p.LocationID = l.LocationID
-      JOIN Categories c ON p.CategoryID = c.CategoryID
-      JOIN Providers pr ON p.ProviderID = pr.ProviderID
-      JOIN Clinics cl ON pr.ClinicID = cl.ClinicID
+      LEFT JOIN Locations l ON p.LocationID = l.LocationID
+      JOIN Categories c ON p.CategoryID = c.CategoryID        
+      LEFT JOIN Providers pr ON p.ProviderID = pr.ProviderID
+      JOIN Clinics cl ON p.ClinicID = cl.ClinicID
     `);
     
     res.json(result.recordset);
@@ -733,15 +735,13 @@ app.get('/api/clinics/search-index', async (req, res) => {
           ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
         FROM ClinicPhotos
       ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
-      JOIN Providers pr ON c.ClinicID = pr.ClinicID
-      JOIN Procedures p ON pr.ProviderID = p.ProviderID
+      JOIN Procedures p ON p.ClinicID = c.ClinicID
       JOIN Categories cat ON p.CategoryID = cat.CategoryID
-      WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
-        AND NOT EXISTS (
-          SELECT 1
-          FROM DeletedClinics dc
-          WHERE dc.OriginalClinicID = c.ClinicID
-        )
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM DeletedClinics dc
+        WHERE dc.OriginalClinicID = c.ClinicID
+      )
         AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
     `;
 
@@ -768,9 +768,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
       WHERE ClinicID IN (
         SELECT DISTINCT c.ClinicID
         FROM Clinics c
-        JOIN Providers pr ON c.ClinicID = pr.ClinicID
-        WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
-          AND NOT EXISTS (
+        WHERE NOT EXISTS (
             SELECT 1
             FROM DeletedClinics dc
             WHERE dc.OriginalClinicID = c.ClinicID
@@ -790,10 +788,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
       WHERE ClinicID IN (
         SELECT DISTINCT c.ClinicID
         FROM Clinics c
-        JOIN Providers pr ON c.ClinicID = pr.ClinicID
-        JOIN Procedures p ON pr.ProviderID = p.ProviderID
-        WHERE pr.ProviderName NOT LIKE '%Please Request Consult%'
-        AND NOT EXISTS (
+        JOIN Procedures p ON p.ClinicID = c.ClinicID
+        WHERE NOT EXISTS (
           SELECT 1
           FROM DeletedClinics dc
           WHERE dc.OriginalClinicID = c.ClinicID
@@ -1881,8 +1877,7 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
               ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
             FROM Procedures p
             JOIN Categories c ON p.CategoryID = c.CategoryID
-            JOIN Providers pr ON p.ProviderID = pr.ProviderID
-            WHERE pr.ClinicID = @clinicId
+            WHERE p.ClinicID = @clinicId
           ) AS RankedProcedures
           WHERE RowNum = 1
           ORDER BY Category, ProcedureName
@@ -2085,8 +2080,7 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
           ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
         FROM Procedures p
         JOIN Categories c ON p.CategoryID = c.CategoryID
-        JOIN Providers pr ON p.ProviderID = pr.ProviderID
-        WHERE pr.ClinicID = @clinicId
+        WHERE p.ClinicID = @clinicId
       ) AS RankedProcedures
       WHERE RowNum = 1
       ORDER BY Category, ProcedureName;

@@ -5,6 +5,7 @@ const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googlePlaces');
 const { normalizeAddressForStorage } = require('../../utils/addressUtils');
 const { proceduresTableHasPriceUnitColumn } = require('../../utils/procedurePriceUnitColumn');
+const { loadProceduresClinicFkMeta } = require('../../utils/proceduresClinicFkShape');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -171,29 +172,12 @@ class ClinicCreationService {
         }
       }
 
-      // Procedures require a ProviderID; drafts may list procedures without any DraftProviders rows
-      if (draft.procedures && draft.procedures.length > 0 && providerMap.size === 0) {
-        const defaultName = (draft.clinicName && String(draft.clinicName).trim()) || 'Practice';
-        const defaultProviderId = await this.createProvider(
-          clinicId,
-          { providerName: defaultName },
-          transaction
-        );
-        providerMap.set(defaultName, defaultProviderId);
-      }
-
-      // Create procedures
+      // Create procedures (clinic is canonical; ProviderID optional when resolvable)
       // Note: draft.procedures is now normalized to camelCase
       if (draft.procedures && draft.procedures.length > 0) {
         for (const procedureData of draft.procedures) {
           const providerId = this.resolveProviderIdForProcedure(procedureData, providerMap);
-          if (!providerId) {
-            throw new Error(
-              'Could not resolve a provider for procedure: ' +
-                (procedureData.procedureName || procedureData.ProcedureName || 'unknown')
-            );
-          }
-          await this.createProcedure(providerId, procedureData, transaction);
+          await this.createProcedure(clinicId, providerId || null, procedureData, transaction);
         }
       }
 
@@ -494,10 +478,7 @@ class ClinicCreationService {
 
       for (const procedureData of draft.procedures) {
         const providerId = this.resolveProviderIdForProcedure(procedureData, providerMap);
-
-        if (providerId) {
-          await this.createProcedure(providerId, procedureData, transaction);
-        }
+        await this.createProcedure(clinicId, providerId || null, procedureData, transaction);
       }
     }
 
@@ -627,15 +608,12 @@ class ClinicCreationService {
    * Create procedure
    * Note: ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
    * Accepts both camelCase (from normalized draft) and PascalCase (for backward compatibility)
-   * @param {number} providerId - Provider ID
+   * @param {number} clinicId - Owning clinic (canonical)
+   * @param {number|null} providerId - Optional provider attribution (same clinic)
    * @param {Object} procedureData - Procedure data
    * @param {Object} transaction - SQL transaction
    */
-  async createProcedure(providerId, procedureData, transaction) {
-    if (!providerId) {
-      throw new Error('ProviderID is required to create procedure');
-    }
-
+  async createProcedure(clinicId, providerId, procedureData, transaction) {
     // Support both camelCase and PascalCase for backward compatibility
     const category = procedureData.category || procedureData.Category;
     const procedureName = procedureData.procedureName || procedureData.ProcedureName;
@@ -648,6 +626,20 @@ class ClinicCreationService {
     // Get or create CategoryID
     const categoryId = await this.getOrCreateCategory(category, transaction);
 
+    const fkMeta = await loadProceduresClinicFkMeta(transaction);
+    let locationID;
+    if (fkMeta.locationIdUseNull) {
+      locationID = null;
+    } else if (fkMeta.locationIdReferencesClinicId) {
+      locationID = clinicId;
+    } else {
+      const locResult = await transaction
+        .request()
+        .input('clinicID', sql.Int, clinicId)
+        .query('SELECT LocationID FROM Clinics WHERE ClinicID = @clinicID');
+      locationID = locResult.recordset[0]?.LocationID ?? null;
+    }
+
     // ProcedureID is NOT an IDENTITY column, so we need to manually get the next ID
     const maxIdRequest = new sql.Request(transaction);
     const maxIdResult = await maxIdRequest.query(`
@@ -657,33 +649,34 @@ class ClinicCreationService {
 
     const request = new sql.Request(transaction);
     request.input('procedureID', sql.Int, procedureId);
+    request.input('clinicID', sql.Int, clinicId);
     request.input('providerID', sql.Int, providerId);
     request.input('procedureName', sql.NVarChar, procedureName);
     request.input('categoryID', sql.Int, categoryId);
     request.input('averageCost', sql.Decimal(10, 2), averageCost || null);
-    request.input('locationID', sql.Int, null); // Can be set later if needed
+    request.input('locationID', sql.Int, locationID);
 
     const hasPriceUnitCol = await proceduresTableHasPriceUnitColumn(transaction);
     if (hasPriceUnitCol) {
       request.input('priceUnit', sql.NVarChar(50), priceUnit);
       await request.query(`
         INSERT INTO Procedures (
-          ProcedureID, ProviderID, ProcedureName, CategoryID,
+          ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
           AverageCost, LocationID, PriceUnit
         )
         VALUES (
-          @procedureID, @providerID, @procedureName, @categoryID,
+          @procedureID, @clinicID, @providerID, @procedureName, @categoryID,
           @averageCost, @locationID, @priceUnit
         )
       `);
     } else {
       await request.query(`
         INSERT INTO Procedures (
-          ProcedureID, ProviderID, ProcedureName, CategoryID,
+          ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
           AverageCost, LocationID
         )
         VALUES (
-          @procedureID, @providerID, @procedureName, @categoryID,
+          @procedureID, @clinicID, @providerID, @procedureName, @categoryID,
           @averageCost, @locationID
         )
       `);

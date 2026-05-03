@@ -59,6 +59,11 @@ class ClinicMergeService {
         duplicateClinicId,
         transaction
       );
+      const reparentedProcedures = await this.reparentProceduresClinic(
+        canonicalClinicId,
+        duplicateClinicId,
+        transaction
+      );
       const reparentedPhotos = await this.reparentClinicPhotos(
         canonicalClinicId,
         duplicateClinicId,
@@ -87,6 +92,7 @@ class ClinicMergeService {
           mergedBy,
           source,
           reparentedProviders,
+          reparentedProcedures,
           reparentedPhotos,
           repointedDrafts
         },
@@ -102,6 +108,7 @@ class ClinicMergeService {
         deletedClinicId,
         placeId,
         reparentedProviders,
+        reparentedProcedures,
         reparentedPhotos,
         repointedDrafts
       };
@@ -142,6 +149,18 @@ class ClinicMergeService {
     request.input('duplicateClinicId', sql.Int, duplicateClinicId);
     const result = await request.query(`
       UPDATE Providers
+      SET ClinicID = @canonicalClinicId
+      WHERE ClinicID = @duplicateClinicId
+    `);
+    return result.rowsAffected[0] || 0;
+  }
+
+  async reparentProceduresClinic(canonicalClinicId, duplicateClinicId, transaction) {
+    const request = new sql.Request(transaction);
+    request.input('canonicalClinicId', sql.Int, canonicalClinicId);
+    request.input('duplicateClinicId', sql.Int, duplicateClinicId);
+    const result = await request.query(`
+      UPDATE Procedures
       SET ClinicID = @canonicalClinicId
       WHERE ClinicID = @duplicateClinicId
     `);

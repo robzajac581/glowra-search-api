@@ -76,8 +76,7 @@ async function main() {
           ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) AS RowNum
         FROM Procedures p
         JOIN Categories c ON p.CategoryID = c.CategoryID
-        JOIN Providers pr ON p.ProviderID = pr.ProviderID
-        WHERE pr.ClinicID = @clinicId
+        WHERE p.ClinicID = @clinicId
       ) AS RankedProcedures
       WHERE RowNum = 1
       ORDER BY Category, ProcedureName

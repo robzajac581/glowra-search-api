@@ -1,6 +1,6 @@
 # AI Context Document
 
-**Last Updated:** October 15, 2025
+**Last Updated:** May 1, 2026
 
 This document provides high-level context for AI assistants working with the Glowra Search API codebase.
 
@@ -82,7 +82,7 @@ Rich Google Places information:
 Doctor/provider information linked to clinics
 
 ### Procedures
-Procedures offered with pricing, linked to providers and clinics
+Procedures offered with pricing. **Clinic-centric:** live rows use **`Procedures.ClinicID` → `Clinics`**; **`ProviderID`** is optional. **`Procedures.LocationID`** may reference **`Locations`** and/or a legacy **`Clinics(ClinicID)`** FK depending on the database; **`loadProceduresClinicFkMeta`** in `utils/proceduresClinicFkShape.js` chooses insert values. See **`docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`**.
 
 ### Locations
 Geographic locations for filtering/search
