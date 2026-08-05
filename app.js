@@ -392,15 +392,16 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
 
     // Check if cached version exists and is fresh
     let cachedPhoto = null;
+    let staleCache = null; // Fallback if a cached copy exists but is past PHOTO_CACHE_DURATION
     try {
       const stats = await fs.stat(cacheFilePath);
       const meta = JSON.parse(await fs.readFile(cacheMetaPath, 'utf-8'));
-      
+
       const cacheAge = Date.now() - stats.mtimeMs;
-      
+
       if (cacheAge < PHOTO_CACHE_DURATION) {
         cachedPhoto = await fs.readFile(cacheFilePath);
-        
+
         // Serve cached image
         res.set({
           'Content-Type': meta.contentType || 'image/jpeg',
@@ -409,11 +410,15 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
           'Last-Modified': stats.mtime.toUTCString(),
           'ETag': `"${cacheKey}"`
         });
-        
+
         return res.send(cachedPhoto);
       }
+
+      // Cache exists but is expired - keep it around as a fallback in case
+      // the live Google fetch below fails (e.g. rate limiting)
+      staleCache = { stats, meta };
     } catch (error) {
-      // Cache miss or expired - continue to fetch from Google
+      // No cache file at all - continue to fetch from Google
     }
 
     // Fetch from Google Places API with authentication
@@ -451,27 +456,48 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
     } catch (fetchError) {
       console.error(`Failed to fetch photo ${photoId}:`, fetchError.message);
 
+      // Live fetch failed but we have an expired cached copy on disk -
+      // serve it rather than showing the user a broken image. A short
+      // Cache-Control encourages clients/CDN to retry soon for a fresh copy.
+      if (staleCache) {
+        try {
+          const stalePhoto = await fs.readFile(cacheFilePath);
+          console.warn(`Serving stale cached photo ${photoId} after fetch error`);
+          res.set({
+            'Content-Type': staleCache.meta.contentType || 'image/jpeg',
+            'Cache-Control': 'public, max-age=60',
+            'X-Cache': 'STALE',
+            'Last-Modified': staleCache.stats.mtime.toUTCString(),
+            'ETag': `"${cacheKey}-stale"`
+          });
+          return res.send(stalePhoto);
+        } catch (staleReadError) {
+          console.error(`Failed to read stale cache for photo ${photoId}:`, staleReadError.message);
+          // Fall through to normal error handling below
+        }
+      }
+
       // Check for specific error types
       if (fetchError.response?.status === 429) {
         // Rate limited by Google
         return res.status(503).set({
           'Retry-After': '60',
           'X-Error': 'Rate limited'
-        }).json({ 
+        }).json({
           error: 'Service temporarily unavailable due to rate limiting',
           retryAfter: 60
         });
       }
 
       if (fetchError.response?.status === 403) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: 'Access denied by photo provider',
           message: 'API key may be invalid or photo access is restricted'
         });
       }
 
       // For other errors, return 404 (photo not available)
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Photo could not be retrieved',
         message: process.env.NODE_ENV === 'development' ? fetchError.message : undefined
       });
