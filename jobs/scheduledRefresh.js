@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { sql, db } = require('../db');
 const { batchFetchPlaceDetails, fetchPlacePhotos } = require('../utils/googlePlaces');
+const { expirePhotoCache } = require('../utils/photoCache');
 const clinicDeletionService = require('../clinic-management/services/clinicDeletionService');
 
 // Configuration for refresh intervals (in days)
@@ -266,10 +267,22 @@ async function manualRefresh() {
 }
 
 /**
+ * Delete the given ClinicPhotos rows by PhotoID
+ */
+async function deletePhotoRows(pool, rows) {
+  for (const row of rows) {
+    await pool.request()
+      .input('photoId', sql.Int, row.PhotoID)
+      .query(`DELETE FROM ClinicPhotos WHERE PhotoID = @photoId`);
+  }
+}
+
+/**
  * Refresh photos for all clinics with PlaceIDs
  * Fetches fresh photo references from Google Places API to prevent expiration
  * Google photo references can expire after ~30-60 days, so we refresh weekly
  * Preserves user-uploaded photos (PhotoReference LIKE 'user-upload%')
+ * Updates Google photo rows in place so PhotoIDs remain stable across refreshes
  */
 async function refreshAllClinicPhotos() {
   let pool;
@@ -303,58 +316,103 @@ async function refreshAllClinicPhotos() {
       try {
         // Fetch photos from Google Places API
         const photos = await fetchPlacePhotos(clinic.PlaceID);
-        
+
+        // Existing Google photo rows, in display order. These are updated in
+        // place rather than deleted and re-inserted, so PhotoIDs stay stable -
+        // photo URLs already served to browsers/crawlers keep working, and the
+        // photo cache (keyed on PhotoID) is not orphaned on every refresh.
+        const existingResult = await pool.request()
+          .input('clinicId', sql.Int, clinic.ClinicID)
+          .query(`
+            SELECT PhotoID, PhotoReference
+            FROM ClinicPhotos
+            WHERE ClinicID = @clinicId AND PhotoReference NOT LIKE 'user-upload%'
+            ORDER BY DisplayOrder ASC
+          `);
+        const existingPhotos = existingResult.recordset;
+
         if (!photos || photos.length === 0) {
           console.log(`   ⊘ No photos available for ${clinic.ClinicName}`);
-          // Still delete expired Google photos even if no new ones (preserves user uploads)
-          await pool.request()
-            .input('clinicId', sql.Int, clinic.ClinicID)
-            .query(`DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId AND PhotoReference NOT LIKE 'user-upload%'`);
+          // Still remove Google photos even if no new ones (preserves user uploads)
+          await deletePhotoRows(pool, existingPhotos);
           continue;
         }
-
-        // Delete only Google photos - preserve user-uploaded photos (PhotoReference LIKE 'user-upload%')
-        await pool.request()
-          .input('clinicId', sql.Int, clinic.ClinicID)
-          .query(`DELETE FROM ClinicPhotos WHERE ClinicID = @clinicId AND PhotoReference NOT LIKE 'user-upload%'`);
 
         // Get current max display order for user photos (to append Google photos after them)
         const maxOrderResult = await pool.request()
           .input('clinicId', sql.Int, clinic.ClinicID)
-          .query(`SELECT ISNULL(MAX(DisplayOrder), -1) as MaxOrder FROM ClinicPhotos WHERE ClinicID = @clinicId`);
+          .query(`SELECT ISNULL(MAX(DisplayOrder), -1) as MaxOrder FROM ClinicPhotos WHERE ClinicID = @clinicId AND PhotoReference LIKE 'user-upload%'`);
         const startDisplayOrder = (maxOrderResult.recordset[0]?.MaxOrder ?? -1) + 1;
 
-        // Insert new Google photos (limit to 20 per clinic)
+        // Store Google photos (limit to 20 per clinic)
         const photosToStore = photos.slice(0, 20);
-        
+
         for (let i = 0; i < photosToStore.length; i++) {
           const photo = photosToStore[i];
-          
+
           // Extract attribution text from HTML attributions array
-          const attributionText = photo.attributions && photo.attributions.length > 0 
+          const attributionText = photo.attributions && photo.attributions.length > 0
             ? photo.attributions.join('; ').replace(/<[^>]*>/g, '') // Strip HTML tags
             : null;
-          
-          await pool.request()
-            .input('clinicId', sql.Int, clinic.ClinicID)
-            .input('photoReference', sql.NVarChar(1000), photo.reference)
-            .input('photoURL', sql.NVarChar(2000), photo.urls.large)
-            .input('width', sql.Int, photo.width)
-            .input('height', sql.Int, photo.height)
-            .input('attributionText', sql.NVarChar(500), attributionText)
-            .input('isPrimary', sql.Bit, (startDisplayOrder === 0 && i === 0) ? 1 : 0) // First photo is primary only if no user photos
-            .input('displayOrder', sql.Int, startDisplayOrder + i)
-            .query(`
-              INSERT INTO ClinicPhotos (
-                ClinicID, PhotoReference, PhotoURL, Width, Height, 
-                AttributionText, IsPrimary, DisplayOrder, LastUpdated
-              ) VALUES (
-                @clinicId, @photoReference, @photoURL, @width, @height,
-                @attributionText, @isPrimary, @displayOrder, GETDATE()
-              )
-            `);
+
+          const isPrimary = (startDisplayOrder === 0 && i === 0) ? 1 : 0; // First photo is primary only if no user photos
+          const displayOrder = startDisplayOrder + i;
+          const existingPhoto = existingPhotos[i];
+
+          if (existingPhoto) {
+            await pool.request()
+              .input('photoId', sql.Int, existingPhoto.PhotoID)
+              .input('photoReference', sql.NVarChar(1000), photo.reference)
+              .input('photoURL', sql.NVarChar(2000), photo.urls.large)
+              .input('width', sql.Int, photo.width)
+              .input('height', sql.Int, photo.height)
+              .input('attributionText', sql.NVarChar(500), attributionText)
+              .input('isPrimary', sql.Bit, isPrimary)
+              .input('displayOrder', sql.Int, displayOrder)
+              .query(`
+                UPDATE ClinicPhotos
+                SET PhotoReference = @photoReference,
+                    PhotoURL = @photoURL,
+                    Width = @width,
+                    Height = @height,
+                    AttributionText = @attributionText,
+                    IsPrimary = @isPrimary,
+                    DisplayOrder = @displayOrder,
+                    LastUpdated = GETDATE()
+                WHERE PhotoID = @photoId
+              `);
+
+            // The row now points at a different Google photo, so anything
+            // cached under this PhotoID is out of date. Expire it (rather than
+            // delete) so it is refetched but remains usable as a fallback.
+            if (existingPhoto.PhotoReference !== photo.reference) {
+              await expirePhotoCache(existingPhoto.PhotoID);
+            }
+          } else {
+            await pool.request()
+              .input('clinicId', sql.Int, clinic.ClinicID)
+              .input('photoReference', sql.NVarChar(1000), photo.reference)
+              .input('photoURL', sql.NVarChar(2000), photo.urls.large)
+              .input('width', sql.Int, photo.width)
+              .input('height', sql.Int, photo.height)
+              .input('attributionText', sql.NVarChar(500), attributionText)
+              .input('isPrimary', sql.Bit, isPrimary)
+              .input('displayOrder', sql.Int, displayOrder)
+              .query(`
+                INSERT INTO ClinicPhotos (
+                  ClinicID, PhotoReference, PhotoURL, Width, Height,
+                  AttributionText, IsPrimary, DisplayOrder, LastUpdated
+                ) VALUES (
+                  @clinicId, @photoReference, @photoURL, @width, @height,
+                  @attributionText, @isPrimary, @displayOrder, GETDATE()
+                )
+              `);
+          }
         }
-        
+
+        // Google returned fewer photos than we had stored - drop the leftovers
+        await deletePhotoRows(pool, existingPhotos.slice(photosToStore.length));
+
         successCount++;
         totalPhotosStored += photosToStore.length;
         console.log(`   ✓ Refreshed ${photosToStore.length} photos for ${clinic.ClinicName}`);

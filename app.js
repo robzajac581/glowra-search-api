@@ -67,9 +67,8 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
-// Photo cache configuration
-const PHOTO_CACHE_DIR = path.join(__dirname, '.photo-cache');
-const PHOTO_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+// Photo cache configuration (shared with the refresh job so cache keys match)
+const { PHOTO_CACHE_DIR, PHOTO_CACHE_DURATION, cacheKeyForPhoto } = require('./utils/photoCache');
 
 // Ensure cache directory exists
 (async () => {
@@ -386,7 +385,7 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
     }
 
     // Generate cache key based on photo ID and size
-    const cacheKey = crypto.createHash('md5').update(`${photoId}-${size}`).digest('hex');
+    const cacheKey = cacheKeyForPhoto(photoId, size);
     const cacheFilePath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.jpg`);
     const cacheMetaPath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.meta.json`);
 
