@@ -53,9 +53,24 @@ function validateField(fieldName, value, fieldDef) {
     return { valid: false, error: `${fieldDef.label || fieldName} must be at most ${fieldDef.maxLength} characters` };
   }
 
-  // Check enum
+  // Check enum.
+  //
+  // fieldDef.enumAliases (optional) maps accepted alternative spellings to
+  // their canonical value, so a caller submitting a legacy spelling is not
+  // rejected. Lookup is case-insensitive with collapsed whitespace. The error
+  // message still lists only the canonical values -- aliases are accepted, not
+  // advertised.
   if (fieldDef.enum && !fieldDef.enum.includes(value)) {
-    return { valid: false, error: `${fieldDef.label || fieldName} must be one of: ${fieldDef.enum.join(', ')}` };
+    const aliasKey =
+      typeof value === 'string'
+        ? value.trim().replace(/\s+/g, ' ').toLowerCase()
+        : null;
+    const aliased =
+      aliasKey && fieldDef.enumAliases ? fieldDef.enumAliases[aliasKey] : undefined;
+
+    if (!aliased || !fieldDef.enum.includes(aliased)) {
+      return { valid: false, error: `${fieldDef.label || fieldName} must be one of: ${fieldDef.enum.join(', ')}` };
+    }
   }
 
   // Check pattern

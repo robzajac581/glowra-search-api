@@ -14,13 +14,20 @@ const US_STATES = [
   'Wisconsin', 'Wyoming'
 ];
 
-const CLINIC_CATEGORIES = [
-  'Plastic Surgery',
-  'Med Spa / Aesthetics',
-  'Medical',
-  'Dermatology',
-  'Other'
-];
+// Single source of truth: the canonical category list lives in
+// utils/categoryNormalizer.js, which is what every write path runs values
+// through before storing them. This file used to redeclare the list with
+// 'Med Spa / Aesthetics' instead of 'Medspa / Aesthetics', so validateClinic()
+// rejected the normaliser's own output (GLO-68).
+//
+// CLINIC_CATEGORY_ALIASES keeps the older 'Med Spa / Aesthetics' spelling
+// accepted on input -- glowra-FE's list-your-clinic form still submits it.
+const {
+  getValidCategories,
+  CATEGORY_ALIASES: CLINIC_CATEGORY_ALIASES
+} = require('../../utils/categoryNormalizer');
+
+const CLINIC_CATEGORIES = getValidCategories();
 
 const clinicFields = {
   clinicName: {
@@ -77,9 +84,10 @@ const clinicFields = {
     type: 'string',
     required: true,
     enum: CLINIC_CATEGORIES,
+    enumAliases: CLINIC_CATEGORY_ALIASES,
     label: 'Clinic Category',
     description: 'Primary category of the clinic',
-    example: 'Med Spa / Aesthetics'
+    example: 'Medspa / Aesthetics'
   },
   
   website: {
@@ -260,6 +268,7 @@ module.exports = {
   clinicFields,
   advancedClinicFields,
   US_STATES,
-  CLINIC_CATEGORIES
+  CLINIC_CATEGORIES,
+  CLINIC_CATEGORY_ALIASES
 };
 
