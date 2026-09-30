@@ -66,9 +66,14 @@ function validateField(fieldName, value, fieldDef) {
         ? value.trim().replace(/\s+/g, ' ').toLowerCase()
         : null;
     const aliased =
-      aliasKey && fieldDef.enumAliases ? fieldDef.enumAliases[aliasKey] : undefined;
+      aliasKey !== null && fieldDef.enumAliases
+        ? fieldDef.enumAliases[aliasKey]
+        : undefined;
 
-    if (!aliased || !fieldDef.enum.includes(aliased)) {
+    // Compare against undefined rather than falsiness: '' is a legitimate
+    // canonical value (procedureFields' "no unit"), and `!aliased` would
+    // discard an alias that correctly resolves to it.
+    if (aliased === undefined || !fieldDef.enum.includes(aliased)) {
       return { valid: false, error: `${fieldDef.label || fieldName} must be one of: ${fieldDef.enum.join(', ')}` };
     }
   }
@@ -149,8 +154,21 @@ function validateProviders(providers) {
 function validateProcedure(procedure, index = 0) {
   const errors = [];
 
+  // The price unit arrives under any of three spellings. The schema declares it
+  // as 'unit', but the API response, the Procedures.PriceUnit column and
+  // glowra-FE's admin review screen all call it 'priceUnit', and the write paths
+  // in clinicCreationService/draftService read 'priceUnit' first. Validating
+  // only procedure.unit therefore let a payload carrying 'priceUnit' skip the
+  // enum entirely and be written straight to the column -- which is how values
+  // like '/650' reached live data. Resolve the same way the write paths do, so
+  // there is one effective value and the enum applies to it whichever name the
+  // caller used.
+  const effectiveUnit =
+    procedure.priceUnit ?? procedure.PriceUnit ?? procedure.unit;
+
   for (const [fieldName, fieldDef] of Object.entries(procedureFields)) {
-    const result = validateField(fieldName, procedure[fieldName], fieldDef);
+    const value = fieldName === 'unit' ? effectiveUnit : procedure[fieldName];
+    const result = validateField(fieldName, value, fieldDef);
     if (!result.valid) {
       errors.push({ field: `procedures[${index}].${fieldName}`, message: result.error });
     }

@@ -8,6 +8,7 @@ const draftService = require('./draftService');
 const duplicateDetectionService = require('./duplicateDetectionService');
 const { validateSubmission, calculateAveragePrice } = require('../utils/schemaValidator');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
+const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
 
 class SubmissionService {
   /**
@@ -222,7 +223,18 @@ class SubmissionService {
             procedureRequest.input('averageCost', sql.Decimal(10, 2), avgPrice);
             procedureRequest.input('priceMin', sql.Decimal(10, 2), procedure.priceMin || null);
             procedureRequest.input('priceMax', sql.Decimal(10, 2), procedure.priceMax || null);
-            procedureRequest.input('priceUnit', sql.NVarChar, procedure.unit || null);
+            // validateSubmission() above already rejects a unit outside the enum,
+            // so this is defence in depth rather than the primary guard: it
+            // canonicalises the accepted spelling (e.g. 'sessions' -> '/session')
+            // so the stored value is the canonical one, not whatever was posted.
+            procedureRequest.input(
+              'priceUnit',
+              sql.NVarChar,
+              normalizePriceUnitForStorage(
+                procedure.priceUnit ?? procedure.unit ?? null,
+                `submissionService draft=${draftId} procedure=${JSON.stringify(procedure.procedureName)}`
+              )
+            );
             procedureRequest.input('providerNames', sql.NVarChar(sql.MAX), 
               procedure.providerNames ? JSON.stringify(procedure.providerNames) : null);
             procedureRequest.input('providerName', sql.NVarChar, 

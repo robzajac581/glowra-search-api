@@ -1,6 +1,7 @@
 const { db, sql } = require('../../db');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { normalizeDraft, normalizeProviders, normalizeProcedures, normalizePhotos } = require('../../utils/responseNormalizer');
+const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
 
 /**
  * Shared WHERE fragments for ClinicDrafts list + count (same filters, same order of params).
@@ -469,7 +470,17 @@ class DraftService {
           procedureRequest.input('averageCost', sql.Decimal(10, 2), averageCost ?? null);
           procedureRequest.input('priceMin', sql.Decimal(10, 2), procedure.priceMin ?? null);
           procedureRequest.input('priceMax', sql.Decimal(10, 2), procedure.priceMax ?? null);
-          procedureRequest.input('priceUnit', sql.NVarChar, procedure.priceUnit ?? null);
+          // Admin draft edits reach the DraftProcedures.PriceUnit column without
+          // passing validateProcedure(), so normalise here too -- otherwise this
+          // path stays open for junk even once submissions are validated.
+          procedureRequest.input(
+            'priceUnit',
+            sql.NVarChar,
+            normalizePriceUnitForStorage(
+              procedure.priceUnit ?? procedure.unit ?? null,
+              `draftService.update draft=${draftId} procedure=${JSON.stringify(procedure.procedureName)}`
+            )
+          );
           procedureRequest.input('providerNames', sql.NVarChar(sql.MAX),
             Array.isArray(providerNames) ? JSON.stringify(providerNames) : null);
           procedureRequest.input('providerName', sql.NVarChar, providerName);

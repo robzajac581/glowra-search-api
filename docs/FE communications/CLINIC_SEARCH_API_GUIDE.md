@@ -103,7 +103,7 @@ interface Procedure {
 }
 ```
 
-`priceUnit` values match list-your-clinic submissions (e.g. empty, `/unit`, `/session`, `/injection`, `/area`, `/treatment`, `/syringe`, `/vial`). The same optional field appears on **`GET /api/clinics/:clinicId/procedures`** (grouped, flat, and `?include=procedures` on **`GET /api/clinics/:clinicId`**) for consistency.
+`priceUnit` values match list-your-clinic submissions: empty, `/unit`, `/session`, `/injection`, `/area`, `/treatment`, `/syringe`, `/vial`, `/procedure`, `/package`, `/cycle`, `/thread`, `/graft`. The canonical list lives in `utils/priceUnitNormalizer.js`. Historic rows may still carry a value outside this list (see GLO-69); treat an unrecognised `priceUnit` as a display-only string rather than assuming it is one of the above. The same optional field appears on **`GET /api/clinics/:clinicId/procedures`** (grouped, flat, and `?include=procedures` on **`GET /api/clinics/:clinicId`**) for consistency.
 
 ### Field Nullability
 - **Can be null/0:** `rating`, `reviewCount`, `price`, `city`, `state`, `address`, `photoURL`

@@ -6,6 +6,7 @@ const { fetchGooglePlaceDetails, fetchPlacePhotos } = require('../../utils/googl
 const { normalizeAddressForStorage } = require('../../utils/addressUtils');
 const { proceduresTableHasPriceUnitColumn } = require('../../utils/procedurePriceUnitColumn');
 const { loadProceduresClinicFkMeta } = require('../../utils/proceduresClinicFkShape');
+const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -620,8 +621,15 @@ class ClinicCreationService {
     const averageCost = procedureData.averageCost || procedureData.AverageCost;
     const rawUnit =
       procedureData.priceUnit ?? procedureData.PriceUnit ?? procedureData.unit ?? null;
-    const priceUnit =
-      rawUnit != null && String(rawUnit).trim() !== '' ? String(rawUnit).trim() : null;
+    // Previously this stored String(rawUnit).trim() verbatim, so anything the
+    // caller sent landed in Procedures.PriceUnit -- this path runs on draft
+    // approval and has no validateProcedure() in front of it. Normalising here
+    // resolves known spellings and drops junk (logged, not stored) rather than
+    // failing the approval, since a bad unit must not block a clinic going live.
+    const priceUnit = normalizePriceUnitForStorage(
+      rawUnit,
+      `createProcedure clinic=${clinicId} procedure=${JSON.stringify(procedureName)}`
+    );
 
     // Get or create CategoryID
     const categoryId = await this.getOrCreateCategory(category, transaction);

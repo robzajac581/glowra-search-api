@@ -3,6 +3,11 @@
  * Single source of truth for procedure data validation and form generation
  */
 
+const {
+  getValidPriceUnits,
+  getPriceUnitAliases
+} = require('../../utils/priceUnitNormalizer');
+
 const PROCEDURE_CATEGORIES = [
   'Face',
   'Body',
@@ -13,16 +18,13 @@ const PROCEDURE_CATEGORIES = [
   'Other'
 ];
 
-const PRICE_UNITS = [
-  '',           // No unit (blank)
-  '/unit',
-  '/session',
-  '/injection',
-  '/area',
-  '/treatment',
-  '/syringe',
-  '/vial'
-];
+// Derived from utils/priceUnitNormalizer rather than redeclared, so the enum
+// and the normaliser cannot drift apart (the GLO-68 failure mode, applied here
+// before it could happen). glowra-FE keeps its own copy for the form dropdown
+// in src/pages/list-your-clinic/constants.js -- that list must be kept in step
+// with this one; test/procedurePriceUnitEnum.test.js pins the values it expects.
+const PRICE_UNITS = getValidPriceUnits();
+const PRICE_UNIT_ALIASES = getPriceUnitAliases();
 
 const procedureFields = {
   procedureName: {
@@ -64,10 +66,16 @@ const procedureFields = {
     placeholder: '0'
   },
   
+  // The canonical request field is 'unit'. Write paths also accept 'priceUnit'
+  // (and 'PriceUnit'), which is the name used in the API response, in the
+  // database column, and by glowra-FE's admin review screen -- validateProcedure
+  // resolves those to this field before validating, so a payload cannot bypass
+  // the enum by choosing the other spelling.
   unit: {
     type: 'string',
     required: false,
     enum: PRICE_UNITS,
+    enumAliases: PRICE_UNIT_ALIASES,
     label: 'Price Unit',
     description: 'Unit for the price (e.g., /unit, /session)',
     example: '/unit'
@@ -96,6 +104,7 @@ const procedureFields = {
 module.exports = {
   procedureFields,
   PROCEDURE_CATEGORIES,
-  PRICE_UNITS
+  PRICE_UNITS,
+  PRICE_UNIT_ALIASES
 };
 

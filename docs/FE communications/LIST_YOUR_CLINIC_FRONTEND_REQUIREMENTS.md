@@ -332,6 +332,11 @@ This keeps it available but unobtrusive - most users will ignore it.
 - /treatment
 - /syringe
 - /vial
+- /procedure
+- /package
+- /cycle
+- /thread
+- /graft
 
 ---
 
@@ -632,6 +637,11 @@ All 50 US states + DC (standard dropdown)
 - /treatment
 - /syringe
 - /vial
+- /procedure
+- /package
+- /cycle
+- /thread
+- /graft
 
 ---
 
