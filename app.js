@@ -734,8 +734,47 @@ app.get('/api/clinics/search-index', async (req, res) => {
     // Build the SQL query with optional clinicName filtering
     // Address: street only - prefer GooglePlacesData.Street when available
     // City/State/Zip: prefer Clinics columns, then GooglePlacesData, then Locations
-    let query = `
-      SELECT 
+    // Two queries, not one wide one.
+    //
+    // The original SELECT joined Procedures and returned one row per procedure,
+    // which meant every clinic-level column — including a PhotoURL that runs to
+    // ~1.1 KB — was repeated across all ~21 of that clinic's rows. For 400
+    // clinics that is 8,419 rows and 4.7 MB to render a page that only ever
+    // shows 400 clinics. Splitting the clinic columns away from the procedure
+    // columns removes the duplication entirely: same response shape, ~1.2 MB.
+    //
+    // It also matters for the query plan. On 2026-09-30 the unfiltered form of
+    // the old query started timing out in production (500 after 15s, mssql's
+    // default requestTimeout) while the *same* result set returned fine when a
+    // clinicName filter was present — a plan flip, almost certainly a spill on
+    // the 5-DTU Basic tier this database runs on. Two narrow queries give the
+    // optimiser a much easier problem than one six-way join.
+    //
+    // The shared predicate: not deleted, has a usable photo, and has at least
+    // one procedure. That last one is what the old INNER JOIN to Procedures was
+    // really expressing, so it becomes an EXISTS here rather than a join.
+    const sharedWhere = `
+      WHERE NOT EXISTS (
+        SELECT 1 FROM DeletedClinics dc WHERE dc.OriginalClinicID = c.ClinicID
+      )
+        AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)`;
+
+    const primaryPhotoJoin = `
+      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
+      LEFT JOIN (
+        SELECT ClinicID, PhotoURL,
+          ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
+        FROM ClinicPhotos
+      ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1`;
+
+    const clinicNameSearch = clinicName && clinicName.trim() ? clinicName.trim() : null;
+
+    // --- Query 1: one row per clinic ---
+    // Address: street only - prefer GooglePlacesData.Street when available
+    // City/State/Zip: prefer Clinics columns, then GooglePlacesData, then Locations
+    const clinicRequest = pool.request();
+    let clinicQuery = `
+      SELECT
         c.ClinicID,
         c.ClinicName,
         COALESCE(g.Street, c.Address) as Address,
@@ -747,41 +786,52 @@ app.get('/api/clinics/search-index', async (req, res) => {
         c.GoogleRating,
         c.GoogleReviewCount,
         COALESCE(g.Category, 'Medical Spa') as ClinicCategory,
-        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL,
+        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL
+      FROM Clinics c
+      LEFT JOIN Locations l ON c.LocationID = l.LocationID${primaryPhotoJoin}
+      ${sharedWhere}`;
+
+    // The clinicName predicate spans both tables (clinic name OR procedure
+    // name), so at clinic level it has to be asked as "does this clinic have
+    // any procedure row that satisfies it". A clinic matching on its own name
+    // satisfies the clause for every one of its procedures, so EXISTS is still
+    // true — and a clinic with no procedures is excluded either way, which is
+    // exactly what the old INNER JOIN did.
+    clinicQuery += clinicNameSearch
+      ? ` AND EXISTS (
+            SELECT 1 FROM Procedures p
+             WHERE p.ClinicID = c.ClinicID
+               AND ${bindClinicNameOrProcedureSearchSql(clinicRequest, clinicNameSearch)}
+          )`
+      : ` AND EXISTS (SELECT 1 FROM Procedures p WHERE p.ClinicID = c.ClinicID)`;
+
+    clinicQuery += ` ORDER BY c.ClinicID`;
+
+    // --- Query 2: procedures, carrying only the clinic id to join on ---
+    const procedureRequest = pool.request();
+    let procedureQuery = `
+      SELECT
+        p.ClinicID,
         p.ProcedureID,
         p.ProcedureName,
         p.AverageCost,
         ${procPriceUnitSql},
         cat.Category as ProcedureCategory
-      FROM Clinics c
-      LEFT JOIN Locations l ON c.LocationID = l.LocationID
-      LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
-      LEFT JOIN (
-        SELECT ClinicID, PhotoURL,
-          ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
-        FROM ClinicPhotos
-      ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
-      JOIN Procedures p ON p.ClinicID = c.ClinicID
-      JOIN Categories cat ON p.CategoryID = cat.CategoryID
-      WHERE NOT EXISTS (
-        SELECT 1
-        FROM DeletedClinics dc
-        WHERE dc.OriginalClinicID = c.ClinicID
-      )
-        AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)
-    `;
+      FROM Procedures p
+      JOIN Clinics c ON c.ClinicID = p.ClinicID
+      JOIN Categories cat ON p.CategoryID = cat.CategoryID${primaryPhotoJoin}
+      ${sharedWhere}`;
 
-    const request = pool.request();
-    
-    // Add clinicName filtering: match clinic name OR procedure name (SQL pre-filter; JS refines)
-    if (clinicName && clinicName.trim()) {
-      const clinicNameSearch = clinicName.trim();
-      query += ` AND ${bindClinicNameOrProcedureSearchSql(request, clinicNameSearch)}`;
+    if (clinicNameSearch) {
+      procedureQuery += ` AND ${bindClinicNameOrProcedureSearchSql(procedureRequest, clinicNameSearch)}`;
     }
 
-    query += ` ORDER BY c.ClinicID, p.ProcedureName`;
+    procedureQuery += ` ORDER BY p.ClinicID, p.ProcedureName`;
 
-    const result = await request.query(query);
+    const [clinicResult, procedureResult] = await Promise.all([
+      clinicRequest.query(clinicQuery),
+      procedureRequest.query(procedureQuery)
+    ]);
 
     // Query to get gallery photos for all clinics (up to 5 photos per clinic)
     // Filter by clinicName if provided for efficiency
@@ -848,34 +898,35 @@ app.get('/api/clinics/search-index', async (req, res) => {
       }
     });
 
-    // Transform the flat result set into a clinic-centric structure
+    // Assemble: clinics first, then hang procedures off them by ClinicID.
     const clinicsMap = new Map();
 
-    result.recordset.forEach(row => {
-      const clinicId = row.ClinicID;
+    clinicResult.recordset.forEach(row => {
+      clinicsMap.set(row.ClinicID, {
+        clinicId: row.ClinicID,
+        clinicName: row.ClinicName,
+        address: row.Address,
+        city: row.City,
+        state: row.State,
+        zipCode: row.PostalCode || null,
+        latitude: row.Latitude || null,
+        longitude: row.Longitude || null,
+        rating: row.GoogleRating || 0,
+        reviewCount: row.GoogleReviewCount || 0,
+        clinicCategory: normalizeCategory(row.ClinicCategory),
+        photoURL: row.PhotoURL || null,
+        galleryPhotos: galleryPhotosMap.get(row.ClinicID) || null,
+        procedures: []
+      });
+    });
 
-      // Initialize clinic object if it doesn't exist
-      if (!clinicsMap.has(clinicId)) {
-        clinicsMap.set(clinicId, {
-          clinicId: row.ClinicID,
-          clinicName: row.ClinicName,
-          address: row.Address,
-          city: row.City,
-          state: row.State,
-          zipCode: row.PostalCode || null,
-          latitude: row.Latitude || null,
-          longitude: row.Longitude || null,
-          rating: row.GoogleRating || 0,
-          reviewCount: row.GoogleReviewCount || 0,
-          clinicCategory: normalizeCategory(row.ClinicCategory),
-          photoURL: row.PhotoURL || null,
-          galleryPhotos: galleryPhotosMap.get(clinicId) || null,
-          procedures: []
-        });
-      }
-
-      // Get the clinic object
-      const clinic = clinicsMap.get(clinicId);
+    procedureResult.recordset.forEach(row => {
+      const clinic = clinicsMap.get(row.ClinicID);
+      // Both queries apply the same predicate, so a procedure without a clinic
+      // should not happen — but the two run as separate statements, so a write
+      // landing between them could produce one. Skipping is correct: a
+      // procedure with no clinic has nothing to attach to.
+      if (!clinic) return;
 
       // Deduplicate procedures by name AND category to avoid showing the same procedure multiple times
       // This handles cases where multiple providers at the same clinic offer the same procedure
@@ -893,7 +944,6 @@ app.get('/api/clinics/search-index', async (req, res) => {
         });
       }
     });
-
     // Convert map to array
     let clinics = Array.from(clinicsMap.values());
     
@@ -2384,8 +2434,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Initialize scheduled jobs
-try {
+// Initialize scheduled jobs.
+//
+// Guarded because this is not inert on startup: initRatingRefreshJob schedules
+// a check that runs ~10s after boot and, if a refresh is overdue, fetches
+// ratings and photos from Google Places for every clinic in the database. That
+// is billable work triggered by the mere act of starting the process — which
+// makes running this API locally against the production database unsafe by
+// default, and that is exactly what anyone debugging a prod query wants to do.
+// Set DISABLE_SCHEDULED_JOBS=true in a local .env; Render leaves it unset.
+if (String(process.env.DISABLE_SCHEDULED_JOBS).toLowerCase() === 'true') {
+  console.log('Scheduled jobs disabled via DISABLE_SCHEDULED_JOBS — no rating/photo refresh will run.');
+} else try {
   initRatingRefreshJob();
 } catch (error) {
   console.error('Failed to initialize scheduled jobs:', error);
