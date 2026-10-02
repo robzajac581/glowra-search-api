@@ -20,6 +20,7 @@ const XLSX = require('xlsx');
 require('dotenv').config();
 const { db, sql } = require('../db');
 const { proceduresTableHasPriceUnitColumn } = require('../utils/procedurePriceUnitColumn');
+const { normalizePriceUnitForStorage } = require('../utils/priceUnitNormalizer');
 const { loadProceduresClinicFkMeta } = require('../utils/proceduresClinicFkShape');
 
 function normKey(s) {
@@ -34,11 +35,17 @@ function tripKey(name, city, state) {
   return `${normKey(name)}|${normKey(city)}|${normKey(state)}`;
 }
 
+/**
+ * Map a spreadsheet Unit cell to a canonical API PriceUnit, or null.
+ *
+ * This function used to lowercase the cell and prepend '/' unconditionally,
+ * which is how junk units reached live data: a mis-shifted row whose Unit cell
+ * held a price produced '/650', and '2 vials' produced '/2 vials'. It now goes
+ * through the shared normaliser, which resolves known spellings and returns
+ * null for anything that is not a real unit.
+ */
 function excelUnitToPriceUnit(unit) {
-  if (unit == null || String(unit).trim() === '') return null;
-  let u = String(unit).trim().toLowerCase();
-  if (!u.startsWith('/')) u = `/${u}`;
-  return u;
+  return normalizePriceUnitForStorage(unit, 'excel import Unit column');
 }
 
 function parseArgs(argv) {
