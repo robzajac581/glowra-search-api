@@ -9,6 +9,7 @@ const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob, refreshAllClinicPhotos } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
+const { checkApiKeyConfig } = require('./clinic-management/middleware/auth');
 const { calculateDistance, geocodeLocation, parseLocationInput, isLikelyGeographicLocationString, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
 const { mergeAddressForResponse } = require('./utils/addressUtils');
@@ -2452,6 +2453,14 @@ if (String(process.env.DISABLE_SCHEDULED_JOBS).toLowerCase() === 'true') {
 }
 
 // Start server
+//
+// Validate deploy-time configuration before listening so a missing
+// CLINIC_MANAGEMENT_API_KEY shows up in the deploy log rather than as a
+// runtime failure the first time someone hits /bulk-import, /drafts or
+// /duplicates. Non-fatal by default (the public search endpoints do not need
+// the key); set CLINIC_MANAGEMENT_STRICT_CONFIG=true to make it fatal.
+checkApiKeyConfig();
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

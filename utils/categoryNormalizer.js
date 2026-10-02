@@ -20,6 +20,47 @@ const CATEGORIES = {
 };
 
 /**
+ * Alternative spellings that are accepted on input and mean one of the
+ * canonical CATEGORIES above.
+ *
+ * These exist because 'Med Spa / Aesthetics' (with a space) was previously the
+ * value in the clinic-management schema enum and is still the value the
+ * list-your-clinic form in glowra-FE submits. Accepting it keeps that form
+ * working while the canonical stored spelling stays 'Medspa / Aesthetics',
+ * which is what every row in the database already uses.
+ *
+ * Keys are compared case-insensitively after whitespace collapsing.
+ */
+const CATEGORY_ALIASES = {
+  'med spa / aesthetics': CATEGORIES.MEDSPA_AESTHETICS,
+  'med spa/aesthetics': CATEGORIES.MEDSPA_AESTHETICS,
+  'medspa/aesthetics': CATEGORIES.MEDSPA_AESTHETICS,
+  'medspa / aesthetics': CATEGORIES.MEDSPA_AESTHETICS
+};
+
+/**
+ * Resolve a caller-supplied category to its canonical spelling.
+ *
+ * Unlike normalizeCategory(), this does NOT guess from keywords and does NOT
+ * fall back to 'Other' -- it returns null for anything that is not a canonical
+ * value or a known alias. That makes it safe to use for validation, where
+ * silently coercing an unrecognised value would hide input errors.
+ *
+ * @param {string} category
+ * @returns {string|null} canonical category, or null if unrecognised
+ */
+function toCanonicalCategory(category) {
+  if (!category || typeof category !== 'string') return null;
+
+  const collapsed = category.trim().replace(/\s+/g, ' ');
+  if (!collapsed) return null;
+
+  if (getValidCategories().includes(collapsed)) return collapsed;
+
+  return CATEGORY_ALIASES[collapsed.toLowerCase()] || null;
+}
+
+/**
  * Normalize a string for comparison (lowercase, trim, remove extra spaces, handle plurals)
  */
 function normalizeString(str) {
@@ -160,7 +201,9 @@ function isValidCategory(category) {
 
 module.exports = {
   normalizeCategory,
+  toCanonicalCategory,
   getValidCategories,
   isValidCategory,
-  CATEGORIES
+  CATEGORIES,
+  CATEGORY_ALIASES
 };
