@@ -4,13 +4,18 @@ require('dotenv').config();
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
+// Minimal field mask for a star rating. Deliberately excludes `reviews`
+// (Atmosphere tier) and `opening_hours` (Contact Data SKU): the rating refresh
+// job persists neither, so requesting them is money spent on discarded data.
+const RATING_ONLY_FIELDS = 'rating,user_ratings_total';
+
 /**
  * Fetches place details from Google Places API
  * @param {string} placeId - Google Place ID
  * @param {boolean} includePhotos - Whether to include photos in the request (default: false)
  * @returns {Promise<Object>} - Place details with rating, reviews, and opening hours
  */
-async function fetchGooglePlaceDetails(placeId, includePhotos = false) {
+async function fetchGooglePlaceDetails(placeId, includePhotos = false, fieldsOverride = null) {
   // Validation
   if (!placeId) {
     throw new Error('Place ID is required');
@@ -21,14 +26,20 @@ async function fetchGooglePlaceDetails(placeId, includePhotos = false) {
   }
 
   try {
-    // Request only the fields we need to minimize API costs
-    let fields = 'rating,user_ratings_total,reviews,opening_hours,business_status';
-    
+    // Request only the fields we need to minimize API costs.
+    //
+    // Place Details bills at the highest SKU tier any requested field belongs
+    // to, and the tiers stack. `opening_hours` pulls in the Contact Data SKU
+    // and `reviews` pulls in the Atmosphere tier, so a caller that only needs
+    // a star rating should pass fieldsOverride = RATING_ONLY_FIELDS rather
+    // than paying for data it discards. See GLO-73.
+    let fields = fieldsOverride || 'rating,user_ratings_total,reviews,opening_hours,business_status';
+
     // Add photos field if requested
     if (includePhotos) {
       fields += ',photos';
     }
-    
+
     const response = await axios.get(GOOGLE_PLACES_API_URL, {
       params: {
         place_id: placeId,
@@ -98,12 +109,12 @@ async function fetchGooglePlaceDetails(placeId, includePhotos = false) {
  * @param {boolean} includePhotos - Whether to include photos in the request (default: false)
  * @returns {Promise<Object>} - Place details or null on failure
  */
-async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3, includePhotos = false) {
+async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3, includePhotos = false, fieldsOverride = null) {
   let lastError;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return await fetchGooglePlaceDetails(placeId, includePhotos);
+      return await fetchGooglePlaceDetails(placeId, includePhotos, fieldsOverride);
     } catch (error) {
       lastError = error;
       console.error(`Attempt ${attempt} failed:`, error.message);
@@ -237,7 +248,7 @@ function sleep(ms) {
  * @param {number} delayMs - Delay between batches in milliseconds (default: 200)
  * @returns {Promise<Array>} - Array of results {placeId, data, error}
  */
-async function batchFetchPlaceDetails(placeIds, concurrency = 5, delayMs = 200) {
+async function batchFetchPlaceDetails(placeIds, concurrency = 5, delayMs = 200, fieldsOverride = null) {
   const results = [];
   
   // Process in chunks to avoid rate limiting
@@ -247,7 +258,7 @@ async function batchFetchPlaceDetails(placeIds, concurrency = 5, delayMs = 200) 
     const chunkResults = await Promise.allSettled(
       chunk.map(async (placeId) => {
         try {
-          const data = await fetchGooglePlaceDetailsWithRetry(placeId, 2);
+          const data = await fetchGooglePlaceDetailsWithRetry(placeId, 2, false, fieldsOverride);
           return { placeId, data, error: null };
         } catch (error) {
           console.error(`Failed to fetch data for ${placeId}:`, error.message);
@@ -280,13 +291,12 @@ async function batchFetchPlaceDetails(placeIds, concurrency = 5, delayMs = 200) 
  * @returns {Promise<Array>} - Array of photo objects
  */
 async function fetchPlacePhotos(placeId) {
-  try {
-    const placeDetails = await fetchGooglePlaceDetails(placeId, true);
-    return placeDetails.photos || [];
-  } catch (error) {
-    console.error(`Failed to fetch photos for place ${placeId}:`, error.message);
-    return [];
-  }
+  // Throws on failure. It previously swallowed every error and returned [],
+  // which callers could not tell apart from "Google has no photos for this
+  // place" - and the refresh job deletes a clinic's stored photos on an empty
+  // result, so one transient API error wiped real data. (GLO-73)
+  const placeDetails = await fetchGooglePlaceDetails(placeId, true);
+  return (placeDetails && placeDetails.photos) || [];
 }
 
 /**
@@ -441,6 +451,7 @@ module.exports = {
   parseReviews,
   parsePhotos,
   isCacheFresh,
-  batchFetchPlaceDetails
+  batchFetchPlaceDetails,
+  RATING_ONLY_FIELDS
 };
 
