@@ -1,0 +1,1787 @@
+{
+  "_comment": "GLO-72 promotional assessments for ClinicIDs 623-629 ONLY. Generated from glowra-ingestion/data/ingestion.db (extracted_procedures, quote_verified=1, price_unit <> /month) on 2026-10-05 -- the same row set stages/push.js pushed to prod on 2026-10-02. Regenerate with the query in scripts/backfillPromotionalFromIngestion.js. Every row carries the verbatim evidence quote the extractor judged from, so the assessment is auditable without the ingestion database.",
+  "_scope": "ClinicIDs 623-629 only. Every other clinic predates the extractor and MUST stay NULL (not assessed).",
+  "generatedAt": "2026-10-05",
+  "clinicIds": [
+    623,
+    624,
+    625,
+    626,
+    627,
+    628,
+    629
+  ],
+  "rows": [
+    {
+      "clinicId": 623,
+      "procedureName": "Abdominal Tightening",
+      "isPromotional": false,
+      "evidenceQuote": "Abdominal Tightening\n$800.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Acne Scar",
+      "isPromotional": false,
+      "evidenceQuote": "Acne Scar\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Beach Day Cocktail",
+      "isPromotional": false,
+      "evidenceQuote": "Beach Day Cocktail\n$250.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Botulinum Toxin (Botox, Jeuveau, Dysport, Xeomin)",
+      "isPromotional": false,
+      "evidenceQuote": "Botulinum Toxin (Botox, Jeuveau, Dysport, Xeomin)\nUnit\n$10.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Cheeks",
+      "isPromotional": false,
+      "evidenceQuote": "Cheeks\n$450.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Crow's Feet",
+      "isPromotional": false,
+      "evidenceQuote": "Fibroblast Plasma Pen Therapy\nCrow's Feet\n$400.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Decollete",
+      "isPromotional": false,
+      "evidenceQuote": "Decollete\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Derma Fillers Basic",
+      "isPromotional": false,
+      "evidenceQuote": "Derma Fillers\nBasic\n$580.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Double Chin Monothreads",
+      "isPromotional": false,
+      "evidenceQuote": "Double Chin Monothreads\n$300.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Double Chin Monothreads and Barber Threads",
+      "isPromotional": false,
+      "evidenceQuote": "Double Chin Monothreads and Barber Threads\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Energy and Focus",
+      "isPromotional": false,
+      "evidenceQuote": "Energy and Focus\n$220.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Eyebrows",
+      "isPromotional": false,
+      "evidenceQuote": "Eyebrows\n$450.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Eyelids",
+      "isPromotional": false,
+      "evidenceQuote": "Eyelids\n$650.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Food Poisoning",
+      "isPromotional": false,
+      "evidenceQuote": "Food Poisoning\n$250.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Forehead and Glabella Area",
+      "isPromotional": false,
+      "evidenceQuote": "Forehead and Glabella Area\n$400.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Foxy Eye",
+      "isPromotional": false,
+      "evidenceQuote": "Foxy Eye\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Full Face Soft PDO",
+      "isPromotional": false,
+      "evidenceQuote": "Full Face Soft PDO\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Glabellar",
+      "isPromotional": false,
+      "evidenceQuote": "Glabellar\n$350.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Hands",
+      "isPromotional": false,
+      "evidenceQuote": "Hands\n$550.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Jawline",
+      "isPromotional": false,
+      "evidenceQuote": "Jawline\n$750.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Jet Lag IV Drip",
+      "isPromotional": false,
+      "evidenceQuote": "Jet Lag IV Drip\n$220.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Lips (smoking lines)",
+      "isPromotional": false,
+      "evidenceQuote": "Lips (smoking lines)\n$600.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Lips Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Lips Filler\n$650.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Liquid Rhinoplasty",
+      "isPromotional": false,
+      "evidenceQuote": "Liquid Rhinoplasty\n$750.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Marionette Lines",
+      "isPromotional": false,
+      "evidenceQuote": "Marionette Lines\n$300.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Migraine & Headache Mix",
+      "isPromotional": false,
+      "evidenceQuote": "Migraine & Headache Mix\n$250.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Moon Time (Menstrual Symptoms)",
+      "isPromotional": false,
+      "evidenceQuote": "Moon Time (Menstrual Symptoms)\n$230.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Nasolabial Folds and Marionette Lines",
+      "isPromotional": false,
+      "evidenceQuote": "Nasolabial Folds and Marionette Lines\n$450.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Nasolabial Folds and Oral Commisure",
+      "isPromotional": false,
+      "evidenceQuote": "Nasolabial Folds and Oral Commisure\n$400.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Nausea Drip",
+      "isPromotional": false,
+      "evidenceQuote": "Nausea Drip\n$209.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Neck\n$850.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Neck Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Neck Lift\n$600.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Necklace Line",
+      "isPromotional": false,
+      "evidenceQuote": "Necklace Line\n$350.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "PDO Threads Facelift",
+      "isPromotional": false,
+      "evidenceQuote": "PDO Threads\nFacelift\n$1,300.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Platelet-Rich plasma (PRP)",
+      "isPromotional": false,
+      "evidenceQuote": "Platelet-Rich plasma (PRP)\n1 Session\n$200.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Recovery Drip",
+      "isPromotional": false,
+      "evidenceQuote": "Recovery Drip\n$300.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Snatched Jawline",
+      "isPromotional": false,
+      "evidenceQuote": "Snatched Jawline\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Stretch marks",
+      "isPromotional": false,
+      "evidenceQuote": "Stretch marks\n$650.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Tear Through",
+      "isPromotional": false,
+      "evidenceQuote": "Tear Through\n$500.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Temple Volume and Eyebrow Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Temple Volume and Eyebrow Lift\n$350.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "The After Party Drip",
+      "isPromotional": false,
+      "evidenceQuote": "The After Party Drip\n$220.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "The Bug Fix Drip",
+      "isPromotional": false,
+      "evidenceQuote": "The Bug Fix Drip\n$220.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "The Glam Over",
+      "isPromotional": false,
+      "evidenceQuote": "The Glam Over\n$250.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "The Skinny Mix",
+      "isPromotional": false,
+      "evidenceQuote": "The Skinny Mix\n$250.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 623,
+      "procedureName": "Vermilion Border Lip Outline",
+      "isPromotional": false,
+      "evidenceQuote": "Vermilion Border Lip Outline\n$350.00",
+      "sourceUrl": "https://aestheticsnewera.com/offerings"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "AURA Analysis",
+      "isPromotional": false,
+      "evidenceQuote": "Consultation $50",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Botox",
+      "isPromotional": false,
+      "evidenceQuote": "Botox\n\n$14.00/unit",
+      "sourceUrl": "https://www.emveemedspa.com/botox-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Daxxify",
+      "isPromotional": false,
+      "evidenceQuote": "Daxxify\n\n$7.00/unit",
+      "sourceUrl": "https://www.emveemedspa.com/botox-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Dysport",
+      "isPromotional": false,
+      "evidenceQuote": "Dysport\n\n$4.80/unit",
+      "sourceUrl": "https://www.emveemedspa.com/botox-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Filler Dissolving (Hylenex)",
+      "isPromotional": false,
+      "evidenceQuote": "Filler Dissolving (Hylenex)\n\n$250/vial",
+      "sourceUrl": "https://www.emveemedspa.com/filler-dissolving-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Full Syringe",
+      "isPromotional": false,
+      "evidenceQuote": "Full Syringe\n\n$800",
+      "sourceUrl": "https://www.emveemedspa.com/dermal-fillers-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Half Syringe Lips Only",
+      "isPromotional": false,
+      "evidenceQuote": "Half Syringe Lips Only\n\n$500",
+      "sourceUrl": "https://www.emveemedspa.com/dermal-fillers-coral-gables"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "IV Therapy & NAD+",
+      "isPromotional": false,
+      "evidenceQuote": "Starting at\n$150 / session",
+      "sourceUrl": "https://www.emveemedspa.com"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Liquid Lipo",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $500/session",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Morpheus8",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $1,200/session",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "PRF",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $800/session",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Salmon DNA",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $550/session",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Sculptra",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $850/vial",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 624,
+      "procedureName": "Vitamin Injections",
+      "isPromotional": false,
+      "evidenceQuote": "Starting At $30",
+      "sourceUrl": "https://www.emveemedspa.com/our-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "CHEMICAL PEELS",
+      "isPromotional": false,
+      "evidenceQuote": "CHEMICAL PEELS",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "DEEP PORE CLEANSING FACIAL",
+      "isPromotional": false,
+      "evidenceQuote": "DEEP PORE CLEANSING FACIAL",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Dysport",
+      "isPromotional": true,
+      "evidenceQuote": "Dysport..............................................................$4.50/u (Reg $6/u)",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "HYDRA-OXYGEN FACIALS",
+      "isPromotional": false,
+      "evidenceQuote": "HYDRA-OXYGEN FACIALS",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "HydraFacials",
+      "isPromotional": false,
+      "evidenceQuote": "HydraFacials for Acne, Aging, and Dull Skin",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Juvederm Ultra Lip Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Juvederm Ultra Lip Filler",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Kybella",
+      "isPromotional": false,
+      "evidenceQuote": "Kybella 2 Vials",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "LED THERAPY",
+      "isPromotional": false,
+      "evidenceQuote": "LED Light Therapy is a pain-free, non-invasive",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Laser Hair Removal",
+      "isPromotional": false,
+      "evidenceQuote": "Starting at $39 Per Session",
+      "sourceUrl": "https://www.vipaestheticcenter.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Letybo",
+      "isPromotional": false,
+      "evidenceQuote": "Smooth fine lines and prevent wrinkles with expert Botox®, Dysport®, and Letybo® treatments.",
+      "sourceUrl": "https://www.vipaestheticcenter.com"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Lip Filler",
+      "isPromotional": true,
+      "evidenceQuote": "GET MY $399 LIP FILLER VOUCHER!",
+      "sourceUrl": "https://www.vipaestheticcenter.com/ig-lip-filler-promotion"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "MICRODERMABRASION",
+      "isPromotional": false,
+      "evidenceQuote": "Microdermabrasion is a minimally invasive procedure",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "MICRONEEDLING",
+      "isPromotional": false,
+      "evidenceQuote": "MICRONEEDLING",
+      "sourceUrl": "https://www.vipaestheticcenter.com/facials-med-spa-services"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Nasolabial Folds",
+      "isPromotional": false,
+      "evidenceQuote": "Nasolabial Folds",
+      "sourceUrl": "https://www.vipaestheticcenter.com"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "PDO Threads",
+      "isPromotional": false,
+      "evidenceQuote": "PDO Threads",
+      "sourceUrl": "https://www.vipaestheticcenter.com"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "PRF Under-Eye Treatment",
+      "isPromotional": true,
+      "evidenceQuote": "PRF Under-Eye Treatment...............................$399 (Reg $499)",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "PRP Facial Rejuvenation",
+      "isPromotional": true,
+      "evidenceQuote": "PRP Facial Rejuvenation.................................$249 (Reg $399)",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "PRP for Hair Loss",
+      "isPromotional": false,
+      "evidenceQuote": "PRP for Hair Loss",
+      "sourceUrl": "https://www.vipaestheticcenter.com"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Restylane Kysse Lip Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Restylane Kysse Lip Filler",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Sculptra",
+      "isPromotional": false,
+      "evidenceQuote": "Sculptra 2 Vials",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "Skinvive",
+      "isPromotional": false,
+      "evidenceQuote": "Skinvive",
+      "sourceUrl": "https://www.vipaestheticcenter.com"
+    },
+    {
+      "clinicId": 625,
+      "procedureName": "TOX",
+      "isPromotional": true,
+      "evidenceQuote": "TOX...................................................................$8.99/u (Reg $15/u)",
+      "sourceUrl": "https://www.vipaestheticcenter.com/vip-med-spa-club-membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "ADN Salmon (Sperm Facial Rejuvenation)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $450 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/skincare"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Barbie Botox (Trapezius Botox)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $330 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox",
+      "isPromotional": false,
+      "evidenceQuote": "Botox 12$ / Dysport 11$ (Per Unit)",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox 20 Units plan (3 sessions)",
+      "isPromotional": true,
+      "evidenceQuote": "Pay $180 every 4 months",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox 30 Units",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $810",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox 40 Units",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $1,080",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox 50 Units",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $1,350",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox 60 Units",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $1,620",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Botox Neck / Platysmal Bands",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $330 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Cheeks – Hyaluronic Acid Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $650 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Chin – Hyaluronic Acid Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $650 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Deep Facial Cleansing",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $170 · 45 min",
+      "sourceUrl": "https://amadoclinics.com/skincare"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Defined Beard Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $450 · 1 hr",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Dysport",
+      "isPromotional": false,
+      "evidenceQuote": "Botox 12$ / Dysport 11$ (Per Unit)",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Endolift Abdomen",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $1600 · 1:30 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Endolift Face",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $1200 · 1:30 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Endolift Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $1200 · 1:30 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Eyelash Enhancement",
+      "isPromotional": false,
+      "evidenceQuote": "Eyelash Enhancement",
+      "sourceUrl": "https://amadoclinics.com/skincare"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Flawless Face Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Flawless Face Laser",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Fotona 4D Face",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $600 · 1 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Fotona Facial Rejuvenation",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $300 · 1 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Fotona Onychomycosis (fingernail)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $100 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Fotona in Veins",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $450 · 1 hr",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Fresh Underarms Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Fresh Underarms Laser",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "IV wellness therapies",
+      "isPromotional": true,
+      "evidenceQuote": "Available starting at $130 for a limited time.",
+      "sourceUrl": "https://amadoclinics.com/promotions"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Jawline – Hyaluronic Acid Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $1,300 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "LipLase (Fotona for lips)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $150 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Lips – Hyaluronic Acid Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $650 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Maseter / Bruxism Botox",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $330 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Mesotherapy",
+      "isPromotional": false,
+      "evidenceQuote": "Mesotherapy",
+      "sourceUrl": "https://amadoclinics.com/skincare"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Multivitamin IV Drips (Including Mega Vitamin C up to 15g)",
+      "isPromotional": true,
+      "evidenceQuote": "Multivitamin IV Drips (Including Mega Vitamin C up to 15g)",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Ozone therapy",
+      "isPromotional": false,
+      "evidenceQuote": "we offer personalized ozone sessions designed for long-term wellness",
+      "sourceUrl": "https://amadoclinics.com"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "PRP Facial",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $1200",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Sculptra / Radiesse (Collagen Stimulator)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $800 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Silky Legs Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Silky Legs Laser",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Smoker Lines – Hyaluronic Acid Filler",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $650 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/injectables-fillers"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Smooth Back Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $100 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Smooth Bikini Laser",
+      "isPromotional": false,
+      "evidenceQuote": "Smooth Bikini Laser",
+      "sourceUrl": "https://amadoclinics.com/laser-removal"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Smooth Eyes (Láser Fotona 4D)",
+      "isPromotional": false,
+      "evidenceQuote": "Book Now $250 · 30 min",
+      "sourceUrl": "https://amadoclinics.com/tratamientos-laser"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "The Perfect Derma Peel",
+      "isPromotional": false,
+      "evidenceQuote": "The Perfect Derma Peel",
+      "sourceUrl": "https://amadoclinics.com/skincare"
+    },
+    {
+      "clinicId": 626,
+      "procedureName": "Tirzepatide",
+      "isPromotional": true,
+      "evidenceQuote": "• Price: $1,320",
+      "sourceUrl": "https://amadoclinics.com/membership"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "30-Day Sculpt & Slim",
+      "isPromotional": false,
+      "evidenceQuote": "30-Day Sculpt & Slim",
+      "sourceUrl": "https://arvivaesthetics.com/specials"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "60-Day Sculpt & Slim",
+      "isPromotional": false,
+      "evidenceQuote": "60-Day Sculpt & Slim",
+      "sourceUrl": "https://arvivaesthetics.com/specials"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "90-Day Sculpt & Slim",
+      "isPromotional": false,
+      "evidenceQuote": "90-Day Sculpt & Slim",
+      "sourceUrl": "https://arvivaesthetics.com/specials"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Alloclae (Liquid BBL)",
+      "isPromotional": false,
+      "evidenceQuote": "Alloclae (Liquid BBL) is offered in Miami.",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Bellafill",
+      "isPromotional": false,
+      "evidenceQuote": "Sculptra and Bellafill for collagen",
+      "sourceUrl": "https://arvivaesthetics.com/miami/injectables"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Bridal and event packages",
+      "isPromotional": false,
+      "evidenceQuote": "Bridal and event packages from $150 to $5,000",
+      "sourceUrl": "https://arvivaesthetics.com/specials"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "CO2 resurfacing",
+      "isPromotional": false,
+      "evidenceQuote": "CO2 resurfacing: $525 to $1,575 depending on area",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Chemical peels",
+      "isPromotional": false,
+      "evidenceQuote": "Chemical peels: from $315",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "CoolSculpting",
+      "isPromotional": false,
+      "evidenceQuote": "Emsculpt Neo and CoolSculpting are offered in Tampa and Miami.",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Dermal fillers",
+      "isPromotional": false,
+      "evidenceQuote": "Dermal fillers: $499 to $790 per syringe",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Emsculpt Neo",
+      "isPromotional": false,
+      "evidenceQuote": "Emsculpt Neo: $2,900 (Tampa and Miami only)",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Erbium:YAG resurfacing",
+      "isPromotional": false,
+      "evidenceQuote": "Erbium:YAG resurfacing and permanent makeup are offered in Tampa.",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Genius RF",
+      "isPromotional": false,
+      "evidenceQuote": "Ultherapy, Genius RF, and Erbium:YAG are all here",
+      "sourceUrl": "https://arvivaesthetics.com"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Hormone bloodwork",
+      "isPromotional": false,
+      "evidenceQuote": "Hormone bloodwork: $170",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Hormone management",
+      "isPromotional": false,
+      "evidenceQuote": "Hormone management: $250",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "HydraFacial",
+      "isPromotional": false,
+      "evidenceQuote": "HydraFacial: $260",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "IV therapy",
+      "isPromotional": false,
+      "evidenceQuote": "IV therapy: $26 to $375 depending on treatment",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Kybella",
+      "isPromotional": false,
+      "evidenceQuote": "Kybella: $840",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Laser hair removal",
+      "isPromotional": false,
+      "evidenceQuote": "Laser hair removal: $90 to $700 depending on area",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Medical weight loss",
+      "isPromotional": false,
+      "evidenceQuote": "Medical weight loss: $450",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Microneedling",
+      "isPromotional": false,
+      "evidenceQuote": "Microneedling: from $300",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Neurotoxins (Botox, Dysport, Daxxify, Xeomin)",
+      "isPromotional": false,
+      "evidenceQuote": "Neurotoxins (Botox, Dysport, Daxxify, Xeomin): $6 to $14 per unit",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "O-Shot",
+      "isPromotional": false,
+      "evidenceQuote": "O-Shot and P-Shot: $1,890 each",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "P-Shot",
+      "isPromotional": false,
+      "evidenceQuote": "O-Shot and P-Shot: $1,890 each",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "PDO thread lift",
+      "isPromotional": false,
+      "evidenceQuote": "PDO thread lift: from $315",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "PRP treatment",
+      "isPromotional": false,
+      "evidenceQuote": "PRP treatment: from $1,800",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Renuva",
+      "isPromotional": false,
+      "evidenceQuote": "Renuva: A Donor-Fat Collagen Stimulator, Only in Tampa",
+      "sourceUrl": "https://arvivaesthetics.com/tampa/injectables"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Sculptra",
+      "isPromotional": false,
+      "evidenceQuote": "Sculptra and Bellafill for collagen",
+      "sourceUrl": "https://arvivaesthetics.com/miami/injectables"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Tattoo removal",
+      "isPromotional": false,
+      "evidenceQuote": "Tattoo removal: from $158",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Ultherapy",
+      "isPromotional": false,
+      "evidenceQuote": "Ultherapy: $1,050 to $3,300 depending on area",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "Vaginal rejuvenation",
+      "isPromotional": false,
+      "evidenceQuote": "Vaginal rejuvenation: $945",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "fibroblast skin tightening",
+      "isPromotional": false,
+      "evidenceQuote": "permanent makeup, microdermabrasion, and fibroblast skin tightening",
+      "sourceUrl": "https://arvivaesthetics.com/tampa/spa-services"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "microdermabrasion",
+      "isPromotional": false,
+      "evidenceQuote": "permanent makeup, microdermabrasion, and fibroblast skin tightening",
+      "sourceUrl": "https://arvivaesthetics.com/tampa/spa-services"
+    },
+    {
+      "clinicId": 627,
+      "procedureName": "permanent makeup",
+      "isPromotional": false,
+      "evidenceQuote": "Erbium:YAG resurfacing and permanent makeup are offered in Tampa.",
+      "sourceUrl": "https://arvivaesthetics.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Acne Facial",
+      "isPromotional": false,
+      "evidenceQuote": "Acne Facial\nPackage of 3 — $399\n\nstarting\n$149",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Acne Facial Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Acne Facial\nPackage of 3 — $399",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Anti-Aging w/ LED Facial",
+      "isPromotional": false,
+      "evidenceQuote": "Anti-Aging w/ LED Facial\nPackage of 3 — $499\n\nstarting\n$199",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Anti-Aging w/ LED Facial Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Anti-Aging w/ LED Facial\nPackage of 3 — $499",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Back",
+      "isPromotional": false,
+      "evidenceQuote": "Back\n60 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "CO₂ Laser Resurfacing — Face & Neck 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Face & Neck $900 $2,400",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "CO₂ Laser Resurfacing — Face 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Face $700 $1,900",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Deep Cleansing Facial",
+      "isPromotional": false,
+      "evidenceQuote": "Deep Cleansing Facial\nPackage of 3 — $375\n\nstarting\n$150",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Deep Cleansing Facial Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Deep Cleansing Facial\nPackage of 3 — $375",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Dermaplaning",
+      "isPromotional": false,
+      "evidenceQuote": "Dermaplaning $50",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Detox",
+      "isPromotional": false,
+      "evidenceQuote": "Detox\n60 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Fractional CO₂ resurfacing — Face",
+      "isPromotional": false,
+      "evidenceQuote": "Fractional CO₂ resurfacing $700 face · $900 face & neck",
+      "sourceUrl": "https://gowellmedspa.com/co2-laser"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Fractional CO₂ resurfacing — Face & Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Fractional CO₂ resurfacing $700 face · $900 face & neck",
+      "sourceUrl": "https://gowellmedspa.com/co2-laser"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Hyaluronic Acid Infusion",
+      "isPromotional": false,
+      "evidenceQuote": "Hyaluronic Acid Infusion\n60 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "HydroBright Package",
+      "isPromotional": true,
+      "evidenceQuote": "Save more. Glow more.\n\nPackage\n$1,200",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Hydroglow Facial",
+      "isPromotional": false,
+      "evidenceQuote": "Hydroglow Facial\nPackage of 3 — $450\n\nstarting\n$189",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Hydroglow Facial Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Hydroglow Facial\nPackage of 3 — $450",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "LED Light Therapy",
+      "isPromotional": false,
+      "evidenceQuote": "LED Light Therapy $30",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Large",
+      "isPromotional": false,
+      "evidenceQuote": "full bikini\n1 session\n$90",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Large 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$499\n\n8 sessions\n$550",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Large 8 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$499\n\n8 sessions\n$550",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Medium",
+      "isPromotional": false,
+      "evidenceQuote": "bikini line\n1 session\n$75",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Medium 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$399\n\n8 sessions\n$450",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Medium 8 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$399\n\n8 sessions\n$450",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Small",
+      "isPromotional": false,
+      "evidenceQuote": "forehead\n1 session\n$65",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Small 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$299\n\n8 sessions\n$350",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — Small 8 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$299\n\n8 sessions\n$350",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — X-Large",
+      "isPromotional": false,
+      "evidenceQuote": "full Brazilian\n1 session\n$150",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — X-Large 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$599\n\n8 sessions\n$650",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Laser Hair Removal — X-Large 8 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "6 sessions\n$599\n\n8 sessions\n$650",
+      "sourceUrl": "https://gowellmedspa.com/laser-hair-removal"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Microneedling With PDRN or Exosomes",
+      "isPromotional": false,
+      "evidenceQuote": "With PDRN or Exosomes\nPackage of 3 — $800\n\nstarting\n$350",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Microneedling With PDRN or Exosomes Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "With PDRN or Exosomes\nPackage of 3 — $800",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Peel Booster",
+      "isPromotional": false,
+      "evidenceQuote": "Peel Booster $50",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Perfect Derma Peel — Face",
+      "isPromotional": false,
+      "evidenceQuote": "Perfect Derma Peel — Face\nPackage of 3 — $900\n\nstarting\n$350",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Perfect Derma Peel — Face Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Perfect Derma Peel — Face\nPackage of 3 — $900",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Platinum",
+      "isPromotional": false,
+      "evidenceQuote": "Platinum\n75 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Micro-Needling — 1 Area Body",
+      "isPromotional": false,
+      "evidenceQuote": "1 Area Body\n60 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Face",
+      "isPromotional": false,
+      "evidenceQuote": "Face $350 $899",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Face & Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Face & Neck $450 $1,200",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Face & Neck 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Face & Neck $450 $1,200",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Face 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Face $350 $899",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Neck $250 $600",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "RF Microneedling — Neck 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Neck $250 $600",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Relax",
+      "isPromotional": false,
+      "evidenceQuote": "Relax\n60 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Scar Revision",
+      "isPromotional": false,
+      "evidenceQuote": "Scar Revision (per area) $400 $1,050",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Scar Revision 3 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "Scar Revision (per area) $400 $1,050",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Semaglutide",
+      "isPromotional": false,
+      "evidenceQuote": "Semaglutide from $75 a week",
+      "sourceUrl": "https://gowellmedspa.com"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Tirzepatide",
+      "isPromotional": false,
+      "evidenceQuote": "Tirzepatide from $85 a week",
+      "sourceUrl": "https://gowellmedspa.com"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Tox + filler artistry",
+      "isPromotional": false,
+      "evidenceQuote": "Tox + filler artistry",
+      "sourceUrl": "https://gowellmedspa.com/services"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Traditional Microneedling — Face & Neck",
+      "isPromotional": false,
+      "evidenceQuote": "Traditional Microneedling — Face & Neck\nPackage of 3 — $600\n\nstarting\n$250",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Traditional Microneedling — Face & Neck Package of 3",
+      "isPromotional": true,
+      "evidenceQuote": "Traditional Microneedling — Face & Neck\nPackage of 3 — $600",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Vamp Advanced Salmon DNA",
+      "isPromotional": false,
+      "evidenceQuote": "Vamp Advanced Salmon DNA\n75 min",
+      "sourceUrl": "https://gowellmedspa.com/skin-care"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 1 Area",
+      "isPromotional": false,
+      "evidenceQuote": "1 Area $300 $1,500",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 1 Area 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "1 Area $300 $1,500",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 2 Areas",
+      "isPromotional": false,
+      "evidenceQuote": "2 Areas $400 $2,100",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 2 Areas 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "2 Areas $400 $2,100",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 3 Areas",
+      "isPromotional": false,
+      "evidenceQuote": "3 Areas $500 $2,700",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 628,
+      "procedureName": "Venus Legacy Body Contouring — 3 Areas 6 sessions",
+      "isPromotional": false,
+      "evidenceQuote": "3 Areas $500 $2,700",
+      "sourceUrl": "https://gowellmedspa.com/pricing"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Abdominal Etching",
+      "isPromotional": false,
+      "evidenceQuote": "Abdominal Etching",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Arm Lift",
+      "isPromotional": false,
+      "evidenceQuote": "While the average cost ranges from $3,500 to $6,700",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery/arm-lift"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "BBL Reversal",
+      "isPromotional": false,
+      "evidenceQuote": "BBL Reversal",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "BBL Revision",
+      "isPromotional": false,
+      "evidenceQuote": "BBL Revision",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "BOTOX & Wrinkle Relaxers",
+      "isPromotional": false,
+      "evidenceQuote": "BOTOX & Wrinkle Relaxers",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Back Lift/ Bra Roll Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Back Lift/ Bra Roll Lift",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Brazilian Butt Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Brazilian Butt Lift",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Breast Augmentation",
+      "isPromotional": false,
+      "evidenceQuote": "Breast Augmentation",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Breast Augmentation Fat Transfer",
+      "isPromotional": false,
+      "evidenceQuote": "Breast Augmentation Fat Transfer",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Breast Implant Removal",
+      "isPromotional": false,
+      "evidenceQuote": "Breast Implant Removal",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Breast Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Breast Lift",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Breast Reduction",
+      "isPromotional": false,
+      "evidenceQuote": "Breast Reduction",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Brow Lift",
+      "isPromotional": false,
+      "evidenceQuote": "The cost of a brow lift in Coral Gables and Miami is usually $3500 to $7500",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery/brow-lift"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Buttock Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Buttock Lift",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Dermal Fillers",
+      "isPromotional": false,
+      "evidenceQuote": "Dermal Fillers",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Earlobe Reduction",
+      "isPromotional": false,
+      "evidenceQuote": "Earlobe Reduction",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Eyelid Surgery",
+      "isPromotional": false,
+      "evidenceQuote": "Eyelid Surgery",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "F to M Breast Reconstruction",
+      "isPromotional": false,
+      "evidenceQuote": "F to M Breast Reconstruction",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Facelift",
+      "isPromotional": false,
+      "evidenceQuote": "A facelift in Coral Gables and Miami costs about $9500 to $18000",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery/facelift"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Facial Fat Grafting",
+      "isPromotional": false,
+      "evidenceQuote": "Facial Fat Grafting",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Gynecomastia",
+      "isPromotional": false,
+      "evidenceQuote": "Gynecomastia",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "IPL Photofacial",
+      "isPromotional": false,
+      "evidenceQuote": "IPL Photofacial",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Labiaplasty",
+      "isPromotional": false,
+      "evidenceQuote": "Labiaplasty",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Laser Hair Removal",
+      "isPromotional": false,
+      "evidenceQuote": "Laser Hair Removal",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Laser Skin Resurfacing",
+      "isPromotional": false,
+      "evidenceQuote": "Laser Skin Resurfacing",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Lip Fillers",
+      "isPromotional": false,
+      "evidenceQuote": "Lip Fillers",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Lip Lift",
+      "isPromotional": false,
+      "evidenceQuote": "The cost of a lip lift in Coral Gables and Miami is typically between $2500 and $5000",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery/lip-lift"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Liposuction",
+      "isPromotional": false,
+      "evidenceQuote": "Liposuction",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "M to F Breast Augmentation",
+      "isPromotional": false,
+      "evidenceQuote": "M to F Breast Augmentation",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Medical Tattooing",
+      "isPromotional": false,
+      "evidenceQuote": "Medical Tattooing",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Mommy Makeover",
+      "isPromotional": false,
+      "evidenceQuote": "Mommy Makeover",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Neck Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Neck Lift",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Neck Liposuction",
+      "isPromotional": false,
+      "evidenceQuote": "Neck Liposuction",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Preservation Breast Augmentation",
+      "isPromotional": false,
+      "evidenceQuote": "Preservation Breast Augmentation",
+      "sourceUrl": "https://surgicalarts.miami/breast-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Scar Revision",
+      "isPromotional": false,
+      "evidenceQuote": "Scar Revision",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Skinvive",
+      "isPromotional": false,
+      "evidenceQuote": "Skinvive",
+      "sourceUrl": "https://www.surgicalarts.miami"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Thigh Lift",
+      "isPromotional": false,
+      "evidenceQuote": "Thigh Lift",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "Tummy Tuck",
+      "isPromotional": false,
+      "evidenceQuote": "Tummy Tuck",
+      "sourceUrl": "https://surgicalarts.miami/body-surgery"
+    },
+    {
+      "clinicId": 629,
+      "procedureName": "liquid facelift",
+      "isPromotional": false,
+      "evidenceQuote": "a liquid facelift can cost anywhere between $500 and $5000",
+      "sourceUrl": "https://surgicalarts.miami/face-surgery/facelift"
+    }
+  ]
+}
