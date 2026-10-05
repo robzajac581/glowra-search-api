@@ -7,6 +7,7 @@ const { normalizeAddressForStorage } = require('../../utils/addressUtils');
 const { proceduresTableHasPriceUnitColumn } = require('../../utils/procedurePriceUnitColumn');
 const { loadProceduresClinicFkMeta } = require('../../utils/proceduresClinicFkShape');
 const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
+const { canonicalStateForStorage } = require('../../utils/addressUtils');
 const {
   normalizePromotionalFlagForStorage,
   readPromotionalFlagField
@@ -550,7 +551,11 @@ class ClinicCreationService {
    * Note: LocationID is NOT an IDENTITY column in production, so we assign the next ID manually
    * (same pattern as getOrCreateCategory).
    */
-  async getOrCreateLocation(city, state, transaction) {
+  async getOrCreateLocation(city, rawState, transaction) {
+    // Locations.State is compared against Clinics.State with a plain
+    // case-insensitive equality test in duplicateDetectionService.js:401-402,
+    // so it has to be stored in the same canonical form or that check misses.
+    const state = canonicalStateForStorage(rawState) || null;
     // Try to find existing location
     const findRequest = new sql.Request(transaction);
     findRequest.input('city', sql.NVarChar, city);

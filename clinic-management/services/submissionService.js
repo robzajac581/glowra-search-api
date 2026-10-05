@@ -9,6 +9,7 @@ const duplicateDetectionService = require('./duplicateDetectionService');
 const { validateSubmission, calculateAveragePrice } = require('../utils/schemaValidator');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
+const { canonicalStateForStorage } = require('../../utils/addressUtils');
 const {
   normalizePromotionalFlagForStorage,
   readPromotionalFlagField
@@ -115,7 +116,8 @@ class SubmissionService {
       request.input('clinicName', sql.NVarChar, draftData.clinicName);
       request.input('address', sql.NVarChar, draftData.address);
       request.input('city', sql.NVarChar, draftData.city);
-      request.input('state', sql.NVarChar, draftData.state);
+      // Canonical two-letter USPS code; see utils/stateNormalizer.js.
+      request.input('state', sql.NVarChar, canonicalStateForStorage(draftData.state) || null);
       request.input('zipCode', sql.NVarChar, draftData.zipCode || null);
       request.input('website', sql.NVarChar, draftData.website || null);
       request.input('phone', sql.NVarChar, draftData.phone || null);

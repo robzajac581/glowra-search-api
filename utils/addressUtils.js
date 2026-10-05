@@ -6,6 +6,8 @@
  * Goal: Store and return address (street only), city, state, zipCode as separate fields.
  */
 
+const { toCanonicalState } = require('./stateNormalizer');
+
 /**
  * US 5-digit ZIP code pattern (optionally with +4 extension)
  * Matches: 32940, 32940-1234, 90210
@@ -101,7 +103,7 @@ function normalizeAddressForStorage({ address, city, state, zipCode, postalCode 
       return {
         street: parsed.street || address,
         city: parsed.city || city || '',
-        state: parsed.state || state || '',
+        state: canonicalStateForStorage(parsed.state || state),
         postalCode: parsed.postalCode || zip
       };
     }
@@ -111,9 +113,28 @@ function normalizeAddressForStorage({ address, city, state, zipCode, postalCode 
   return {
     street: (address || '').trim(),
     city: (city || '').trim(),
-    state: (state || '').trim(),
+    state: canonicalStateForStorage(state),
     postalCode: (zip || '').toString().trim()
   };
+}
+
+/**
+ * Canonicalise a state for storage.
+ *
+ * This is the chokepoint every Clinics / GooglePlacesData / Locations write
+ * passes through (clinic-management/services/clinicCreationService.js calls
+ * normalizeAddressForStorage on create at :118, on update at :372 and for the
+ * Google row at :768, and feeds addr.state to getOrCreateLocation at :156).
+ * Normalising here is what stops the 48-distinct-values drift reappearing.
+ *
+ * Unresolvable input is passed through trimmed rather than dropped: losing a
+ * value the caller asserted would be worse than storing one the audit can
+ * flag, and validateClinic() rejects it at the API boundary anyway.
+ */
+function canonicalStateForStorage(state) {
+  const trimmed = (state || '').trim();
+  if (!trimmed) return '';
+  return toCanonicalState(trimmed) || trimmed;
 }
 
 /**
@@ -132,7 +153,15 @@ function mergeAddressForResponse(clinic, googlePlaces = {}, location = {}) {
 
   const address = (g.Street || c.Address || '').trim() || null;
   const city = (c.City || g.City || l.City || '').trim() || null;
-  const state = (c.State || g.State || l.State || '').trim() || null;
+  // Canonicalise on the way out as well as on the way in. Clinics.State is
+  // canonical after GLO-76, but GooglePlacesData.State and Locations.State are
+  // not (126/436 and 92/255 rows respectively are not two-letter codes as of
+  // 2026-10-05), so whenever this COALESCE falls through to one of them the
+  // API would otherwise emit 'Florida'. glowra-FE's NEARBY_STATES filter
+  // (src/pages/home/components/LocalDoctors.jsx:135) does an exact match on
+  // this value, so a fallback row emitting a full name is invisible to it.
+  const rawState = (c.State || g.State || l.State || '').trim() || null;
+  const state = rawState ? (toCanonicalState(rawState) || rawState) : null;
   const zipCode = (c.PostalCode || g.PostalCode || '').toString().trim() || null;
 
   return { address, city, state, zipCode };
@@ -142,6 +171,7 @@ module.exports = {
   isFullAddress,
   parseFullAddress,
   normalizeAddressForStorage,
+  canonicalStateForStorage,
   mergeAddressForResponse,
   US_ZIP_PATTERN
 };

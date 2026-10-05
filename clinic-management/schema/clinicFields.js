@@ -3,16 +3,23 @@
  * Single source of truth for clinic data validation and form generation
  */
 
-const US_STATES = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
-  'Delaware', 'District of Columbia', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois',
-  'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts',
-  'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-  'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
-  'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
-  'Wisconsin', 'Wyoming'
-];
+// Single source of truth: the canonical state list lives in
+// utils/stateNormalizer.js, which is what every write path runs values through
+// before storing them. This file used to redeclare the list as FULL NAMES
+// ('Florida'), so validateClinic() rejected the normaliser's own output ('FL')
+// -- the same second-spelling trap GLO-68 fixed for categories.
+//
+// STATE_ALIASES keeps full names accepted on input: glowra-FE's
+// list-your-clinic form (src/pages/list-your-clinic/constants.js) and the
+// admin BasicInfoTab both submit 'Florida'. Accepting it keeps those forms
+// working while the canonical stored value stays the two-letter USPS code.
+const {
+  getValidStateValues,
+  getStateAliases: getClinicStateAliases
+} = require('../../utils/stateNormalizer');
+
+const US_STATES = getValidStateValues();
+const US_STATE_ALIASES = getClinicStateAliases();
 
 // Single source of truth: the canonical category list lives in
 // utils/categoryNormalizer.js, which is what every write path runs values
@@ -65,9 +72,10 @@ const clinicFields = {
     required: true,
     maxLength: 100,
     enum: US_STATES,
+    enumAliases: US_STATE_ALIASES,
     label: 'State',
-    description: 'US state where the clinic is located',
-    example: 'Florida'
+    description: 'US state, stored as its two-letter USPS code. Full names are accepted on input and normalised.',
+    example: 'FL'
   },
   
   zipCode: {
