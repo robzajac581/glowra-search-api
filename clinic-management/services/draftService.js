@@ -2,6 +2,13 @@ const { db, sql } = require('../../db');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { normalizeDraft, normalizeProviders, normalizeProcedures, normalizePhotos } = require('../../utils/responseNormalizer');
 const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
+const {
+  normalizePromotionalFlagForStorage,
+  readPromotionalFlagField
+} = require('../../utils/promotionalFlagNormalizer');
+const {
+  draftProceduresTableHasIsPromotionalColumn
+} = require('../../utils/procedureIsPromotionalColumn');
 
 /**
  * Shared WHERE fragments for ClinicDrafts list + count (same filters, same order of params).
@@ -203,17 +210,26 @@ class DraftService {
       `);
 
     // Get procedures
+    //
+    // GLO-72: IsPromotional is selected here so the flag survives the
+    // submission -> admin review -> approval round-trip. clinicCreationService
+    // writes Procedures from what this read returns, so a column missing here
+    // is a flag silently lost at approval time. Guarded because the column may
+    // not exist yet on an unmigrated database.
+    const draftsHaveIsPromotional =
+      await draftProceduresTableHasIsPromotionalColumn(pool);
     const proceduresResult = await pool.request()
       .input('draftID', sql.Int, draftId)
       .query(`
-        SELECT 
-          DraftProcedureID, 
-          ProcedureName, 
-          Category, 
+        SELECT
+          DraftProcedureID,
+          ProcedureName,
+          Category,
           AverageCost,
           PriceMin,
           PriceMax,
           PriceUnit,
+          ${draftsHaveIsPromotional ? 'IsPromotional' : 'CAST(NULL AS BIT) AS IsPromotional'},
           ProviderName,
           ProviderNames
         FROM DraftProcedures
@@ -485,9 +501,29 @@ class DraftService {
             Array.isArray(providerNames) ? JSON.stringify(providerNames) : null);
           procedureRequest.input('providerName', sql.NVarChar, providerName);
 
+          // GLO-72. This path DELETEs every DraftProcedure for the draft and
+          // re-INSERTs from the payload, so a flag the submitter set is lost
+          // unless the admin UI round-trips it back here. getDraftById() below
+          // therefore selects IsPromotional, and the admin screen must send it
+          // back unchanged for procedures it did not edit -- otherwise an
+          // unrelated admin edit silently downgrades a promotional price to
+          // "not assessed".
+          const isPromotionalCol =
+            await draftProceduresTableHasIsPromotionalColumn(transaction);
+          if (isPromotionalCol) {
+            procedureRequest.input(
+              'isPromotional',
+              sql.Bit,
+              normalizePromotionalFlagForStorage(
+                readPromotionalFlagField(procedure),
+                `draftService.update draft=${draftId} procedure=${JSON.stringify(procedure.procedureName)}`
+              )
+            );
+          }
+
           await procedureRequest.query(`
-            INSERT INTO DraftProcedures (DraftID, ProcedureName, Category, AverageCost, PriceMin, PriceMax, PriceUnit, ProviderNames, ProviderName)
-            VALUES (@draftID, @procedureName, @category, @averageCost, @priceMin, @priceMax, @priceUnit, @providerNames, @providerName)
+            INSERT INTO DraftProcedures (DraftID, ProcedureName, Category, AverageCost, PriceMin, PriceMax, PriceUnit, ProviderNames, ProviderName${isPromotionalCol ? ', IsPromotional' : ''})
+            VALUES (@draftID, @procedureName, @category, @averageCost, @priceMin, @priceMax, @priceUnit, @providerNames, @providerName${isPromotionalCol ? ', @isPromotional' : ''})
           `);
         }
       }

@@ -7,6 +7,7 @@ const { clinicFields, advancedClinicFields, CLINIC_CATEGORIES, US_STATES } = req
 const { providerFields } = require('../schema/providerFields');
 const { procedureFields, PROCEDURE_CATEGORIES, PRICE_UNITS } = require('../schema/procedureFields');
 const { validateClinicPhotos, PHOTO_TYPES, ALLOWED_MIME_TYPES } = require('../schema/photoFields');
+const { readPromotionalFlagField } = require('../../utils/promotionalFlagNormalizer');
 
 /**
  * Validate a single field value against its definition
@@ -46,6 +47,29 @@ function validateField(fieldName, value, fieldDef) {
 
   if (fieldDef.type === 'array' && !Array.isArray(value)) {
     return { valid: false, error: `${fieldDef.label || fieldName} must be an array` };
+  }
+
+  // Delegated validation.
+  //
+  // A field whose accepted input shapes are owned by a normaliser module
+  // declares a `resolve` hook returning { ok, value }. Validating through the
+  // same function the write path normalises with is the only way the two
+  // cannot drift: a value this validator accepts is by construction a value
+  // the write path can store, and vice versa. (The alternative -- restating
+  // the accepted shapes here -- is what let '/650' through for priceUnit.)
+  //
+  // Note this runs after the empty short-circuit above, so an absent value
+  // never reaches the hook: absence means "not supplied", which for a
+  // three-state field like isPromotional is a meaningful state of its own and
+  // not an error.
+  if (typeof fieldDef.resolve === 'function') {
+    const resolved = fieldDef.resolve(value);
+    if (!resolved || resolved.ok !== true) {
+      return {
+        valid: false,
+        error: `${fieldDef.label || fieldName} ${fieldDef.resolveError || 'is not a recognised value'}`
+      };
+    }
   }
 
   // Check maxLength
@@ -166,8 +190,22 @@ function validateProcedure(procedure, index = 0) {
   const effectiveUnit =
     procedure.priceUnit ?? procedure.PriceUnit ?? procedure.unit;
 
+  // GLO-72: the promotional flag arrives under three spellings too, and is
+  // resolved by the same helper the write paths use, for the same reason.
+  // readPromotionalFlagField() returns undefined when no spelling is present,
+  // which validateField() treats as "not supplied" -- correct, because an
+  // unassessed procedure is a legitimate state, not a validation failure.
+  const effectiveIsPromotional = readPromotionalFlagField(procedure);
+
   for (const [fieldName, fieldDef] of Object.entries(procedureFields)) {
-    const value = fieldName === 'unit' ? effectiveUnit : procedure[fieldName];
+    let value;
+    if (fieldName === 'unit') {
+      value = effectiveUnit;
+    } else if (fieldName === 'isPromotional') {
+      value = effectiveIsPromotional;
+    } else {
+      value = procedure[fieldName];
+    }
     const result = validateField(fieldName, value, fieldDef);
     if (!result.valid) {
       errors.push({ field: `procedures[${index}].${fieldName}`, message: result.error });

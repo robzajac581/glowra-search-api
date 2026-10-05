@@ -7,6 +7,13 @@ const { normalizeAddressForStorage } = require('../../utils/addressUtils');
 const { proceduresTableHasPriceUnitColumn } = require('../../utils/procedurePriceUnitColumn');
 const { loadProceduresClinicFkMeta } = require('../../utils/proceduresClinicFkShape');
 const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
+const {
+  normalizePromotionalFlagForStorage,
+  readPromotionalFlagField
+} = require('../../utils/promotionalFlagNormalizer');
+const {
+  proceduresTableHasIsPromotionalColumn
+} = require('../../utils/procedureIsPromotionalColumn');
 
 /**
  * Service to convert approved drafts into actual Clinics, Providers, and Procedures
@@ -631,6 +638,17 @@ class ClinicCreationService {
       `createProcedure clinic=${clinicId} procedure=${JSON.stringify(procedureName)}`
     );
 
+    // GLO-72. This is the path that puts a price in front of patients, so it
+    // is the one that most needs to preserve "not assessed" rather than invent
+    // "standard rate". readPromotionalFlagField() covers the camelCase and
+    // PascalCase spellings this method already accepts for every other field;
+    // absent -> null, junk -> null and logged. As with priceUnit, a bad value
+    // must not block an approval.
+    const isPromotional = normalizePromotionalFlagForStorage(
+      readPromotionalFlagField(procedureData),
+      `createProcedure clinic=${clinicId} procedure=${JSON.stringify(procedureName)}`
+    );
+
     // Get or create CategoryID
     const categoryId = await this.getOrCreateCategory(category, transaction);
 
@@ -664,31 +682,40 @@ class ClinicCreationService {
     request.input('averageCost', sql.Decimal(10, 2), averageCost || null);
     request.input('locationID', sql.Int, locationID);
 
+    // Optional columns are appended by name rather than branching the whole
+    // INSERT per combination: with PriceUnit and IsPromotional both guarded,
+    // the literal-SQL approach would need four copies of the same statement.
+    const columns = [
+      'ProcedureID', 'ClinicID', 'ProviderID', 'ProcedureName', 'CategoryID',
+      'AverageCost', 'LocationID'
+    ];
+    const values = [
+      '@procedureID', '@clinicID', '@providerID', '@procedureName', '@categoryID',
+      '@averageCost', '@locationID'
+    ];
+
     const hasPriceUnitCol = await proceduresTableHasPriceUnitColumn(transaction);
     if (hasPriceUnitCol) {
       request.input('priceUnit', sql.NVarChar(50), priceUnit);
-      await request.query(`
-        INSERT INTO Procedures (
-          ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
-          AverageCost, LocationID, PriceUnit
-        )
-        VALUES (
-          @procedureID, @clinicID, @providerID, @procedureName, @categoryID,
-          @averageCost, @locationID, @priceUnit
-        )
-      `);
-    } else {
-      await request.query(`
-        INSERT INTO Procedures (
-          ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
-          AverageCost, LocationID
-        )
-        VALUES (
-          @procedureID, @clinicID, @providerID, @procedureName, @categoryID,
-          @averageCost, @locationID
-        )
-      `);
+      columns.push('PriceUnit');
+      values.push('@priceUnit');
     }
+
+    const hasIsPromotionalCol = await proceduresTableHasIsPromotionalColumn(transaction);
+    if (hasIsPromotionalCol) {
+      request.input('isPromotional', sql.Bit, isPromotional);
+      columns.push('IsPromotional');
+      values.push('@isPromotional');
+    }
+
+    await request.query(`
+      INSERT INTO Procedures (
+        ${columns.join(', ')}
+      )
+      VALUES (
+        ${values.join(', ')}
+      )
+    `);
   }
 
   /**

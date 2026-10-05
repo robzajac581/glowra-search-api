@@ -20,6 +20,8 @@ const XLSX = require('xlsx');
 require('dotenv').config();
 const { db, sql } = require('../db');
 const { proceduresTableHasPriceUnitColumn } = require('../utils/procedurePriceUnitColumn');
+const { proceduresTableHasIsPromotionalColumn } = require('../utils/procedureIsPromotionalColumn');
+const { normalizePromotionalFlagForStorage } = require('../utils/promotionalFlagNormalizer');
 const { normalizePriceUnitForStorage } = require('../utils/priceUnitNormalizer');
 const { loadProceduresClinicFkMeta } = require('../utils/proceduresClinicFkShape');
 
@@ -240,7 +242,8 @@ async function insertProcedureRow(
   row,
   hasPriceUnitCol,
   fkClinicFilterSql,
-  procedureLocationIdSelectFragment
+  procedureLocationIdSelectFragment,
+  hasIsPromotionalCol = false
 ) {
   const allowedFragments = new Set(['c.ClinicID', 'c.LocationID', 'CAST(NULL AS INT)']);
   if (!allowedFragments.has(procedureLocationIdSelectFragment)) {
@@ -266,44 +269,43 @@ async function insertProcedureRow(
   req.input('categoryID', sql.Int, row.categoryId);
   req.input('averageCost', sql.Decimal(10, 2), row.averageCost ?? null);
 
-  let result;
+  // Optional columns appended by name rather than one literal INSERT per
+  // combination of guarded columns.
+  const columns = [
+    'ProcedureID', 'ClinicID', 'ProviderID', 'ProcedureName', 'CategoryID',
+    'AverageCost', 'LocationID'
+  ];
+  const selects = [
+    '@procedureID', 'c.ClinicID', 'NULL', '@procedureName', '@categoryID',
+    '@averageCost', procedureLocationIdSelectFragment
+  ];
+
   if (hasPriceUnitCol) {
     req.input('priceUnit', sql.NVarChar(50), row.priceUnit ?? null);
-    result = await req.query(`
-      INSERT INTO dbo.Procedures (
-        ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
-        AverageCost, LocationID, PriceUnit
-      )
-      SELECT
-        @procedureID,
-        c.ClinicID,
-        NULL,
-        @procedureName,
-        @categoryID,
-        @averageCost,
-        ${procedureLocationIdSelectFragment},
-        @priceUnit
-      FROM dbo.Clinics AS c WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
-      WHERE c.ClinicID = ${clinicId}${fkPred}
-    `);
-  } else {
-    result = await req.query(`
-      INSERT INTO dbo.Procedures (
-        ProcedureID, ClinicID, ProviderID, ProcedureName, CategoryID,
-        AverageCost, LocationID
-      )
-      SELECT
-        @procedureID,
-        c.ClinicID,
-        NULL,
-        @procedureName,
-        @categoryID,
-        @averageCost,
-        ${procedureLocationIdSelectFragment}
-      FROM dbo.Clinics AS c WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
-      WHERE c.ClinicID = ${clinicId}${fkPred}
-    `);
+    columns.push('PriceUnit');
+    selects.push('@priceUnit');
   }
+
+  // GLO-72. A spreadsheet almost never carries a promotional assessment, so
+  // row.isPromotional is normally null and the row is stored "not assessed".
+  // That is the correct outcome: an importer cannot tell from a price cell
+  // whether the clinic's page conditioned that price on anything, and
+  // recording false here would publish a claim the spreadsheet never made.
+  if (hasIsPromotionalCol) {
+    req.input('isPromotional', sql.Bit, row.isPromotional ?? null);
+    columns.push('IsPromotional');
+    selects.push('@isPromotional');
+  }
+
+  const result = await req.query(`
+    INSERT INTO dbo.Procedures (
+      ${columns.join(', ')}
+    )
+    SELECT
+      ${selects.join(',\n      ')}
+    FROM dbo.Clinics AS c WITH (UPDLOCK, ROWLOCK, HOLDLOCK)
+    WHERE c.ClinicID = ${clinicId}${fkPred}
+  `);
 
   const raw = result.rowsAffected;
   const inserted = Array.isArray(raw) ? raw.reduce((a, b) => a + b, 0) : raw || 0;
@@ -397,6 +399,15 @@ async function run() {
     }
     const glowCat = row.GlowraCategory != null && row.GlowraCategory !== '' ? row.GlowraCategory : row.Category;
     const unit = excelUnitToPriceUnit(row.Unit);
+    // GLO-72. Optional 'Promotional' / 'IsPromotional' column. Absent in every
+    // workbook used so far, which normalises to null ("not assessed") -- the
+    // correct default, since nothing in a spreadsheet establishes whether a
+    // price was conditional. Only an explicit true/false cell records an
+    // assessment.
+    const promotional = normalizePromotionalFlagForStorage(
+      row.Promotional ?? row.IsPromotional,
+      `excel import procedure=${JSON.stringify(String(procedureName).trim())}`
+    );
     const avgPrice = row.AvgPrice;
     const hasPrice = avgPrice != null && avgPrice !== '' && !Number.isNaN(parseFloat(avgPrice));
     const averageCost = hasPrice ? parseFloat(avgPrice) : null;
@@ -500,7 +511,8 @@ async function run() {
       categoryId,
       categoryLabel: catCanon,
       averageCost,
-      priceUnit: unit
+      priceUnit: unit,
+      isPromotional: promotional
     });
     plannedInserts++;
   }
@@ -586,6 +598,7 @@ async function run() {
       triggersWereDisabled = true;
     }
     const hasPriceUnitCol = await proceduresTableHasPriceUnitColumn(transaction);
+    const hasIsPromotionalCol = await proceduresTableHasIsPromotionalColumn(transaction);
     for (let idx = 0; idx < toInsert.length; idx++) {
       const row = toInsert[idx];
       try {
@@ -594,7 +607,8 @@ async function run() {
           row,
           hasPriceUnitCol,
           fkClinicFilterSql,
-          procedureLocationIdSelectFragment
+          procedureLocationIdSelectFragment,
+          hasIsPromotionalCol
         );
       } catch (err) {
         err.importInsertIndex = idx;

@@ -17,6 +17,10 @@ const {
   proceduresTableHasPriceUnitColumn,
   innerProcedurePriceUnitSelectSql
 } = require('./utils/procedurePriceUnitColumn');
+const {
+  proceduresTableHasIsPromotionalColumn,
+  innerProcedureIsPromotionalSelectSql
+} = require('./utils/procedureIsPromotionalColumn');
 const { matchesProcedureSearch, matchesClinicNameSearch, calculateRelevanceScore } = require('./utils/searchUtils');
 const app = express();
 const port = process.env.PORT || 3001;
@@ -90,6 +94,33 @@ function optionalPriceUnit(raw) {
   if (raw == null) return {};
   const s = String(raw).trim();
   return s ? { priceUnit: s } : {};
+}
+
+/**
+ * GLO-72 promotional flag, as a spreadable fragment.
+ *
+ * THREE states, and the encoding preserves all three:
+ *
+ *   isPromotional: true   -- assessed, the price is conditional
+ *   isPromotional: false  -- assessed, the price is the standard rate
+ *   (key absent)          -- NOT ASSESSED
+ *
+ * Absence is the "unknown" state rather than a fourth encoding, matching
+ * optionalPriceUnit() above and keeping the ~444 pre-extractor clinics from
+ * paying any payload cost at all for a field that says nothing about them.
+ * That matters most on /api/clinics/search-index, which carries one object per
+ * procedure across the whole catalogue and took search down on 2026-09-30 by
+ * being too wide (GLO-69) -- only the handful of assessed rows add bytes here.
+ *
+ * Consumers must badge on `=== true` only. Treating a missing key as false is
+ * the exact error the nullable column exists to prevent.
+ *
+ * @param {unknown} raw - BIT column value: true, false, or null
+ * @returns {Record<string, boolean>}
+ */
+function optionalIsPromotional(raw) {
+  if (raw === null || raw === undefined) return {};
+  return { isPromotional: raw === true || raw === 1 };
 }
 
 /**
@@ -731,6 +762,15 @@ app.get('/api/clinics/search-index', async (req, res) => {
     const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
     const procPriceUnitSql = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
 
+    // GLO-72. One BIT per procedure row, added to the narrow procedures query
+    // only -- never to the clinic query, where it would be duplicated across
+    // every procedure of every clinic. That duplication is precisely what made
+    // this endpoint 4.69 MB and took search down on 2026-09-30 (GLO-69), so
+    // the split is preserved deliberately. The JSON cost is bounded further by
+    // optionalIsPromotional(), which omits the key for unassessed rows.
+    const proceduresHasIsPromotional = await proceduresTableHasIsPromotionalColumn(pool);
+    const procIsPromotionalSql = innerProcedureIsPromotionalSelectSql(proceduresHasIsPromotional);
+
     // Build the SQL query with optional clinicName filtering
     // Address: street only - prefer GooglePlacesData.Street when available
     // City/State/Zip: prefer Clinics columns, then GooglePlacesData, then Locations
@@ -816,6 +856,7 @@ app.get('/api/clinics/search-index', async (req, res) => {
         p.ProcedureName,
         p.AverageCost,
         ${procPriceUnitSql},
+        ${procIsPromotionalSql},
         cat.Category as ProcedureCategory
       FROM Procedures p
       JOIN Clinics c ON c.ClinicID = p.ClinicID
@@ -940,7 +981,8 @@ app.get('/api/clinics/search-index', async (req, res) => {
           procedureName: row.ProcedureName,
           price: row.AverageCost || 0,
           category: row.ProcedureCategory,
-          ...optionalPriceUnit(row.PriceUnit)
+          ...optionalPriceUnit(row.PriceUnit),
+          ...optionalIsPromotional(row.IsPromotional)
         });
       }
     });
@@ -1931,6 +1973,9 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
     if (includeProcedures) {
       const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
       const procPriceUnitInner = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
+      // GLO-72 promotional flag; see optionalIsPromotional().
+      const proceduresHasIsPromotional = await proceduresTableHasIsPromotionalColumn(pool);
+      const procIsPromotionalInner = innerProcedureIsPromotionalSelectSql(proceduresHasIsPromotional);
 
       const proceduresResult = await pool.request()
         .input('clinicId', sql.Int, clinicId)
@@ -1941,13 +1986,15 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
             AverageCost,
             Category,
             CategoryID,
-            PriceUnit
+            PriceUnit,
+            IsPromotional
           FROM (
             SELECT 
               p.ProcedureID,
               p.ProcedureName,
               p.AverageCost,
               ${procPriceUnitInner},
+              ${procIsPromotionalInner},
               c.Category,
               c.CategoryID,
               ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
@@ -1966,7 +2013,8 @@ app.get('/api/clinics/:clinicId', async (req, res) => {
         averageCost: p.AverageCost,
         category: p.Category,
         categoryId: p.CategoryID,
-        ...optionalPriceUnit(p.PriceUnit)
+        ...optionalPriceUnit(p.PriceUnit),
+        ...optionalIsPromotional(p.IsPromotional)
       }));
     }
 
@@ -2118,10 +2166,17 @@ app.get('/api/clinics/:clinicId/providers', async (req, res) => {
  *   - flat: If 'true', returns a flat array of procedures instead of grouped by category
  * 
  * Response Formats:
- *   Grouped (default): { "Face": { categoryId: 1, procedures: [{ id, name, price, priceUnit? }] }, ... }
- *   Flat (?flat=true): [{ procedureId, procedureName, price, category, categoryId, priceUnit? }, ...]
+ *   Grouped (default): { "Face": { categoryId: 1, procedures: [{ id, name, price, priceUnit?, isPromotional? }] }, ... }
+ *   Flat (?flat=true): [{ procedureId, procedureName, price, category, categoryId, priceUnit?, isPromotional? }, ...]
  *
  * priceUnit is optional (e.g. "/session", "/unit") when stored on the procedure; omitted when empty.
+ *
+ * isPromotional (GLO-72) is three-state and the key's ABSENCE is one of the
+ * three: true = assessed and the price is conditional ("new clients only",
+ * "package of three", "limited time"); false = assessed and it is the standard
+ * rate; key absent = never assessed, which is the case for every clinic loaded
+ * before the extractor existed. Clients must badge on `=== true` and must not
+ * read an absent key as false.
  */
 app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
   let pool;
@@ -2133,6 +2188,9 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
 
     const proceduresHasPriceUnit = await proceduresTableHasPriceUnitColumn(pool);
     const procPriceUnitInner = innerProcedurePriceUnitSelectSql(proceduresHasPriceUnit);
+    // GLO-72 promotional flag; see optionalIsPromotional().
+    const proceduresHasIsPromotional = await proceduresTableHasIsPromotionalColumn(pool);
+    const procIsPromotionalInner = innerProcedureIsPromotionalSelectSql(proceduresHasIsPromotional);
 
     const request = pool.request();
     request.input('clinicId', sql.Int, clinicId);
@@ -2144,13 +2202,15 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
         AverageCost,
         Category,
         CategoryID,
-        PriceUnit
+        PriceUnit,
+        IsPromotional
       FROM (
         SELECT 
           p.ProcedureID,
           p.ProcedureName,
           p.AverageCost,
           ${procPriceUnitInner},
+          ${procIsPromotionalInner},
           c.Category,
           c.CategoryID,
           ROW_NUMBER() OVER (PARTITION BY p.ProcedureName, c.Category ORDER BY p.ProcedureID) as RowNum
@@ -2171,7 +2231,8 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
         averageCost: proc.AverageCost, // Include both for compatibility
         category: proc.Category,
         categoryId: proc.CategoryID,
-        ...optionalPriceUnit(proc.PriceUnit)
+        ...optionalPriceUnit(proc.PriceUnit),
+        ...optionalIsPromotional(proc.IsPromotional)
       }));
       return res.json(flatProcedures);
     }
@@ -2188,7 +2249,8 @@ app.get('/api/clinics/:clinicId/procedures', async (req, res) => {
         id: proc.ProcedureID,
         name: proc.ProcedureName,
         price: proc.AverageCost,
-        ...optionalPriceUnit(proc.PriceUnit)
+        ...optionalPriceUnit(proc.PriceUnit),
+        ...optionalIsPromotional(proc.IsPromotional)
       });
       return acc;
     }, {});
