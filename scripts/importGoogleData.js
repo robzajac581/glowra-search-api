@@ -58,7 +58,13 @@ async function importGoogleData(excelFilePath) {
                 Latitude = @latitude,
                 Longitude = @longitude,
                 Phone = @phone,
-                LastRatingUpdate = GETDATE()
+                -- Only stamp when a rating was actually imported. This script
+                -- stamped unconditionally, which is how 318 clinics ended up
+                -- looking "freshly refreshed" with a NULL GoogleRating and
+                -- nothing ever retrying them. (GLO-73)
+                LastRatingUpdate = CASE WHEN @rating IS NULL
+                                        THEN LastRatingUpdate
+                                        ELSE GETDATE() END
             WHERE ClinicID = @clinicId
           `);
         

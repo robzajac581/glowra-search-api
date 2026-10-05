@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const { sql, db } = require('../db');
-const { batchFetchPlaceDetails, fetchPlacePhotos } = require('../utils/googlePlaces');
+const { batchFetchPlaceDetails, fetchPlacePhotos, RATING_ONLY_FIELDS } = require('../utils/googlePlaces');
 const { expirePhotoCache } = require('../utils/photoCache');
 const clinicDeletionService = require('../clinic-management/services/clinicDeletionService');
 
@@ -157,7 +157,12 @@ async function refreshAllClinicRatings() {
       SELECT ClinicID, ClinicName, PlaceID, LastRatingUpdate
       FROM Clinics
       WHERE PlaceID IS NOT NULL
-      ORDER BY LastRatingUpdate ASC NULLS FIRST;
+      -- T-SQL has no NULLS FIRST. This query previously used it, so it threw
+      -- "Incorrect syntax near 'NULLS'" on every run and the whole rating
+      -- refresh aborted here, before a single Places call. The error was
+      -- swallowed by the caller's catch, so the job looked healthy. (GLO-73)
+      ORDER BY CASE WHEN LastRatingUpdate IS NULL THEN 0 ELSE 1 END ASC,
+               LastRatingUpdate ASC;
     `);
 
     const clinics = result.recordset;
@@ -179,12 +184,16 @@ async function refreshAllClinicRatings() {
     // Batch fetch with rate limiting
     // Process 10 at a time with 500ms delay to avoid rate limits
     console.log('Fetching data from Google Places API...');
-    const results = await batchFetchPlaceDetails(placeIds, 10, 500);
+    // RATING_ONLY_FIELDS: this job persists only the rating, review count and
+    // reviews. opening_hours / business_status were being requested and then
+    // discarded, which added the Contact Data SKU to every call for nothing.
+    const results = await batchFetchPlaceDetails(placeIds, 10, 500, RATING_ONLY_FIELDS);
 
     // Track statistics
     let successCount = 0;
     let failCount = 0;
     let skippedCount = 0;
+    let noRatingCount = 0;
 
     // Update database with results
     console.log('Updating database...');
@@ -194,9 +203,22 @@ async function refreshAllClinicRatings() {
       const clinic = clinics[i];
 
       if (result.data && !result.error) {
+        // A Place Details call can succeed and still carry no rating - an
+        // unreviewed business, or a PlaceID that resolves to a street address
+        // rather than a listing. Writing that through would blank an existing
+        // rating AND stamp LastRatingUpdate, marking the clinic "freshly
+        // refreshed" with no data, so nothing ever flags it. Treat it as a
+        // no-data outcome instead: leave the row untouched and leave the
+        // timestamp alone, so the gap stays visible. (GLO-73)
+        if (result.data.rating === null || result.data.rating === undefined) {
+          noRatingCount++;
+          console.log(`⊘ No rating available from Google for clinic ${clinic.ClinicID} (${clinic.ClinicName})`);
+          continue;
+        }
+
         try {
           const reviewsJSON = JSON.stringify(result.data.reviews);
-          
+
           const updateRequest = pool.request();
           updateRequest.input('clinicId', sql.Int, clinic.ClinicID);
           updateRequest.input('rating', sql.Decimal(2, 1), result.data.rating);
@@ -204,8 +226,10 @@ async function refreshAllClinicRatings() {
           updateRequest.input('reviewsJSON', sql.NVarChar(sql.MAX), reviewsJSON);
           updateRequest.input('lastUpdate', sql.DateTime, new Date());
 
+          // LastRatingUpdate is set in the same statement as the rating, so it
+          // can only advance on a successful write.
           await updateRequest.query(`
-            UPDATE Clinics 
+            UPDATE Clinics
             SET GoogleRating = @rating,
                 GoogleReviewCount = @reviewCount,
                 GoogleReviewsJSON = @reviewsJSON,
@@ -235,14 +259,16 @@ async function refreshAllClinicRatings() {
       total: clinics.length,
       updated: successCount,
       failed: failCount,
-      skipped: skippedCount
+      skipped: skippedCount,
+      noRatingAvailable: noRatingCount
     };
 
     console.log('\n--- Refresh Summary ---');
     console.log(`Total clinics: ${summary.total}`);
     console.log(`Successfully updated: ${summary.updated}`);
     console.log(`Failed: ${summary.failed}`);
-    console.log(`Skipped: ${summary.skipped}`);
+    console.log(`Skipped (place not found): ${summary.skipped}`);
+    console.log(`No rating available from Google: ${summary.noRatingAvailable}`);
     console.log('----------------------\n');
 
     return summary;
@@ -314,7 +340,10 @@ async function refreshAllClinicPhotos() {
     // Process each clinic
     for (const clinic of clinics) {
       try {
-        // Fetch photos from Google Places API
+        // Fetch photos from Google Places API. A throw here is caught by the
+        // per-clinic catch below and counted as a failure - crucially, it does
+        // NOT reach the deletion branch, so a transient API error can no
+        // longer wipe a clinic's stored photos.
         const photos = await fetchPlacePhotos(clinic.PlaceID);
 
         // Existing Google photo rows, in display order. These are updated in
