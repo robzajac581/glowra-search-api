@@ -9,6 +9,13 @@ const duplicateDetectionService = require('./duplicateDetectionService');
 const { validateSubmission, calculateAveragePrice } = require('../utils/schemaValidator');
 const { normalizeCategory } = require('../../utils/categoryNormalizer');
 const { normalizePriceUnitForStorage } = require('../../utils/priceUnitNormalizer');
+const {
+  normalizePromotionalFlagForStorage,
+  readPromotionalFlagField
+} = require('../../utils/promotionalFlagNormalizer');
+const {
+  draftProceduresTableHasIsPromotionalColumn
+} = require('../../utils/procedureIsPromotionalColumn');
 
 class SubmissionService {
   /**
@@ -235,21 +242,39 @@ class SubmissionService {
                 `submissionService draft=${draftId} procedure=${JSON.stringify(procedure.procedureName)}`
               )
             );
-            procedureRequest.input('providerNames', sql.NVarChar(sql.MAX), 
+            procedureRequest.input('providerNames', sql.NVarChar(sql.MAX),
               procedure.providerNames ? JSON.stringify(procedure.providerNames) : null);
-            procedureRequest.input('providerName', sql.NVarChar, 
-              procedure.providerNames && procedure.providerNames.length > 0 
-                ? procedure.providerNames[0] 
+            procedureRequest.input('providerName', sql.NVarChar,
+              procedure.providerNames && procedure.providerNames.length > 0
+                ? procedure.providerNames[0]
                 : null);
+
+            // GLO-72. Same defence-in-depth role as priceUnit above.
+            // readPromotionalFlagField() returns undefined when the submitter
+            // sent no flag at all, and the normaliser turns that into NULL --
+            // "not assessed" -- rather than false. A submitter who simply does
+            // not know must not have "standard rate" recorded on their behalf.
+            const isPromotionalCol =
+              await draftProceduresTableHasIsPromotionalColumn(transaction);
+            if (isPromotionalCol) {
+              procedureRequest.input(
+                'isPromotional',
+                sql.Bit,
+                normalizePromotionalFlagForStorage(
+                  readPromotionalFlagField(procedure),
+                  `submissionService draft=${draftId} procedure=${JSON.stringify(procedure.procedureName)}`
+                )
+              );
+            }
 
             await procedureRequest.query(`
               INSERT INTO DraftProcedures (
-                DraftID, ProcedureName, Category, AverageCost, 
-                PriceMin, PriceMax, PriceUnit, ProviderNames, ProviderName
+                DraftID, ProcedureName, Category, AverageCost,
+                PriceMin, PriceMax, PriceUnit, ProviderNames, ProviderName${isPromotionalCol ? ', IsPromotional' : ''}
               )
               VALUES (
                 @draftID, @procedureName, @category, @averageCost,
-                @priceMin, @priceMax, @priceUnit, @providerNames, @providerName
+                @priceMin, @priceMax, @priceUnit, @providerNames, @providerName${isPromotionalCol ? ', @isPromotional' : ''}
               )
             `);
           }

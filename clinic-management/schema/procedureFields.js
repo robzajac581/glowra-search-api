@@ -7,6 +7,10 @@ const {
   getValidPriceUnits,
   getPriceUnitAliases
 } = require('../../utils/priceUnitNormalizer');
+const {
+  validatePromotionalFlagInput,
+  describeAcceptedPromotionalValues
+} = require('../../utils/promotionalFlagNormalizer');
 
 const PROCEDURE_CATEGORIES = [
   'Face',
@@ -81,6 +85,26 @@ const procedureFields = {
     example: '/unit'
   },
   
+  // GLO-72. Three-state, and the third state is the point: true =
+  // assessed and promotional, false = assessed and standard, absent/null =
+  // NOT ASSESSED. Omitting the field leaves a procedure unassessed; it must
+  // never be read as false. See utils/promotionalFlagNormalizer.js.
+  //
+  // Accepted under 'isPromotional', 'IsPromotional' and 'promotional' --
+  // validateProcedure resolves all three to this field before validating, so a
+  // payload cannot bypass validation by choosing a different spelling (the
+  // GLO-69 priceUnit failure mode).
+  isPromotional: {
+    type: 'boolean',
+    required: false,
+    resolve: validatePromotionalFlagInput,
+    resolveError: `must be ${describeAcceptedPromotionalValues()}`,
+    label: 'Promotional Price',
+    description:
+      'Whether the price is conditional (new clients only, limited time, package) rather than the standard rate. Leave blank if not assessed.',
+    example: true
+  },
+
   averagePrice: {
     type: 'number',
     required: false,

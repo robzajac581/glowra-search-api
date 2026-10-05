@@ -87,6 +87,11 @@ const FIELD_MAPPINGS = {
   'PriceMin': 'priceMin',
   'PriceMax': 'priceMax',
   'PriceUnit': 'priceUnit',
+  // GLO-72. Three-state: true / false / null ("not assessed"). Mapped
+  // explicitly rather than left to toCamelCase so it cannot be dropped by a
+  // future change to the fallback, and so it is visible alongside the other
+  // procedure fields here.
+  'IsPromotional': 'isPromotional',
   'ProviderNames': 'providerNames',
   
   // Photos
@@ -391,6 +396,9 @@ function groupProcedures(procedures) {
       priceMin: normalized.priceMin,
       priceMax: normalized.priceMax,
       priceUnit: normalized.priceUnit,
+      // null here means "not assessed", not "not promotional". The FE must
+      // badge only on an explicit true.
+      isPromotional: normalized.isPromotional ?? null,
       providerNames: normalized.providerNames
     });
     
