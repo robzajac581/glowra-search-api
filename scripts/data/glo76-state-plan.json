@@ -1,0 +1,374 @@
+{
+  "ticket": "GLO-76",
+  "totalRows": 451,
+  "unchanged": {
+    "canonical": 395,
+    "non_us": 8
+  },
+  "counts": {
+    "format_variant": 21,
+    "malformed": 1,
+    "null_derived": 25,
+    "total": 47,
+    "leftNull": 1,
+    "unclassified": 8
+  },
+  "changes": [
+    {
+      "clinicId": 2,
+      "from": null,
+      "to": "TX",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Texas', Locations.State='Texas'"
+    },
+    {
+      "clinicId": 4,
+      "from": null,
+      "to": "TX",
+      "case": "null_derived",
+      "reason": "Unanimous across 1 source(s): Locations.State='Texas'"
+    },
+    {
+      "clinicId": 6,
+      "from": null,
+      "to": "CA",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='California', Locations.State='California'"
+    },
+    {
+      "clinicId": 15,
+      "from": null,
+      "to": "CA",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='California', Locations.State='California'"
+    },
+    {
+      "clinicId": 30,
+      "from": null,
+      "to": "FL",
+      "case": "null_derived",
+      "reason": "Unanimous across 1 source(s): Locations.State='Florida'"
+    },
+    {
+      "clinicId": 38,
+      "from": null,
+      "to": "TX",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Texas', Locations.State='Texas'"
+    },
+    {
+      "clinicId": 45,
+      "from": null,
+      "to": "GA",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Georgia', Locations.State='Georgia'"
+    },
+    {
+      "clinicId": 47,
+      "from": "Nevada",
+      "to": "NV",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 55,
+      "from": null,
+      "to": "AZ",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Arizona', Locations.State='Arizona'"
+    },
+    {
+      "clinicId": 61,
+      "from": null,
+      "to": "FL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Florida', Locations.State='Florida'"
+    },
+    {
+      "clinicId": 64,
+      "from": null,
+      "to": "FL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Florida', Locations.State='Florida'"
+    },
+    {
+      "clinicId": 66,
+      "from": null,
+      "to": "KS",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Kansas', Locations.State='Kansas'"
+    },
+    {
+      "clinicId": 76,
+      "from": null,
+      "to": "NE",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Nebraska', Locations.State='Nebraska'"
+    },
+    {
+      "clinicId": 83,
+      "from": null,
+      "to": "MI",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Michigan', Locations.State='Michigan'"
+    },
+    {
+      "clinicId": 84,
+      "from": null,
+      "to": "MI",
+      "case": "null_derived",
+      "reason": "Unanimous across 1 source(s): Locations.State='Michigan'"
+    },
+    {
+      "clinicId": 86,
+      "from": null,
+      "to": "KY",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Kentucky', Locations.State='Kentucky'"
+    },
+    {
+      "clinicId": 95,
+      "from": "Columbia SC",
+      "to": "SC",
+      "case": "malformed",
+      "reason": "City+state crammed into State. Address '700 Gervais St' and PostalCode '29201' are both Columbia, South Carolina, and Locations.State is 'South Carolina'. GooglePlacesData says 'Michigan' / 'West Bloomfield Township', which is a wrong-PlaceID defect in its own right (reported separately by the audit as placeid_geo_mismatch), not evidence about this clinic. Clinics.City is also wrong ('STE 150') but is out of scope for this ticket."
+    },
+    {
+      "clinicId": 100,
+      "from": null,
+      "to": "VA",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Virginia', Locations.State='Virginia'"
+    },
+    {
+      "clinicId": 101,
+      "from": null,
+      "to": "VA",
+      "case": "null_derived",
+      "reason": "Unanimous across 1 source(s): Locations.State='Virginia'"
+    },
+    {
+      "clinicId": 102,
+      "from": null,
+      "to": "VA",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Virginia', Locations.State='Virginia'"
+    },
+    {
+      "clinicId": 108,
+      "from": null,
+      "to": "IN",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Indiana', Locations.State='Indiana'"
+    },
+    {
+      "clinicId": 110,
+      "from": null,
+      "to": "IN",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Indiana', Locations.State='Indiana'"
+    },
+    {
+      "clinicId": 111,
+      "from": null,
+      "to": "IL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Illinois', Locations.State='Illinois'"
+    },
+    {
+      "clinicId": 118,
+      "from": null,
+      "to": "TX",
+      "case": "null_derived",
+      "reason": "Unanimous across 1 source(s): GooglePlacesData.State='Texas'"
+    },
+    {
+      "clinicId": 131,
+      "from": null,
+      "to": "IL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Illinois', Locations.State='Illinois'"
+    },
+    {
+      "clinicId": 133,
+      "from": null,
+      "to": "IL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Illinois', Locations.State='Illinois'"
+    },
+    {
+      "clinicId": 134,
+      "from": null,
+      "to": "IL",
+      "case": "null_derived",
+      "reason": "Unanimous across 2 source(s): GooglePlacesData.State='Illinois', Locations.State='Illinois'"
+    },
+    {
+      "clinicId": 176,
+      "from": "Illinois",
+      "to": "IL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 298,
+      "from": "Illinois",
+      "to": "IL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 435,
+      "from": "Illinois",
+      "to": "IL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 612,
+      "from": "Illinois",
+      "to": "IL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 614,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 615,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 616,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 617,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 618,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 619,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 620,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 621,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 622,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 623,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 624,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 625,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 626,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 627,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 628,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    },
+    {
+      "clinicId": 629,
+      "from": "Florida",
+      "to": "FL",
+      "case": "format_variant"
+    }
+  ],
+  "leftNull": [
+    {
+      "clinicId": 40,
+      "reason": "Ambiguous: Locations.State='Mexico' is not a recognised state"
+    }
+  ],
+  "unclassified": [
+    {
+      "clinicId": 162,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 163,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 212,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 312,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 313,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 446,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 447,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    },
+    {
+      "clinicId": 564,
+      "value": "TR",
+      "reason": "Non-US clinic; State holds the ISO country code. Not a US state and not a format defect."
+    }
+  ]
+}

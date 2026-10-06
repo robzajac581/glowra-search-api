@@ -1,5 +1,13 @@
 const { db, sql } = require('../../db');
 const fuzzball = require('fuzzball');
+const { toCanonicalState } = require('../../utils/stateNormalizer');
+
+/** Canonical two-letter code when resolvable, else the tidied raw value. */
+function canonicalOrRaw(value) {
+  const trimmed = (value || '').trim();
+  if (!trimmed) return '';
+  return toCanonicalState(trimmed) || trimmed.toLowerCase();
+}
 
 /**
  * Multi-strategy duplicate detection service
@@ -398,8 +406,12 @@ class DuplicateDetectionService {
         // Check city/state match
         const cityMatch = clinic.City && 
           fuzzball.ratio(city.toLowerCase(), clinic.City.toLowerCase()) >= 80;
-        const stateMatch = clinic.State && 
-          state.toLowerCase() === clinic.State.toLowerCase();
+        // Compare canonical forms, not raw strings. Locations.State holds a
+        // mix of 'FL' and 'Florida' (92 of 255 rows are not two-letter codes
+        // as of 2026-10-05) and the incoming submission may use either, so a
+        // plain lowercase equality test silently misses real duplicates.
+        const stateMatch = clinic.State &&
+          canonicalOrRaw(state) === canonicalOrRaw(clinic.State);
 
         if (cityMatch && stateMatch) {
           // Fuzzy match on name
