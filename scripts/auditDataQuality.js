@@ -35,7 +35,8 @@
  *   node scripts/auditDataQuality.js                       # query prod, print summary
  *   node scripts/auditDataQuality.js --json <file>         # also write the diffable JSON
  *   node scripts/auditDataQuality.js --fixture <file>      # offline: read rows from a fixture
- *   node scripts/auditDataQuality.js --dump-fixture <file> # save the raw rows as a fixture
+ *   node scripts/auditDataQuality.js --dump-fixture <file> # save the rows as a fixture
+ *                                                          # (API keys redacted on write)
  *   node scripts/auditDataQuality.js --no-meta             # omit the timestamp block
  *
  * Azure SQL here is Basic / 5 DTU and a SELECT * timed out at 15s during
@@ -107,6 +108,30 @@ const QUERY = `
 
 function isBlank(v) {
   return v === null || v === undefined || String(v).trim() === '';
+}
+
+/**
+ * Strip API keys out of rows before they are written to a fixture.
+ *
+ * GooglePlacesData.Photo holds a photo-proxy URL carrying the live
+ * GOOGLE_PLACES_API_KEY as a `key=` query parameter, so a raw --dump-fixture
+ * committed the production key to git (it was in test/fixtures/
+ * dataQualityRows.json from 246471a until it was scrubbed). The audit only
+ * reads whether GooglePhoto is blank, so the value is worthless to us and
+ * dangerous in a repo. Redact every `key=` parameter on any string field --
+ * not just GooglePhoto -- so adding a column to QUERY cannot reintroduce this.
+ */
+const KEY_PARAM = /([?&](?:key|api_?key)=)[^&#\s"']+/gi;
+
+function redactSecrets(rows) {
+  return rows.map(row =>
+    Object.fromEntries(
+      Object.entries(row).map(([k, v]) => [
+        k,
+        typeof v === 'string' ? v.replace(KEY_PARAM, '$1REDACTED') : v
+      ])
+    )
+  );
 }
 
 /** Pure: rows in, report out. Keeps the audit testable without a database. */
@@ -259,8 +284,8 @@ async function main() {
     source = 'database';
     if (dumpPath) {
       fs.mkdirSync(path.dirname(dumpPath), { recursive: true });
-      fs.writeFileSync(dumpPath, JSON.stringify(rows, null, 2) + '\n');
-      console.log(`Fixture written to ${dumpPath} (${rows.length} rows).`);
+      fs.writeFileSync(dumpPath, JSON.stringify(redactSecrets(rows), null, 2) + '\n');
+      console.log(`Fixture written to ${dumpPath} (${rows.length} rows, API keys redacted).`);
     }
   }
 
@@ -286,4 +311,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { buildReport, ZIP1_TO_STATES, QUERY };
+module.exports = { buildReport, redactSecrets, ZIP1_TO_STATES, QUERY };

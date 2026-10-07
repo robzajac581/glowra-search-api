@@ -2,11 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 
-const { buildReport, ZIP1_TO_STATES } = require('../scripts/auditDataQuality');
+const { buildReport, redactSecrets, ZIP1_TO_STATES } = require('../scripts/auditDataQuality');
 
 // Real production rows, captured 2026-10-05 via
 //   node scripts/auditDataQuality.js --dump-fixture test/fixtures/dataQualityRows.json
-// Only the columns the audit reads; no PII beyond clinic IDs.
+// Only the columns the audit reads; no PII beyond clinic IDs. The dump redacts
+// API keys out of the photo-proxy URLs -- the raw dump used to carry the live
+// GOOGLE_PLACES_API_KEY in every GooglePhoto value.
 const FIXTURE = require(path.join(__dirname, 'fixtures', 'dataQualityRows.json'));
 
 function row(overrides = {}) {
@@ -124,4 +126,38 @@ test('output is deterministic and diffable', () => {
   // IDs sorted numerically, not lexicographically.
   const ids = buildReport(FIXTURE).failingClauses.missing_photo.clinicIds;
   assert.deepStrictEqual(ids, [...ids].sort((a, b) => a - b));
+});
+
+test('the committed fixture carries no API key', () => {
+  for (const row of FIXTURE) {
+    if (typeof row.GooglePhoto !== 'string') continue;
+    const m = row.GooglePhoto.match(/[?&]key=([^&]*)/);
+    if (m) assert.strictEqual(m[1], 'REDACTED', `clinic ${row.ClinicID} leaks a key`);
+  }
+});
+
+test('redactSecrets strips key params without touching anything else', () => {
+  const [out] = redactSecrets([
+    row({
+      GooglePhoto: 'https://x.test/photo?maxwidth=400&key=AIzaSecretValue123&ref=abc',
+      State: 'FL',
+      GoogleRating: 4.5,
+      PlaceID: null
+    })
+  ]);
+  assert.strictEqual(
+    out.GooglePhoto,
+    'https://x.test/photo?maxwidth=400&key=REDACTED&ref=abc'
+  );
+  assert.strictEqual(out.State, 'FL');
+  assert.strictEqual(out.GoogleRating, 4.5);
+  assert.strictEqual(out.PlaceID, null);
+});
+
+test('redactSecrets catches a key on any column, not just GooglePhoto', () => {
+  const [out] = redactSecrets([
+    row({ PlaceID: 'https://maps.test/d?api_key=AIzaOther999', GooglePhoto: null })
+  ]);
+  assert.strictEqual(out.PlaceID, 'https://maps.test/d?api_key=REDACTED');
+  assert.strictEqual(out.GooglePhoto, null);
 });
