@@ -1,7 +1,23 @@
 const axios = require('axios');
 require('dotenv').config();
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const {
+  requireGooglePlacesApiKey,
+  buildKeylessGooglePhotoUrl
+} = require('./photoUrl');
+
+// The API key is read per call via requireGooglePlacesApiKey(), NOT captured
+// here at module load.
+//
+// It used to be captured here, and that single line is what caused the
+// 2026-10-07 photo outage: the process running the GLO-73 photo refresh had
+// booted before GOOGLE_PLACES_API_KEY was set in its environment, so this
+// constant held undefined for the process's whole life. parsePhotos()
+// interpolated it into "?key=&photoreference=...", the job persisted those
+// URLs to all 3,909 ClinicPhotos rows, and a later redeploy with a correct key
+// could not repair them because the key had been written into the data.
+// Reading per call means a corrected environment takes effect immediately and
+// a blank one fails loudly instead of silently producing invalid URLs.
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
 // Minimal field mask for a star rating. Deliberately excludes `reviews`
@@ -21,9 +37,7 @@ async function fetchGooglePlaceDetails(placeId, includePhotos = false, fieldsOve
     throw new Error('Place ID is required');
   }
 
-  if (!GOOGLE_PLACES_API_KEY) {
-    throw new Error('GOOGLE_PLACES_API_KEY is not configured in environment variables');
-  }
+  const apiKey = requireGooglePlacesApiKey('fetchGooglePlaceDetails');
 
   try {
     // Request only the fields we need to minimize API costs.
@@ -44,7 +58,7 @@ async function fetchGooglePlaceDetails(placeId, includePhotos = false, fieldsOve
       params: {
         place_id: placeId,
         fields: fields,
-        key: GOOGLE_PLACES_API_KEY
+        key: apiKey
       },
       timeout: 10000 // 10 second timeout
     });
@@ -140,8 +154,20 @@ async function fetchGooglePlaceDetailsWithRetry(placeId, maxRetries = 3, include
 
 /**
  * Parse photos from Google Places API response
+ *
+ * The `reference` is the only durable part of a photo and the only thing
+ * callers should persist. The `url`/`urls` fields are **keyless** on purpose:
+ * they record which photo a row points at, and they are what the refresh job
+ * writes into the NOT NULL `ClinicPhotos.PhotoURL` column.
+ *
+ * They used to carry the live API key, which is how a blank key got written
+ * into all 3,909 photo rows on 2026-10-07. Anything that actually needs to
+ * *fetch* a photo must build the URL at the point of use with
+ * `photoUrl.buildGooglePhotoUrl(reference, ...)`, which reads the key from the
+ * environment per call and refuses to proceed when it is empty.
+ *
  * @param {Array} photos - Raw photos array from API
- * @returns {Array} - Structured photos array with URLs
+ * @returns {Array} - Structured photos array with keyless reference URLs
  */
 function parsePhotos(photos) {
   if (!Array.isArray(photos)) {
@@ -149,24 +175,21 @@ function parsePhotos(photos) {
   }
 
   return photos.map((photo, index) => {
-    // Photo reference for constructing URLs
+    // Photo reference for constructing URLs at serve time
     const photoReference = photo.photo_reference;
-    
-    // Construct optimized photo URLs
-    // For web performance, we'll create multiple sizes
-    const baseParams = `key=${GOOGLE_PLACES_API_KEY}&photoreference=${photoReference}`;
-    
+
     return {
       reference: photoReference,
       width: photo.width || null,
       height: photo.height || null,
-      // Full size (max 1600px as per Google's limit)
-      url: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=1600`,
+      // Full size (max 1600px as per Google's limit). Keyless - not fetchable
+      // as-is, and deliberately so: it is a record, not a credential.
+      url: buildKeylessGooglePhotoUrl(photoReference, { size: 'large' }),
       // Optimized sizes for different use cases
       urls: {
-        thumbnail: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=400`,  // Cards/thumbnails
-        medium: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=800`,     // Gallery previews
-        large: `https://maps.googleapis.com/maps/api/place/photo?${baseParams}&maxwidth=1600`      // Full screen
+        thumbnail: buildKeylessGooglePhotoUrl(photoReference, { size: 'thumbnail' }), // Cards/thumbnails
+        medium: buildKeylessGooglePhotoUrl(photoReference, { size: 'medium' }),       // Gallery previews
+        large: buildKeylessGooglePhotoUrl(photoReference, { size: 'large' })          // Full screen
       },
       // Attribution (required by Google Terms of Service)
       attributions: photo.html_attributions || [],
@@ -307,9 +330,7 @@ async function fetchPlacePhotos(placeId) {
  * @returns {Promise<Object|null>} - Place info with confidence score, or null if not found
  */
 async function searchPlaceByText(clinicName, address) {
-  if (!GOOGLE_PLACES_API_KEY) {
-    throw new Error('GOOGLE_PLACES_API_KEY is not configured in environment variables');
-  }
+  const apiKey = requireGooglePlacesApiKey('searchPlaceByText');
 
   try {
     // Construct search query
@@ -321,7 +342,7 @@ async function searchPlaceByText(clinicName, address) {
         input: query,
         inputtype: 'textquery',
         fields: 'place_id,name,formatted_address,geometry',
-        key: GOOGLE_PLACES_API_KEY
+        key: apiKey
       },
       timeout: 10000
     });
@@ -348,7 +369,7 @@ async function searchPlaceByText(clinicName, address) {
           inputtype: 'textquery',
           fields: 'place_id,name,formatted_address,geometry',
           locationbias: `point:${await getApproximateLocation(address)}`, // bias towards the address area
-          key: GOOGLE_PLACES_API_KEY
+          key: apiKey
         },
         timeout: 10000
       });
@@ -426,7 +447,7 @@ async function getApproximateLocation(address) {
     const response = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
       params: {
         address: address,
-        key: GOOGLE_PLACES_API_KEY
+        key: requireGooglePlacesApiKey('getApproximateLocation')
       },
       timeout: 5000
     });
