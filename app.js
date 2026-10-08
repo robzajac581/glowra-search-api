@@ -75,6 +75,18 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 // Photo cache configuration (shared with the refresh job so cache keys match)
 const { PHOTO_CACHE_DIR, PHOTO_CACHE_DURATION, cacheKeyForPhoto } = require('./utils/photoCache');
 
+// Serve-time photo URL construction. The Google Places API key is a credential
+// read from the environment per request, never a value stored in a column and
+// never a value serialised into a response. See utils/photoUrl.js.
+const {
+  MissingPlacesApiKeyError,
+  isGooglePhotoReference,
+  buildGooglePhotoUrl,
+  isDirectlyServablePhotoUrl,
+  redactApiKey,
+  resolvePrimaryPhotoUrl
+} = require('./utils/photoUrl');
+
 // Ensure cache directory exists
 (async () => {
   try {
@@ -184,13 +196,19 @@ app.get('/api/provider-photos/:providerId', async (req, res) => {
 });
 
 /**
- * Photo Proxy Endpoint - Handles Google Places photos with caching
+ * Photo Proxy Endpoint - Handles a clinic's primary photo with caching
  * GET /api/photos/clinic/:clinicId
- * 
+ *
  * This endpoint:
- * - Proxies Google Places photos to avoid frontend rate limiting
- * - Caches images locally for 7 days
- * - Uses authenticated API requests to Google
+ * - Resolves the clinic's primary photo and proxies it, so the frontend never
+ *   talks to Google directly and never sees the API key
+ * - Builds the Google URL from PhotoReference *at request time*; it used to
+ *   fetch whatever full URL was stored in PhotoURL, which is why it returned
+ *   403 for every clinic after the GLO-73 refresh wrote a blank key into the
+ *   stored URLs
+ * - Caches images locally for 7 days, under the same PhotoID+size key the
+ *   /api/photos/proxy/:photoId endpoint uses, so the two share cache entries
+ *   instead of each holding a private copy
  * - Returns actual image binary data with proper headers
  */
 app.get('/api/photos/clinic/:clinicId', async (req, res) => {
@@ -211,16 +229,22 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
     const request = pool.request();
     request.input('clinicId', sql.Int, parseInt(clinicId));
 
-    // First, try to get the photo URL from GooglePlacesData, fallback to ClinicPhotos
+    // Fetch the photo *inputs* for this clinic's primary photo. Note what is
+    // not selected: a ready-made URL. PhotoURL is still read, but only as the
+    // authoritative value for rows that have no Google reference (user
+    // uploads); for Google rows the reference is what matters.
     const result = await request.query(`
-      SELECT 
+      SELECT
         c.ClinicID,
         c.ClinicName,
-        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL
+        cp.PhotoID as PrimaryPhotoID,
+        cp.PhotoReference as PrimaryPhotoReference,
+        cp.PhotoURL as PrimaryPhotoURL,
+        g.Photo as GooglePhoto
       FROM Clinics c
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       LEFT JOIN (
-        SELECT ClinicID, PhotoURL,
+        SELECT ClinicID, PhotoID, PhotoReference, PhotoURL,
           ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
         FROM ClinicPhotos
       ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
@@ -232,14 +256,58 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
     }
 
     const clinic = result.recordset[0];
-    const photoURL = clinic.PhotoURL;
+
+    // Resolve what to fetch, in the same preference order the search-index
+    // payload uses: Google reference -> directly servable stored URL -> none.
+    let photoURL = null;
+    let isGooglePhoto = false;
+    // The PhotoID the resolved photo actually came from, or null when it came
+    // from GooglePlacesData.Photo (which has no ClinicPhotos row behind it).
+    let cachePhotoId = null;
+
+    if (isGooglePhotoReference(clinic.PrimaryPhotoReference)) {
+      try {
+        photoURL = buildGooglePhotoUrl(clinic.PrimaryPhotoReference, {
+          size: 'large',
+          context: `clinic ${clinic.ClinicID} primary photo`
+        });
+        isGooglePhoto = true;
+      } catch (error) {
+        // The guard in utils/photoUrl.js has already logged loudly. A blank
+        // key is an operator problem, not a missing photo, so say 503 rather
+        // than pretending the clinic has no picture.
+        if (error instanceof MissingPlacesApiKeyError) {
+          return res.status(503).json({
+            error: 'Photo service not configured',
+            message: 'GOOGLE_PLACES_API_KEY is not set on this server'
+          });
+        }
+        throw error;
+      }
+    } else if (isDirectlyServablePhotoUrl(clinic.PrimaryPhotoURL)) {
+      photoURL = clinic.PrimaryPhotoURL.trim();
+    } else if (isDirectlyServablePhotoUrl(clinic.GooglePhoto)) {
+      photoURL = clinic.GooglePhoto.trim();
+    }
 
     if (!photoURL) {
+      // The defined fallback for a row with neither a usable reference nor a
+      // usable URL. A 404 lets the frontend render its placeholder; serving a
+      // URL we know is broken would render a broken-image tile instead.
       return res.status(404).json({ error: 'No photo available for this clinic' });
     }
 
-    // Generate cache key based on photo URL
-    const cacheKey = crypto.createHash('md5').update(photoURL).digest('hex');
+    // Cache key: PhotoID + size for a ClinicPhotos-backed photo, so this
+    // endpoint shares entries with /api/photos/proxy/:photoId and so the
+    // refresh job's expirePhotoCache(photoId) actually invalidates what we
+    // serve. It used to be md5 of the full URL, which embedded the API key -
+    // meaning every key rotation silently orphaned the entire cache, and the
+    // two endpoints never shared a byte. Clinics whose photo comes from
+    // GooglePlacesData.Photo have no PhotoID, so they fall back to hashing
+    // the (keyless, by isDirectlyServablePhotoUrl) URL.
+    const cacheKey = clinic.PrimaryPhotoID != null
+      ? cacheKeyForPhoto(clinic.PrimaryPhotoID, 'large')
+      : crypto.createHash('md5').update(photoURL).digest('hex');
     const cacheFilePath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.jpg`);
     const cacheMetaPath = path.join(PHOTO_CACHE_DIR, `${cacheKey}.meta.json`);
 
@@ -395,20 +463,35 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
 
     const photo = result.recordset[0];
 
-    // User-uploaded photos have PhotoReference like "user-upload-123-0" or "google-123-0" (invalid for Google API)
-    // Google photos have long alphanumeric references from Places API
-    const isUserUpload = !photo.PhotoReference ||
-      photo.PhotoReference.startsWith('user-upload') ||
-      photo.PhotoReference.startsWith('google-');
-
+    // Which of the two kinds of row is this?
+    //
+    // A real Google reference means the key-bearing URL is built here, per
+    // request, from the live environment — never read from PhotoURL. That
+    // column holds 3,874 strings poisoned by the 2026-10-07 outage (a blank
+    // key baked in by the refresh job), and the fix is precisely that nothing
+    // reads them any more. See utils/photoUrl.js.
+    //
+    // Anything else — a user upload, or an older import whose synthetic
+    // `google-<id>-<n>` reference is not valid at Google — has PhotoURL as
+    // its authoritative value.
     let photoURL;
-    if (isUserUpload && photo.PhotoURL && /^https?:\/\//i.test(photo.PhotoURL)) {
-      // Use PhotoURL directly for user-uploaded photos (S3, CDN, etc.)
-      photoURL = photo.PhotoURL;
-    } else if (photo.PhotoReference) {
-      // Google Places photo - construct API URL
-      const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-      photoURL = `https://maps.googleapis.com/maps/api/place/photo?key=${apiKey}&photoreference=${photo.PhotoReference}&maxwidth=${maxWidth}`;
+    if (isGooglePhotoReference(photo.PhotoReference)) {
+      try {
+        photoURL = buildGooglePhotoUrl(photo.PhotoReference, {
+          maxWidth,
+          context: `photo proxy, PhotoID ${photoId}`
+        });
+      } catch (keyError) {
+        // The guard in utils/photoUrl.js has already logged loudly with the
+        // remedy. A missing credential is an operator problem, not "this
+        // clinic has no photo", so it is a 503 rather than a 404 — and a
+        // stale cached copy below is still better than an error, which is
+        // why this falls through rather than returning immediately.
+        if (keyError.code !== 'MISSING_PLACES_API_KEY') throw keyError;
+        photoURL = null;
+      }
+    } else if (isDirectlyServablePhotoUrl(photo.PhotoURL)) {
+      photoURL = photo.PhotoURL.trim();
     } else {
       return res.status(404).json({
         error: 'Photo not available',
@@ -799,10 +882,13 @@ app.get('/api/clinics/search-index', async (req, res) => {
       )
         AND (g.Photo IS NOT NULL OR cp.PhotoURL IS NOT NULL)`;
 
+    // PhotoID and PhotoReference come along because the primary photo URL is
+    // now built at serve time rather than read out of PhotoURL - see
+    // resolvePrimaryPhotoUrl below and utils/photoUrl.js for why.
     const primaryPhotoJoin = `
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       LEFT JOIN (
-        SELECT ClinicID, PhotoURL,
+        SELECT ClinicID, PhotoID, PhotoReference, PhotoURL,
           ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
         FROM ClinicPhotos
       ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1`;
@@ -826,7 +912,15 @@ app.get('/api/clinics/search-index', async (req, res) => {
         c.GoogleRating,
         c.GoogleReviewCount,
         COALESCE(g.Category, 'Medical Spa') as ClinicCategory,
-        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL
+        -- Photo inputs, not a photo URL. The COALESCE that used to live here
+        -- served GooglePlacesData.Photo / ClinicPhotos.PhotoURL verbatim, and
+        -- those stored strings carry a baked-in API key - blank on 3,874 rows
+        -- after the GLO-73 refresh, and a live production key on 35 more.
+        -- Both are resolved in JS below instead.
+        cp.PhotoID as PrimaryPhotoID,
+        cp.PhotoReference as PrimaryPhotoReference,
+        cp.PhotoURL as PrimaryPhotoURL,
+        g.Photo as GooglePhoto
       FROM Clinics c
       LEFT JOIN Locations l ON c.LocationID = l.LocationID${primaryPhotoJoin}
       ${sharedWhere}`;
@@ -955,7 +1049,18 @@ app.get('/api/clinics/search-index', async (req, res) => {
         rating: row.GoogleRating || 0,
         reviewCount: row.GoogleReviewCount || 0,
         clinicCategory: normalizeCategory(row.ClinicCategory),
-        photoURL: row.PhotoURL || null,
+        // Built per request from PhotoReference: a URL on our own photo proxy
+        // for Google photos, the stored URL for user uploads and keyless
+        // Street View thumbnails, null when there is neither. The API key
+        // never appears in this payload.
+        photoURL: resolvePrimaryPhotoUrl({
+          baseURL,
+          photoId: row.PrimaryPhotoID,
+          photoReference: row.PrimaryPhotoReference,
+          photoUrl: row.PrimaryPhotoURL,
+          googlePhoto: row.GooglePhoto,
+          size: 'medium'
+        }),
         galleryPhotos: galleryPhotosMap.get(row.ClinicID) || null,
         procedures: []
       });

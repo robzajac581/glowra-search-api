@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { sql, db } = require('../db');
 const { batchFetchPlaceDetails, fetchPlacePhotos, RATING_ONLY_FIELDS } = require('../utils/googlePlaces');
 const { expirePhotoCache } = require('../utils/photoCache');
+const { requireGooglePlacesApiKey } = require('../utils/photoUrl');
 const clinicDeletionService = require('../clinic-management/services/clinicDeletionService');
 
 // Configuration for refresh intervals (in days)
@@ -312,10 +313,30 @@ async function deletePhotoRows(pool, rows) {
  */
 async function refreshAllClinicPhotos() {
   let pool;
-  
+
+  // Preflight: refuse to start without a usable API key.
+  //
+  // This is the guard the 2026-10-07 outage needed. The job ran for the first
+  // time in a process whose GOOGLE_PLACES_API_KEY was blank, and because
+  // nothing checked, it "succeeded" its way through all 3,909 photo rows
+  // writing "?key=&photoreference=..." into every one. The per-clinic catch
+  // below would have turned that into 436 logged failures and no writes if
+  // the key check had existed at the time; this makes the check explicit and
+  // up front, so the job aborts before it opens a single transaction rather
+  // than discovering the problem 436 times.
+  try {
+    requireGooglePlacesApiKey('refreshAllClinicPhotos');
+  } catch (error) {
+    console.error(
+      '   ✗ ABORTING photo refresh: GOOGLE_PLACES_API_KEY is empty or unset. ' +
+      'No photo rows were touched. Set the environment variable and re-run.'
+    );
+    return { total: 0, updated: 0, failed: 0, totalPhotos: 0, aborted: 'missing-api-key' };
+  }
+
   try {
     pool = await db.getConnection();
-    
+
     // Get all clinics with PlaceIDs
     const result = await pool.request().query(`
       SELECT ClinicID, ClinicName, PlaceID
@@ -392,6 +413,10 @@ async function refreshAllClinicPhotos() {
             await pool.request()
               .input('photoId', sql.Int, existingPhoto.PhotoID)
               .input('photoReference', sql.NVarChar(1000), photo.reference)
+              // Keyless by construction (parsePhotos). PhotoURL is NOT NULL so it
+              // cannot be cleared, but nothing reads it for Google-referenced
+              // rows any more - PhotoReference is the authoritative column and
+              // the key is spliced in at serve time. See utils/photoUrl.js.
               .input('photoURL', sql.NVarChar(2000), photo.urls.large)
               .input('width', sql.Int, photo.width)
               .input('height', sql.Int, photo.height)
@@ -421,6 +446,10 @@ async function refreshAllClinicPhotos() {
             await pool.request()
               .input('clinicId', sql.Int, clinic.ClinicID)
               .input('photoReference', sql.NVarChar(1000), photo.reference)
+              // Keyless by construction (parsePhotos). PhotoURL is NOT NULL so it
+              // cannot be cleared, but nothing reads it for Google-referenced
+              // rows any more - PhotoReference is the authoritative column and
+              // the key is spliced in at serve time. See utils/photoUrl.js.
               .input('photoURL', sql.NVarChar(2000), photo.urls.large)
               .input('width', sql.Int, photo.width)
               .input('height', sql.Int, photo.height)
