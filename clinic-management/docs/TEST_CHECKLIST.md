@@ -130,6 +130,11 @@ This checklist helps verify that all clinic-management endpoints are working cor
   - Test with known duplicate: Should return matches
   - Test with new clinic: Should return `hasDuplicates: false`
 
+- [ ] **GET** `/api/clinic-management/duplicates/address-candidates`
+  - Expected: `200 OK` with `clinicsScanned`, `counts`, `candidates`
+  - Known review_only pairs: 32/42, 54/119; with `?includeExcluded=true` also 17/121 (suite 201 vs 202)
+  - Must not be shadowed by `/duplicates/:draftId` (no "Invalid draft ID" 400)
+
 - [ ] **GET** `/api/clinic-management/duplicates/:draftId`
   - Use draft ID from bulk import
   - Expected: `200 OK` with duplicate suggestions for that draft

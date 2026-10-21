@@ -254,6 +254,7 @@ Check single clinic for duplicates.
   "address": "123 Main St",
   "city": "New York",
   "state": "NY",
+  "zipCode": "10001",
   "phone": "555-1234",
   "website": "https://example.com",
   "placeID": "ChIJ..."
@@ -278,6 +279,48 @@ Check single clinic for duplicates.
   "newClinicData": {...}
 }
 ```
+
+A match found by the same-address check also carries `addressClassification`
+(`likely_duplicate` or `review_only`) and `addressEvidence` (see below). A
+`likely_duplicate` address match is reported at `medium` confidence, a
+`review_only` one at `low`; neither is ever merged automatically.
+
+#### GET `/duplicates/address-candidates`
+Read-only scan of all existing clinics for pairs that share a normalized street
+address. Query `includeExcluded=true` to also return suite-mismatch pairs.
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "clinicsScanned": 442,
+  "counts": { "likely_duplicate": 0, "review_only": 6, "excluded": 5 },
+  "candidates": [
+    {
+      "clinicIds": [54, 119],
+      "clinicNames": ["HUGO HIGA,M.D. Eyelid and Facial Surgery", "Higa Hugo M.D., LLC"],
+      "classification": "review_only",
+      "reason": "website_domain_mismatch",
+      "evidence": {
+        "addressMatch": true,
+        "normalizedStreet": "1600 kapiolani blvd",
+        "localityBasis": "zip",
+        "zip": "96814",
+        "units": ["105", "105"],
+        "unitComparison": "match",
+        "websiteDomains": ["hugohigamd.com", "hawaiianeye.land"],
+        "websiteComparison": "mismatch",
+        "nameSimilarity": 72,
+        "pricedProcedures": [16, 0],
+        "addressSources": ["clinic", "clinic"]
+      }
+    }
+  ]
+}
+```
+
+See `DUPLICATE_DETECTION_GUIDE.md` for the classification rules.
 
 #### GET `/duplicates/:draftId`
 Get duplicate suggestions for a draft.
@@ -450,7 +493,7 @@ await fetch(`/api/clinic-management/drafts/${draftId}/approve`, {
 
 - All dates are in ISO 8601 format
 - All monetary values are in USD
-- Duplicate detection uses multiple strategies (PlaceID, fuzzy matching, phone, website)
+- Duplicate detection uses multiple strategies (PlaceID, fuzzy matching, phone, website, same street address)
 - Drafts can be updated multiple times before approval
 - Once approved, drafts cannot be modified (create new draft for changes)
 

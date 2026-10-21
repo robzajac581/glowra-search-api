@@ -61,7 +61,7 @@ const options = {
       },
       {
         name: 'Duplicates',
-        description: 'Duplicate detection endpoints'
+        description: 'Duplicate detection endpoints. Suggestions only: PlaceID, fuzzy name/address, phone, website and same-street-address matches are review hints; only an exact PlaceID match links a draft automatically.'
       },
       {
         name: 'Forms',
