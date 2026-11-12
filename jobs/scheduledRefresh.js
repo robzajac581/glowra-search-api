@@ -7,12 +7,22 @@ const clinicDeletionService = require('../clinic-management/services/clinicDelet
 
 // Configuration for refresh intervals (in days)
 const PHOTO_REFRESH_INTERVAL_DAYS = 7; // Weekly - Google photo references expire in 30-60 days
-const RATING_REFRESH_INTERVAL_DAYS = 1; // Daily
+// Ratings: each clinic is refreshed once its LastRatingUpdate is older than
+// this. Was 1 (every clinic, every day), which was ~$215/month of Place Details
+// + Atmosphere Data on the October 2026 Google invoice. Ratings move slowly.
+const RATING_REFRESH_INTERVAL_DAYS = 30;
+// Hard ceiling on Places calls per nightly rating run. A steady state needs
+// ~clinics/30 (about 15); the cap bounds the cost of a mass-stale event, e.g.
+// many new clinics or a column reset, at ~50 calls/day.
+const RATING_REFRESH_MAX_PER_RUN = Number.parseInt(process.env.RATING_REFRESH_MAX_PER_RUN, 10) > 0
+  ? Number.parseInt(process.env.RATING_REFRESH_MAX_PER_RUN, 10)
+  : 50;
 
 /**
  * Scheduled job to refresh Google Places ratings and photos for all clinics
- * - Ratings: Daily at 2 AM
- * - Photos: Bi-weekly (1st & 15th of month) at 2 AM
+ * - Ratings: nightly at 2 AM, but only clinics whose rating is older than
+ *   RATING_REFRESH_INTERVAL_DAYS (30), at most RATING_REFRESH_MAX_PER_RUN per night
+ * - Photos: Weekly (Sundays) at 2 AM
  * - Deleted clinics cleanup: Daily at 3 AM
  * 
  * IMPORTANT: This also runs a startup check to catch missed jobs!
@@ -26,7 +36,7 @@ function initRatingRefreshJob() {
   
   console.log('Initializing rating and photo refresh cron job...');
   console.log(`Schedule: Daily at 2:00 AM (${cronSchedule})`);
-  console.log('  - Ratings: Daily');
+  console.log(`  - Ratings: clinics older than ${RATING_REFRESH_INTERVAL_DAYS} days, max ${RATING_REFRESH_MAX_PER_RUN}/night`);
   console.log('  - Photos: Weekly (every Sunday)');
   
   // Initialize deleted clinics cleanup job (runs at 3 AM)
@@ -44,7 +54,7 @@ function initRatingRefreshJob() {
     console.log(`Time: ${new Date().toISOString()}`);
 
     try {
-      // Always refresh ratings
+      // Only clinics whose rating has gone stale (monthly cadence per clinic)
       await refreshAllClinicRatings();
       
       // Refresh photos weekly (every Sunday) - Google photo references expire after ~30-60 days
@@ -109,33 +119,10 @@ async function checkAndRunOverdueJobs() {
       }
     }
     
-    // Check when ratings were last updated
-    const ratingResult = await pool.request().query(`
-      SELECT TOP 1 LastRatingUpdate 
-      FROM Clinics 
-      WHERE LastRatingUpdate IS NOT NULL
-      ORDER BY LastRatingUpdate DESC
-    `);
-    
-    const lastRatingUpdate = ratingResult.recordset[0]?.LastRatingUpdate;
-    console.log(`Last rating update: ${lastRatingUpdate ? lastRatingUpdate.toISOString() : 'Never'}`);
-    
-    // Check if rating refresh is overdue (more than 2 days old - gives some buffer)
-    if (!lastRatingUpdate) {
-      console.log('⭐ No ratings found - running initial rating fetch...');
-      await refreshAllClinicRatings();
-    } else {
-      const daysSinceRatingUpdate = (now - new Date(lastRatingUpdate)) / (1000 * 60 * 60 * 24);
-      console.log(`Days since last rating update: ${daysSinceRatingUpdate.toFixed(1)}`);
-      
-      if (daysSinceRatingUpdate > 2) { // 2 days buffer for ratings
-        console.log(`⭐ Rating refresh overdue (>2 days) - running now...`);
-        await refreshAllClinicRatings();
-      } else {
-        console.log(`✓ Ratings are fresh (last updated ${daysSinceRatingUpdate.toFixed(1)} days ago)`);
-      }
-    }
-    
+    // Ratings are NOT refreshed at startup. Deploys are frequent, and the
+    // nightly run already picks up every clinic past its interval, so a boot
+    // check would only re-spend on the same stale rows after each deploy.
+
     console.log('=== Overdue job check completed ===\n');
     
   } catch (error) {
@@ -147,17 +134,26 @@ async function checkAndRunOverdueJobs() {
 /**
  * Main function to refresh ratings for all clinics
  */
-async function refreshAllClinicRatings() {
+async function refreshAllClinicRatings({
+  staleAfterDays = RATING_REFRESH_INTERVAL_DAYS,
+  maxClinics = RATING_REFRESH_MAX_PER_RUN
+} = {}) {
   let pool;
   
   try {
     pool = await db.getConnection();
     
-    // Get all clinics with PlaceIDs
-    const result = await pool.request().query(`
-      SELECT ClinicID, ClinicName, PlaceID, LastRatingUpdate
+    // Clinics with a PlaceID whose rating is missing or older than the
+    // interval, stalest first, capped per run.
+    const result = await pool.request()
+      .input('staleAfterDays', sql.Int, staleAfterDays)
+      .input('maxClinics', sql.Int, maxClinics)
+      .query(`
+      SELECT TOP (@maxClinics) ClinicID, ClinicName, PlaceID, LastRatingUpdate
       FROM Clinics
       WHERE PlaceID IS NOT NULL
+        AND (LastRatingUpdate IS NULL
+             OR LastRatingUpdate < DATEADD(day, -@staleAfterDays, GETDATE()))
       -- T-SQL has no NULLS FIRST. This query previously used it, so it threw
       -- "Incorrect syntax near 'NULLS'" on every run and the whole rating
       -- refresh aborted here, before a single Places call. The error was
@@ -169,7 +165,7 @@ async function refreshAllClinicRatings() {
     const clinics = result.recordset;
     
     if (clinics.length === 0) {
-      console.log('No clinics with PlaceIDs found');
+      console.log(`No clinic ratings older than ${staleAfterDays} days - nothing to refresh`);
       return {
         total: 0,
         updated: 0,
@@ -177,7 +173,7 @@ async function refreshAllClinicRatings() {
       };
     }
 
-    console.log(`Found ${clinics.length} clinic(s) with PlaceIDs to refresh`);
+    console.log(`Found ${clinics.length} clinic(s) with ratings older than ${staleAfterDays} days (cap ${maxClinics})`);
 
     // Extract place IDs
     const placeIds = clinics.map(c => c.PlaceID);
