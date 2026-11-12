@@ -209,8 +209,8 @@ async function loadProceduresClinicFkMeta(poolOrTransaction) {
     );
   }
 
-  filterSql = fk.filterDefinition;
-  fkCount = 1;
+  const filterSql = fk.filterDefinition;
+  const fkCount = 1;
   parentColumnCount = fk.columns.length;
 
   const refColsStr = refs.join(', ');

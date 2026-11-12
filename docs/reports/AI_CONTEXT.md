@@ -82,7 +82,7 @@ Rich Google Places information:
 Doctor/provider information linked to clinics
 
 ### Procedures
-Procedures offered with pricing. **Clinic-centric:** live rows use **`Procedures.ClinicID` → `Clinics`**; **`ProviderID`** is optional. **`Procedures.LocationID`** may reference **`Locations`** and/or a legacy **`Clinics(ClinicID)`** FK depending on the database; **`loadProceduresClinicFkMeta`** in `utils/proceduresClinicFkShape.js` chooses insert values. See **`docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`**.
+Procedures offered with pricing. **Clinic-centric:** live rows use **`Procedures.ClinicID` → `Clinics`**; **`ProviderID`** is optional. In prod the clinic FK is **`FK_Procedures_ClinicID`** on `ClinicID`; **`Procedures.LocationID`** references **`Locations`** only (the legacy `LocationID` → `Clinics(ClinicID)` FK was dropped under GLO-87), and existing `LocationID` values are a mix of real location ids, legacy clinic-id copies and NULL, so never read clinic ownership from it. **`loadProceduresClinicFkMeta`** in `utils/proceduresClinicFkShape.js` still detects the FK shape (including the legacy one on older databases) and chooses insert values. See **`docs/PROCEDURES_CLINICS_LOCATIONS_SCHEMA.md`**.
 
 ### Locations
 Geographic locations for filtering/search

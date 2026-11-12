@@ -1,3 +1,21 @@
+/**
+ * RETIRED — do not run. (GLO-86)
+ *
+ * One-off from the 2025-10 Google data migration (commit 3367461). When a
+ * name match failed or was judged wrong, this script INSERTed a brand-new
+ * Clinics row carrying the Google data, and never checked whether a clinic
+ * already existed at that street address. That produced the GLO-86 paired
+ * half-rows: an old row with the prices and a new row with the rating and
+ * photos for the same business. 8 pairs were merged by hand on 2026-10-21.
+ *
+ * New clinics must go through clinic-management (submission -> draft ->
+ * approve), which runs duplicate detection, including same-address.
+ */
+if (!process.argv.includes('--i-understand-this-creates-duplicate-clinics')) {
+  console.error('scripts/consolidateData.js is retired (GLO-86): it creates duplicate clinics. See the header comment.');
+  process.exit(1);
+}
+
 const fs = require('fs');
 const { sql, db } = require('../db');
 const { normalizeAddressForStorage } = require('../utils/addressUtils');

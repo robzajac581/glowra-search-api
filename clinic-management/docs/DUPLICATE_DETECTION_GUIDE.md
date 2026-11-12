@@ -18,8 +18,85 @@ The duplicate detector still evaluates multiple signals in confidence order:
 3. **Phone match**
 4. **Website domain match**
 5. **Fuzzy clinic name + city/state**
+6. **Same normalized street address** (see below)
 
 Only **PlaceID exact match** is used for automatic duplicate linking/merging.
+
+## Same-Address Detection
+
+Code: `utils/addressDuplicateUtils.js` (pure, unit-tested in
+`test/addressDuplicateDetection.test.js`), wired into
+`duplicateDetectionService.checkDuplicates` and exposed as a whole-table scan at
+`GET /duplicates/address-candidates`.
+
+### Why
+
+Two historical import passes created paired half-rows for the same practice: one
+row with prices, the other with Google rating and photos. Names and PlaceIDs
+differed, so strategies 1-5 missed every pair. The same street address catches
+them, but address alone is wrong roughly 15% of the time (multi-location
+practices, separate practices in one building, two practices in one suite). So
+this strategy only **surfaces candidates with evidence**; it never merges.
+
+### Matching
+
+Two clinics are compared only when the normalized street is identical and the
+locality agrees: ZIP when both sides have one (conflicting ZIPs never match),
+otherwise city + state. Normalization handles:
+
+- multi-line `Clinics.Address` with an embedded city (`1600 Kapiolani Blvd\nSuite 105\nHonolulu`),
+  a practice-name line before the street, and a unit line that also carries the city (`Suite 107 Miami`)
+- suite/unit variants: `#420`, `Suite 420`, `STE 202`, `Suite #320`, `UNIT 320`, also when the unit
+  sits in the `City` column (`Suite 551\nReston`)
+- USPS suffix/directional spellings: Boulevard/Blvd, Freeway/Fwy, Parkway/Pkwy, East/E, ...
+- an empty `Clinics.Address`: the GooglePlacesData street, city, state and ZIP are used together
+  (rows with an empty Address have been seen with the street number stored as `PostalCode`)
+
+### Classification
+
+Website registrable domain is the most decisive signal; a suite mismatch overrides it.
+
+| Classification | When |
+|---|---|
+| `excluded` | both sides name a suite/unit and they differ (e.g. 17/121, suite 201 vs 202) |
+| `review_only` | website domains differ (e.g. 54/119, same suite, different sites) |
+| `review_only` | neither side has a website |
+| `review_only` | same website, names dissimilar (< 50 after removing generic words), and both clinics have priced procedures: two practitioners sharing one site (e.g. 32/42) |
+| `likely_duplicate` | otherwise: website domain matches, or exactly one side has a website |
+
+Shared hosts (facebook.com, instagram.com, linktr.ee, ...) count as "no website".
+In `checkDuplicates`, `likely_duplicate` is reported at `medium` confidence and
+`review_only` at `low`; `excluded` pairs are not returned. Every match carries
+`addressClassification` and `addressEvidence`.
+
+### Known limitations
+
+- A row with no street at all (empty `Address` and no Google street) cannot be
+  compared. Duplicate 4/118 was of this kind and would not have been found.
+- Website domain alone is not a duplicate signal: chains (laseraway.com,
+  weilerplasticsurgery.com, ...) share one domain across many locations.
+
+### Import history (root cause)
+
+The half-rows were not created by `scripts/importProceduresFromExcel.js` or
+`scripts/importGoogleData.js`; neither inserts `Clinics` rows (the first only
+attaches procedures to clinics it resolves by PlaceID or exact name + city +
+state, the second only updates a clinic it finds by name/address `LIKE`). They
+came from the October 2025 Google Places consolidation:
+`scripts/analyzeUnmatched.js` scored unmatched Google rows against existing
+clinics by name similarity plus lat/lng distance (`scripts/matching-report.json`),
+`scripts/consolidateData.js` created a **new** clinic for every Google row with
+no or a low-confidence match, and `scripts/identifyBadMatches.js` (confidence
+< 60) -> `scripts/verifyBadMatches.js` (name < 85 or far apart) ->
+`scripts/revertAndFix.js` undid matches and created those as new clinics too.
+No step compared street addresses or website domains, so a practice whose
+Google business name differed from the spreadsheet name (Toledo vs Farris,
+Lyos, Higa, Surgical Arts) got a second row carrying the Google data while the
+original kept the prices. The distance signal was also unreliable: Toledo and
+Farris share a street address yet were measured 23.7 km apart, consistent with
+the whole-degree coordinates tracked in GLO-61. Any future importer that creates clinics should call
+`checkDuplicates` (or `classifyAddressPair`) before inserting and skip or queue
+`likely_duplicate` hits for review.
 
 ## Current Dedup Policy
 
@@ -105,6 +182,6 @@ After duplicates are merged, rerun migrations so `UX_Clinics_PlaceID_NotNull` is
 
 1. Always run **dry-run** before `--execute`.
 2. Prefer PlaceID as the canonical identity key.
-3. Treat name/phone/website matches as review hints, not automatic merge triggers.
+3. Treat name/phone/website/address matches as review hints, not automatic merge triggers.
 4. Re-run duplicate backfill before enabling strict PlaceID unique index in environments with legacy data.
 
