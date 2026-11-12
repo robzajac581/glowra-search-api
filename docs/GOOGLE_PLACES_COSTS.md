@@ -64,10 +64,10 @@ and Vertex AI. The daily quota is the hard stop.
 
 ## Known risks and traps
 
-- **`POST /api/admin/refresh-ratings` and `POST /api/admin/refresh-photos` have
-  no authentication** (`app.js`, `TODO: add auth`). Without a `clinicId`,
-  refresh-ratings refreshes every clinic. Each anonymous call costs ~$8–10 of
-  Google calls. Bounded only by the 1,200/day quota. Ticketed in Linear.
+- **`POST /api/admin/refresh-ratings` and `POST /api/admin/refresh-photos`**
+  require the `X-API-Key` header (`CLINIC_MANAGEMENT_API_KEY`) since 2026-11-12
+  (GLO-93; before that they were anonymous). Without a `clinicId`,
+  refresh-ratings refreshes every clinic: ~$8–10 of Google calls per request.
 - **Starting the API locally against prod without `DISABLE_SCHEDULED_JOBS=true`**
   runs the startup photo-overdue check, which can trigger a full photo refresh.
   The root `.claude/launch.json` `search-api` entry sets the flag.

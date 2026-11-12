@@ -147,7 +147,7 @@ node app.js
 
 1. **Google API cost:** see `docs/GOOGLE_PLACES_COSTS.md`. The rating refresh is monthly per
    clinic (max 50/night), Places is capped at 1,200 requests/day, and the budget alert is $60/month.
-   Manual refreshes (`/api/admin/refresh-*`, currently unauthenticated) bill per clinic.
+   Manual refreshes (`/api/admin/refresh-*`, require `X-API-Key`) bill per clinic.
 
 2. **Review Text Availability:**
    - Not all clinics have reviews on Google
