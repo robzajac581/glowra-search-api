@@ -72,8 +72,8 @@ Google Places is the only per-request bill. It was ~$250/month until 2026-11-12,
 daily rating refresh, not photos. **Read `docs/GOOGLE_PLACES_COSTS.md` first.** It covers which
 Google account owns billing (rob.glowra@gmail.com), the controls in place (monthly per-clinic
 rating refresh, 500/day photo budget, 1,200/day Google quota, $60 budget alert, weekly report),
-and the traps (unauthenticated `/api/admin/refresh-*` endpoints; never start the server against
-prod without `DISABLE_SCHEDULED_JOBS=true`). Any loop over all clinics costs ~$0.022 per clinic:
+and the traps (`/api/admin/refresh-*` bill per clinic and need `X-API-Key`; never start the server
+against prod without `DISABLE_SCHEDULED_JOBS=true`). Any loop over all clinics costs ~$0.022 per clinic:
 estimate it, and get Rob's approval for anything over $50. Check spend with
 `python3 -I scripts/googleSpendReport.py 7`.
 

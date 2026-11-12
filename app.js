@@ -9,7 +9,7 @@ const { sql, db } = require('./db');
 const { batchFetchPlaceDetails } = require('./utils/googlePlaces');
 const { initRatingRefreshJob, refreshAllClinicPhotos } = require('./jobs/scheduledRefresh');
 const clinicManagementRouter = require('./clinic-management');
-const { checkApiKeyConfig } = require('./clinic-management/middleware/auth');
+const { checkApiKeyConfig, apiKeyAuth } = require('./clinic-management/middleware/auth');
 const { calculateDistance, geocodeLocation, parseLocationInput, isLikelyGeographicLocationString, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
 const { mergeAddressForResponse } = require('./utils/addressUtils');
@@ -2469,9 +2469,12 @@ app.get('/api/health/photo-status', async (req, res) => {
  *
  * For use by external schedulers (cron-job.org, GitHub Actions) when in-process
  * cron may not run reliably (e.g., serverless, frequent restarts).
- * TODO: add auth (e.g., X-API-Key) for production use
+ *
+ * Requires the X-API-Key header (CLINIC_MANAGEMENT_API_KEY). Each call refreshes
+ * every clinic and bills ~1 Google Place Details call per clinic, so it must
+ * never be anonymous. (GLO-93, docs/GOOGLE_PLACES_COSTS.md)
  */
-app.post('/api/admin/refresh-photos', async (req, res) => {
+app.post('/api/admin/refresh-photos', apiKeyAuth, async (req, res) => {
   try {
     const result = await refreshAllClinicPhotos();
     res.json({
@@ -2489,7 +2492,9 @@ app.post('/api/admin/refresh-photos', async (req, res) => {
 
 // Admin endpoint to manually refresh ratings for one or all clinics
 // TODO: add auth to this (once we have auth)
-app.post('/api/admin/refresh-ratings', async (req, res) => {
+// Requires the X-API-Key header. Without a clinicId this refreshes every clinic
+// (~$8-10 of Google calls), so it must never be anonymous. (GLO-93)
+app.post('/api/admin/refresh-ratings', apiKeyAuth, async (req, res) => {
   let pool;
   try {
     const { clinicId } = req.body;
