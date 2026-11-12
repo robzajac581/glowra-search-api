@@ -66,9 +66,21 @@ Detailed rules live in `.cursorrules` and apply to Claude Code equally. The most
 - **Docs**: update existing documentation rather than writing "what changed" summaries — git is
   the change log. New endpoints need Swagger updates in `clinic-management/swagger.js`.
 
+## Google Places costs (read before touching anything that calls Google)
+
+Google Places is the only per-request bill. It was ~$250/month until 2026-11-12, driven by a
+daily rating refresh, not photos. **Read `docs/GOOGLE_PLACES_COSTS.md` first.** It covers which
+Google account owns billing (rob.glowra@gmail.com), the controls in place (monthly per-clinic
+rating refresh, 500/day photo budget, 1,200/day Google quota, $60 budget alert, weekly report),
+and the traps (unauthenticated `/api/admin/refresh-*` endpoints; never start the server against
+prod without `DISABLE_SCHEDULED_JOBS=true`). Any loop over all clinics costs ~$0.022 per clinic:
+estimate it, and get Rob's approval for anything over $50. Check spend with
+`python3 -I scripts/googleSpendReport.py 7`.
+
 ## Docs
 
 - `docs/` — general feature guides
+- `docs/GOOGLE_PLACES_COSTS.md` — Google billing, cost controls, and how to check spend
 - `docs/FE communications/` — handoff documents for frontend work
 - `docs/Future Work/` — planned and partial work
 - `clinic-management/docs/` — clinic management specifics, including `TEST_CHECKLIST.md`
