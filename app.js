@@ -74,6 +74,7 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 // Photo cache configuration (shared with the refresh job so cache keys match)
 const { PHOTO_CACHE_DIR, PHOTO_CACHE_DURATION, cacheKeyForPhoto } = require('./utils/photoCache');
+const { photoBudget } = require('./utils/googlePhotoBudget');
 
 // Serve-time photo URL construction. The Google Places API key is a credential
 // read from the environment per request, never a value stored in a column and
@@ -196,6 +197,35 @@ app.get('/api/provider-photos/:providerId', async (req, res) => {
 });
 
 /**
+ * Response when the Google photo budget (GLO-76) is exhausted: an expired
+ * cached copy if there is one, otherwise a 503 the frontend renders as its
+ * placeholder. Never cached downstream, so photos return once the window rolls.
+ */
+async function sendPhotoBudgetExhausted(res, { cacheFilePath, staleCache, cacheKey }) {
+  if (staleCache) {
+    try {
+      const stalePhoto = await fs.readFile(cacheFilePath);
+      res.set({
+        'Content-Type': staleCache.meta.contentType || 'image/jpeg',
+        'Cache-Control': 'public, max-age=300',
+        'X-Cache': 'STALE',
+        'X-Photo-Budget': 'exhausted',
+        'Last-Modified': staleCache.stats.mtime.toUTCString(),
+        'ETag': `"${cacheKey}-stale"`
+      });
+      return res.send(stalePhoto);
+    } catch (staleReadError) {
+      // Fall through to the 503.
+    }
+  }
+  return res.status(503).set({
+    'Retry-After': String(photoBudget.retryAfterSeconds()),
+    'Cache-Control': 'no-store',
+    'X-Photo-Budget': 'exhausted'
+  }).json({ error: 'Photo temporarily unavailable', reason: 'photo_budget_exhausted' });
+}
+
+/**
  * Photo Proxy Endpoint - Handles a clinic's primary photo with caching
  * GET /api/photos/clinic/:clinicId
  *
@@ -313,15 +343,16 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
 
     // Check if cached version exists and is fresh
     let cachedPhoto = null;
+    let staleCache = null; // expired copy, served if the photo budget is exhausted
     try {
       const stats = await fs.stat(cacheFilePath);
       const meta = JSON.parse(await fs.readFile(cacheMetaPath, 'utf-8'));
-      
+
       const cacheAge = Date.now() - stats.mtimeMs;
-      
+
       if (cacheAge < PHOTO_CACHE_DURATION) {
         cachedPhoto = await fs.readFile(cacheFilePath);
-        
+
         // Serve cached image
         res.set({
           'Content-Type': meta.contentType || 'image/jpeg',
@@ -330,11 +361,17 @@ app.get('/api/photos/clinic/:clinicId', async (req, res) => {
           'Last-Modified': stats.mtime.toUTCString(),
           'ETag': `"${cacheKey}"`
         });
-        
+
         return res.send(cachedPhoto);
       }
+      staleCache = { stats, meta };
     } catch (error) {
       // Cache miss or expired - continue to fetch from Google
+    }
+
+    // GLO-76: every Google fetch is billed; stop at the configured budget.
+    if (isGooglePhoto && !photoBudget.tryAcquire()) {
+      return sendPhotoBudgetExhausted(res, { cacheFilePath, staleCache, cacheKey });
     }
 
     // Fetch from Google Places API with authentication
@@ -533,6 +570,12 @@ app.get('/api/photos/proxy/:photoId', async (req, res) => {
       staleCache = { stats, meta };
     } catch (error) {
       // No cache file at all - continue to fetch from Google
+    }
+
+    // GLO-76: every Google fetch is billed; stop at the configured budget.
+    // (A null photoURL means the key is missing; that path fails below anyway.)
+    if (photoURL && isGooglePhotoReference(photo.PhotoReference) && !photoBudget.tryAcquire()) {
+      return sendPhotoBudgetExhausted(res, { cacheFilePath, staleCache, cacheKey });
     }
 
     // Fetch from Google Places API with authentication
@@ -2406,6 +2449,7 @@ app.get('/api/health/photo-status', async (req, res) => {
       lastPhotoRefresh: lastPhotoUpdate ? lastPhotoUpdate.toISOString() : null,
       daysSinceRefresh: daysSinceUpdate !== null ? Math.round(daysSinceUpdate * 10) / 10 : null,
       refreshIntervalDays: PHOTO_REFRESH_INTERVAL_DAYS,
+      googlePhotoBudget: photoBudget.stats(),
       message: isOverdue
         ? 'Photo refresh is overdue. Consider triggering manually via POST /api/admin/refresh-photos'
         : 'Photos are within refresh interval'
@@ -2628,6 +2672,15 @@ if (String(process.env.DISABLE_SCHEDULED_JOBS).toLowerCase() === 'true') {
 // the key); set CLINIC_MANAGEMENT_STRICT_CONFIG=true to make it fatal.
 checkApiKeyConfig();
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// GLO-76: reload the Google photo budget before serving, so a deploy does not
+// reset it. Capped at 10s so a slow database can never block startup.
+Promise.race([
+  photoBudget.hydrate(),
+  new Promise((resolve) => setTimeout(() => resolve(null), 10000))
+]).then((loaded) => {
+  if (loaded === null) console.warn('[GLO-76] photo budget reload timed out; starting from 0');
+  else console.log(`[GLO-76] photo budget: ${photoBudget.stats().used}/${photoBudget.stats().limit} used in window`);
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 });
