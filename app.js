@@ -1784,7 +1784,13 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         c.GoogleReviewsJSON,
         c.Phone,
         c.Website,
-        COALESCE(g.Photo, cp.PhotoURL) as PhotoURL,
+        -- Photo inputs, not a URL: stored Photo/PhotoURL strings carry a
+        -- stale baked-in API key, so Google answers with its "map error"
+        -- image. Resolved in JS via resolvePrimaryPhotoUrl, same as search-index.
+        cp.PhotoID as PrimaryPhotoID,
+        cp.PhotoReference as PrimaryPhotoReference,
+        cp.PhotoURL as PrimaryPhotoURL,
+        g.Photo as GooglePhoto,
         g.Category as ClinicCategory,
         g.Description,
         
@@ -1810,7 +1816,7 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
       LEFT JOIN GooglePlacesData g ON c.ClinicID = g.ClinicID
       LEFT JOIN Locations l ON c.LocationID = l.LocationID
       LEFT JOIN (
-        SELECT ClinicID, PhotoURL,
+        SELECT ClinicID, PhotoID, PhotoReference, PhotoURL,
           ROW_NUMBER() OVER (PARTITION BY ClinicID ORDER BY IsPrimary DESC, DisplayOrder ASC) as RowNum
         FROM ClinicPhotos
       ) cp ON c.ClinicID = cp.ClinicID AND cp.RowNum = 1
@@ -1823,6 +1829,8 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         c.GoogleRating DESC,
         DistanceMiles ASC
     `);
+
+    const baseURL = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
 
     // Process results to include one quality review per clinic
     const clinics = result.recordset.map(clinic => {
@@ -1875,7 +1883,14 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
         reviewCount: clinic.GoogleReviewCount,
         category: normalizeCategory(clinic.ClinicCategory),
         description: clinic.Description,
-        photoURL: clinic.PhotoURL,
+        photoURL: resolvePrimaryPhotoUrl({
+          baseURL,
+          photoId: clinic.PrimaryPhotoID,
+          photoReference: clinic.PrimaryPhotoReference,
+          photoUrl: clinic.PrimaryPhotoURL,
+          googlePhoto: clinic.GooglePhoto,
+          size: 'medium'
+        }),
         location: {
           latitude: clinic.Latitude,
           longitude: clinic.Longitude
