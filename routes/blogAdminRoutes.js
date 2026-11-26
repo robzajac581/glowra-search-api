@@ -4,7 +4,7 @@
 
 const express = require('express');
 const multer = require('multer');
-const { requireAdminAuth } = require('../clinic-management/middleware/adminAuth');
+const { requireRole, enforceDeclaredRoles, ADMIN_ROLES } = require('../clinic-management/middleware/adminAuth');
 const blogPostService = require('../services/blogPostService');
 const { BlogPostSlugConflictError } = require('../services/blogPostService');
 const { triggerFrontendDeploy } = require('../utils/deployWebhook');
@@ -28,7 +28,8 @@ const upload = multer({
 
 const router = express.Router();
 
-router.use(requireAdminAuth);
+// GLO-29: every blog admin route is limited to admin roles.
+router.use(requireRole(ADMIN_ROLES));
 
 function uploadMdSingle(req, res, next) {
   upload.single('file')(req, res, (err) => {
@@ -261,5 +262,8 @@ router.delete('/posts/:id', async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
+
+// GLO-29: any route above without a role allowlist rejects every caller.
+enforceDeclaredRoles(router);
 
 module.exports = router;
