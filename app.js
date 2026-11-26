@@ -2692,6 +2692,10 @@ if (String(process.env.DISABLE_SCHEDULED_JOBS).toLowerCase() === 'true') {
 // the key); set CLINIC_MANAGEMENT_STRICT_CONFIG=true to make it fatal.
 checkApiKeyConfig();
 
+// GLO-29: admin JWTs have no fallback secret. Refuse to start without
+// JWT_SECRET rather than run with admin auth broken or forgeable.
+require('./clinic-management/middleware/adminAuth').assertJwtSecretConfigured();
+
 // GLO-76: reload the Google photo budget before serving, so a deploy does not
 // reset it. Capped at 10s so a slow database can never block startup.
 Promise.race([

@@ -11,7 +11,10 @@ const draftService = require('../services/draftService');
 const draftGoogleEnrichmentService = require('../services/draftGoogleEnrichmentService');
 const clinicCreationService = require('../services/clinicCreationService');
 const clinicDeletionService = require('../services/clinicDeletionService');
-const { requireAdminAuth } = require('../middleware/adminAuth');
+const { requireRole, enforceDeclaredRoles, ADMIN_ROLES } = require('../middleware/adminAuth');
+
+// GLO-29: every admin route declares its role allowlist explicitly.
+const adminOnly = requireRole(ADMIN_ROLES);
 const { 
   fetchGooglePlaceDetails, 
   fetchPlacePhotos,
@@ -92,7 +95,7 @@ router.post('/login', async (req, res) => {
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', requireAdminAuth, async (req, res) => {
+router.post('/logout', adminOnly, async (req, res) => {
   // For JWT, logout is handled client-side by removing the token
   // This endpoint exists for consistency and future token blacklisting
   res.json({
@@ -113,7 +116,7 @@ router.post('/logout', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: Current user info
  */
-router.get('/me', requireAdminAuth, async (req, res) => {
+router.get('/me', adminOnly, async (req, res) => {
   try {
     const user = await adminService.getAdminById(req.adminUser.adminUserId);
     
@@ -172,7 +175,7 @@ router.get('/me', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: List of clinics with pagination
  */
-router.get('/clinics', requireAdminAuth, async (req, res) => {
+router.get('/clinics', adminOnly, async (req, res) => {
   try {
     const { page = 1, limit = 20, search } = req.query;
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -277,7 +280,7 @@ router.get('/clinics', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: Dashboard stats
  */
-router.get('/stats', requireAdminAuth, async (req, res) => {
+router.get('/stats', adminOnly, async (req, res) => {
   try {
     const stats = await adminService.getDashboardStats();
     
@@ -335,7 +338,7 @@ router.get('/stats', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: List of drafts
  */
-router.get('/drafts', requireAdminAuth, async (req, res) => {
+router.get('/drafts', adminOnly, async (req, res) => {
   try {
     const { status, type, search, page = 1, limit = 20 } = req.query;
 
@@ -399,7 +402,7 @@ router.get('/drafts', requireAdminAuth, async (req, res) => {
  *       404:
  *         description: Draft not found
  */
-router.get('/drafts/:draftId', requireAdminAuth, async (req, res) => {
+router.get('/drafts/:draftId', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -564,7 +567,7 @@ router.get('/drafts/:draftId', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: Updated draft
  */
-router.put('/drafts/:draftId', requireAdminAuth, async (req, res) => {
+router.put('/drafts/:draftId', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -635,7 +638,7 @@ router.put('/drafts/:draftId', requireAdminAuth, async (req, res) => {
  *       400:
  *         description: Validation error
  */
-router.post('/drafts/:draftId/approve', requireAdminAuth, async (req, res) => {
+router.post('/drafts/:draftId/approve', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -713,7 +716,7 @@ router.post('/drafts/:draftId/approve', requireAdminAuth, async (req, res) => {
  *       200:
  *         description: Draft rejected
  */
-router.post('/drafts/:draftId/reject', requireAdminAuth, async (req, res) => {
+router.post('/drafts/:draftId/reject', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     const { reason } = req.body;
@@ -823,7 +826,7 @@ router.post('/drafts/:draftId/reject', requireAdminAuth, async (req, res) => {
  *       500:
  *         description: Failed to fetch Google photos
  */
-router.get('/google-photos', requireAdminAuth, async (req, res) => {
+router.get('/google-photos', adminOnly, async (req, res) => {
   try {
     const { placeId } = req.query;
     
@@ -894,7 +897,7 @@ router.get('/google-photos', requireAdminAuth, async (req, res) => {
  *       500:
  *         description: Failed to fetch Google photos
  */
-router.get('/clinics/:clinicId/google-photos', requireAdminAuth, async (req, res) => {
+router.get('/clinics/:clinicId/google-photos', adminOnly, async (req, res) => {
   try {
     const clinicId = parseInt(req.params.clinicId);
     
@@ -986,7 +989,7 @@ router.get('/clinics/:clinicId/google-photos', requireAdminAuth, async (req, res
  *       200:
  *         description: PlaceID lookup result
  */
-router.post('/drafts/:draftId/lookup-placeid', requireAdminAuth, async (req, res) => {
+router.post('/drafts/:draftId/lookup-placeid', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -1087,7 +1090,7 @@ router.post('/drafts/:draftId/lookup-placeid', requireAdminAuth, async (req, res
  *       400:
  *         description: No PlaceID available (neither in request body nor stored in draft)
  */
-router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, res) => {
+router.post('/drafts/:draftId/fetch-google-data', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     
@@ -1292,8 +1295,8 @@ router.post('/drafts/:draftId/fetch-google-data', requireAdminAuth, async (req, 
  */
 // Support both GET and POST for backwards compatibility
 // POST allows placeId to be passed in request body
-router.get('/drafts/:draftId/google-photos', requireAdminAuth, handleDraftGooglePhotos);
-router.post('/drafts/:draftId/google-photos', requireAdminAuth, handleDraftGooglePhotos);
+router.get('/drafts/:draftId/google-photos', adminOnly, handleDraftGooglePhotos);
+router.post('/drafts/:draftId/google-photos', adminOnly, handleDraftGooglePhotos);
 
 async function handleDraftGooglePhotos(req, res) {
   try {
@@ -1414,7 +1417,7 @@ async function handleDraftGooglePhotos(req, res) {
  *       200:
  *         description: PlaceID updated
  */
-router.post('/drafts/:draftId/update-placeid', requireAdminAuth, async (req, res) => {
+router.post('/drafts/:draftId/update-placeid', adminOnly, async (req, res) => {
   try {
     const draftId = parseInt(req.params.draftId);
     const { placeId } = req.body;
@@ -1509,7 +1512,7 @@ router.post('/drafts/:draftId/update-placeid', requireAdminAuth, async (req, res
  *       400:
  *         description: Invalid parameters
  */
-router.post('/drafts/bulk-enrich-google', requireAdminAuth, async (req, res) => {
+router.post('/drafts/bulk-enrich-google', adminOnly, async (req, res) => {
   try {
     const dryRun = req.body.dryRun === true;
     const rawMc = parseFloat(req.body.minConfidence);
@@ -1596,7 +1599,7 @@ router.post('/drafts/bulk-enrich-google', requireAdminAuth, async (req, res) => 
  *       500:
  *         description: Internal server error
  */
-router.delete('/clinics/:clinicId', requireAdminAuth, async (req, res) => {
+router.delete('/clinics/:clinicId', adminOnly, async (req, res) => {
   try {
     const clinicId = parseInt(req.params.clinicId);
     
@@ -1607,7 +1610,7 @@ router.delete('/clinics/:clinicId', requireAdminAuth, async (req, res) => {
       });
     }
 
-    // Get admin email from token (stored in req.adminUser by requireAdminAuth middleware)
+    // Get admin email from token (stored in req.adminUser by the adminOnly role guard)
     const deletedBy = req.adminUser?.email || 'unknown';
 
     const result = await clinicDeletionService.deleteClinic(clinicId, deletedBy);
@@ -1674,7 +1677,7 @@ router.delete('/clinics/:clinicId', requireAdminAuth, async (req, res) => {
  *                 pagination:
  *                   type: object
  */
-router.get('/clinics/deleted', requireAdminAuth, async (req, res) => {
+router.get('/clinics/deleted', adminOnly, async (req, res) => {
   try {
     const { page, limit, search } = req.query;
     
@@ -1733,7 +1736,7 @@ router.get('/clinics/deleted', requireAdminAuth, async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post('/clinics/deleted/:deletedClinicId/restore', requireAdminAuth, async (req, res) => {
+router.post('/clinics/deleted/:deletedClinicId/restore', adminOnly, async (req, res) => {
   try {
     const deletedClinicId = parseInt(req.params.deletedClinicId);
     
@@ -1768,5 +1771,7 @@ router.post('/clinics/deleted/:deletedClinicId/restore', requireAdminAuth, async
   }
 });
 
-module.exports = router;
+// GLO-29: any route above without a role allowlist rejects every caller.
+enforceDeclaredRoles(router, { publicRoutes: ['POST /login'] });
 
+module.exports = router;
