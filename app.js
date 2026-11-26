@@ -2729,3 +2729,7 @@ Promise.race([
     console.log(`Server running on port ${port}`);
   });
 });
+
+// Exported so tests can mount the routes on an ephemeral server with the DB
+// stubbed (see test/searchIndexShape.test.js). Startup behaviour is unchanged.
+module.exports = app;
