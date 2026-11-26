@@ -15,6 +15,8 @@ const http = require('node:http');
 
 process.env.DISABLE_SCHEDULED_JOBS = 'true';
 process.env.API_BASE_URL = 'https://api.test';
+// app.js refuses to start without JWT_SECRET (GLO-29); requiring it here needs one.
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'search-index-shape-test-secret';
 
 const express = require('express');
 const { db } = require('../db');
