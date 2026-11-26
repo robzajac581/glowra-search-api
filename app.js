@@ -13,6 +13,7 @@ const { checkApiKeyConfig, apiKeyAuth } = require('./clinic-management/middlewar
 const { calculateDistance, geocodeLocation, parseLocationInput, isLikelyGeographicLocationString, findMetroArea, stateMatches } = require('./utils/locationUtils');
 const { normalizeCategory } = require('./utils/categoryNormalizer');
 const { mergeAddressForResponse } = require('./utils/addressUtils');
+const { fetchIndexableClinics } = require('./services/indexableClinics');
 const {
   proceduresTableHasPriceUnitColumn,
   innerProcedurePriceUnitSelectSql
@@ -1939,6 +1940,30 @@ app.get('/api/clinics/nearby-top-rated', async (req, res) => {
  * Note: This endpoint only reads from the database cache and never calls Google Places API
  * The scheduled job (runs daily at 2 AM) keeps the rating data fresh
  */
+/**
+ * Indexable clinics for static prerendering (GLO-98)
+ * GET /api/clinics/indexable
+ *
+ * Every clinic meeting the complete-data bar (>=3 priced procedures, a photo,
+ * a Google rating), with address, procedures and prices. glowra-FE reads it
+ * once per build to write static HTML for /clinic/:id. DB only: no Google
+ * calls. See services/indexableClinics.js.
+ *
+ * Must stay above /api/clinics/:clinicId, which would otherwise shadow it.
+ */
+app.get('/api/clinics/indexable', async (req, res) => {
+  try {
+    const pool = await db.getConnection();
+    const baseURL = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const clinics = await fetchIndexableClinics(pool, { baseURL });
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json({ count: clinics.length, generatedAt: new Date().toISOString(), clinics });
+  } catch (error) {
+    console.error('Error in /api/clinics/indexable:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/clinics/:clinicId', async (req, res) => {
   let pool;
   try {
