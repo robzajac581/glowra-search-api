@@ -50,8 +50,12 @@ function defaultAccountKey(req) {
 //     arrives as "<client-supplied...>, <client IP>, <Cloudflare edge IP>"
 //     (https://rohitpaulk.com/articles/render-rails-remote-ip).
 // So the right-most entry is a Cloudflare edge, and the client IP that
-// Cloudflare appended is 2nd from the right. If Render's chain changes, set
-// `ipHopsFromRight` accordingly.
+// Cloudflare appended is 2nd from the right.
+//
+// Confirmed in production 2026-11-27 (GLO-30 header probe, one admin login):
+// XFF was "<client IP>, <Cloudflare edge 172.70.x.x>", CF-Connecting-IP matched
+// the client IP, and the socket was a Render-internal 10.x address. If Render's
+// chain changes, set `ipHopsFromRight` accordingly.
 const DEFAULT_IP_HOPS_FROM_RIGHT = 2;
 
 function createIpKey(hopsFromRight = DEFAULT_IP_HOPS_FROM_RIGHT) {
