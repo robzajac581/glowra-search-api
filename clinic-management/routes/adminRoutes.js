@@ -12,9 +12,13 @@ const draftGoogleEnrichmentService = require('../services/draftGoogleEnrichmentS
 const clinicCreationService = require('../services/clinicCreationService');
 const clinicDeletionService = require('../services/clinicDeletionService');
 const { requireRole, enforceDeclaredRoles, ADMIN_ROLES } = require('../middleware/adminAuth');
+const { createAuthRateLimiter } = require('../middleware/authRateLimit');
 
 // GLO-29: every admin route declares its role allowlist explicitly.
 const adminOnly = requireRole(ADMIN_ROLES);
+
+// GLO-30: throttle failed logins per IP and per account.
+const adminLoginLimiter = createAuthRateLimiter({ name: 'admin-login' });
 const { 
   fetchGooglePlaceDetails, 
   fetchPlacePhotos,
@@ -55,8 +59,10 @@ const {
  *         description: Login successful
  *       401:
  *         description: Invalid credentials
+ *       429:
+ *         description: Too many failed attempts (per IP or per account); see Retry-After
  */
-router.post('/login', async (req, res) => {
+router.post('/login', adminLoginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -1773,5 +1779,8 @@ router.post('/clinics/deleted/:deletedClinicId/restore', adminOnly, async (req, 
 
 // GLO-29: any route above without a role allowlist rejects every caller.
 enforceDeclaredRoles(router, { publicRoutes: ['POST /login'] });
+
+// Exposed so tests can clear limiter state between cases.
+router.adminLoginLimiter = adminLoginLimiter;
 
 module.exports = router;
