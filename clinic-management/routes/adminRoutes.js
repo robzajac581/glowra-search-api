@@ -62,7 +62,23 @@ const {
  *       429:
  *         description: Too many failed attempts (per IP or per account); see Retry-After
  */
-router.post('/login', adminLoginLimiter, async (req, res) => {
+// GLO-30 TEMPORARY probe: log the proxy headers on admin login so we can confirm
+// how Render fills X-Forwarded-For before PR #8 picks the hop count. Remove
+// once the hop count is settled. Logs headers only, never the body.
+function logForwardedHeaders(req, res, next) {
+  const h = req.headers;
+  console.log('[GLO-30 xff-probe]', JSON.stringify({
+    xForwardedFor: h['x-forwarded-for'] || null,
+    cfConnectingIp: h['cf-connecting-ip'] || null,
+    trueClientIp: h['true-client-ip'] || null,
+    xRealIp: h['x-real-ip'] || null,
+    reqIp: req.ip || null,
+    socket: (req.socket && req.socket.remoteAddress) || null
+  }));
+  next();
+}
+
+router.post('/login', logForwardedHeaders, adminLoginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     
