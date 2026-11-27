@@ -49,9 +49,10 @@ function buildLimitedApp(limiterOptions) {
   app.use(express.json());
   app.post('/login', limiter, (req, res) => {
     if (req.body.password === 'right') return res.json({ success: true });
+    if (req.body.password === 'boom') return res.status(500).json({ success: false });
     res.status(401).json({ success: false });
   });
-  return { app, advance: (ms) => { clock += ms; } };
+  return { app, limiter, advance: (ms) => { clock += ms; } };
 }
 
 function login(base, { email, password = 'wrong', ip }) {
@@ -123,11 +124,51 @@ test('parallel burst cannot slip past the account limit', async () => {
 });
 
 test('tracked keys stay bounded', async () => {
-  const { app } = buildLimitedApp({ maxKeys: 3, maxPerIp: 1000, maxPerAccount: 1000 });
+  const { app, limiter } = buildLimitedApp({ maxKeys: 3, maxPerIp: 1000, maxPerAccount: 1000 });
+  await quiet(() => withServer(app, async (base) => {
+    const statuses = [];
+    for (let i = 0; i < 20; i++) {
+      statuses.push((await login(base, { email: `r${i}@x.com`, ip: String(i) })).status);
+      const size = limiter.size();
+      assert.ok(size.ip <= 3 && size.account <= 3, `map grew past maxKeys: ${JSON.stringify(size)}`);
+    }
+    // First 3 keys fit; the rest fail closed rather than evicting.
+    assert.deepStrictEqual(statuses.slice(0, 3), [401, 401, 401]);
+    assert.ok(statuses.slice(3).every((s) => s === 429));
+  }));
+});
+
+test('a locked account stays locked while new keys flood in', async () => {
+  const { app, limiter, advance } = buildLimitedApp({ maxKeys: 5, maxPerIp: 1000 });
+  await quiet(() => withServer(app, async (base) => {
+    await login(base, { email: 'target@x.com', ip: 'a' });
+    await login(base, { email: 'target@x.com', ip: 'b' });
+    assert.strictEqual((await login(base, { email: 'target@x.com', ip: 'c' })).status, 429);
+
+    // Flood with fresh emails from spoofed IPs.
+    for (let i = 0; i < 50; i++) await login(base, { email: `flood${i}@x.com`, ip: `f${i}` });
+    assert.ok(limiter.size().account <= 5);
+
+    assert.strictEqual(
+      (await login(base, { email: 'target@x.com', password: 'right', ip: 'fresh' })).status,
+      429,
+      'flooding must not evict the locked account'
+    );
+
+    // After the window everything expires and the map has room again.
+    advance(1001);
+    assert.strictEqual((await login(base, { email: 'target@x.com', password: 'right', ip: 'fresh' })).status, 200);
+  }));
+});
+
+test('server errors (5xx) are not counted as failed attempts', async () => {
+  const { app } = buildLimitedApp();
   await withServer(app, async (base) => {
-    for (let i = 0; i < 20; i++) await login(base, { email: `r${i}@x.com`, ip: String(i) });
+    for (let i = 0; i < 6; i++) {
+      assert.strictEqual((await login(base, { email: 'a@x.com', password: 'boom' })).status, 500);
+    }
+    assert.strictEqual((await login(base, { email: 'a@x.com' })).status, 401);
   });
-  // No assertion on internals beyond "did not throw"; the cap evicts oldest keys.
 });
 
 test('admin login route is rate limited (DB stubbed)', async () => {

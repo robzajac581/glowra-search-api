@@ -2,8 +2,8 @@
  * GLO-30: in-process rate limiting for authentication endpoints.
  *
  * Every attempt counts against two fixed-window budgets: one per client IP
- * and one per account (normalized email). A successful attempt (2xx) is
- * refunded, so only failed attempts add up. When either budget is spent the
+ * and one per account (normalized email). A successful attempt (2xx) or a
+ * server error (5xx) is refunded, so only failed attempts add up. When either budget is spent the
  * request gets 429 with a Retry-After header, before the handler runs.
  *
  * Counters are counted up front (not on response) so a burst of parallel
@@ -22,7 +22,8 @@ const DEFAULT_WINDOW_MS = 15 * 60 * 1000;
 const DEFAULT_MAX_PER_IP = 20;
 const DEFAULT_MAX_PER_ACCOUNT = 5;
 // Bound memory: an attacker cycling random emails or IPs must not grow the
-// maps without limit.
+// maps without limit. When a map is full of live entries, attempts with a
+// new key get 429 until entries expire (fail closed).
 const DEFAULT_MAX_KEYS = 10000;
 
 function defaultAccountKey(req) {
@@ -54,14 +55,21 @@ class FixedWindowCounter {
     return entry;
   }
 
+  /**
+   * True if `key` is tracked already or there is room for a new key.
+   * Never evicts a live entry: a full map of live entries fails closed, so
+   * flooding new keys cannot push a locked account's counter out.
+   */
+  canTrack(key) {
+    if (this.get(key)) return true;
+    if (this.entries.size >= this.maxKeys) this.sweep();
+    return this.entries.size < this.maxKeys;
+  }
+
+  // Callers must check canTrack(key) first.
   increment(key) {
     let entry = this.get(key);
     if (!entry) {
-      if (this.entries.size >= this.maxKeys) this.sweep();
-      if (this.entries.size >= this.maxKeys) {
-        // Still full of live entries: drop the oldest one.
-        this.entries.delete(this.entries.keys().next().value);
-      }
       entry = { count: 0, resetAt: this.now() + this.windowMs };
       this.entries.set(key, entry);
     }
@@ -96,7 +104,7 @@ class FixedWindowCounter {
  * @param {(req) => string} [options.ipKey] - client identifier; default req.ip
  * @param {number} [options.maxKeys] - cap on tracked keys per map
  * @param {() => number} [options.now] - clock, for tests
- * @returns {import('express').RequestHandler & { reset: () => void }}
+ * @returns {import('express').RequestHandler & { reset: () => void, size: () => { ip: number, account: number } }}
  */
 function createAuthRateLimiter(options = {}) {
   const {
@@ -114,7 +122,8 @@ function createAuthRateLimiter(options = {}) {
   const byAccount = new FixedWindowCounter({ windowMs, maxKeys, now });
 
   function reject(res, entry, scope) {
-    const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now()) / 1000));
+    const resetAt = entry ? entry.resetAt : now() + windowMs;
+    const retryAfter = Math.max(1, Math.ceil((resetAt - now()) / 1000));
     console.warn(`[authRateLimit:${name}] ${scope} limit reached; retry in ${retryAfter}s`);
     res.set('Retry-After', String(retryAfter));
     return res.status(429).json({
@@ -132,18 +141,29 @@ function createAuthRateLimiter(options = {}) {
     const accountEntry = account ? byAccount.get(account) : null;
     if (accountEntry && accountEntry.count >= maxPerAccount) return reject(res, accountEntry, 'account');
 
+    if (!byIp.canTrack(ip)) return reject(res, null, 'ip-capacity');
+    if (account && !byAccount.canTrack(account)) return reject(res, null, 'account-capacity');
+
     byIp.increment(ip);
     if (account) byAccount.increment(account);
 
     res.on('finish', () => {
-      if (res.statusCode >= 200 && res.statusCode < 300) {
+      const status = res.statusCode;
+      if (status >= 200 && status < 300) {
+        // Success: refund the IP and clear the account's failures.
         byIp.decrement(ip);
         if (account) byAccount.reset(account);
+      } else if (status >= 500) {
+        // Server error: not a failed guess, refund both.
+        byIp.decrement(ip);
+        if (account) byAccount.decrement(account);
       }
     });
 
     next();
   }
+
+  limiter.size = () => ({ ip: byIp.entries.size, account: byAccount.entries.size });
 
   limiter.reset = () => {
     byIp.entries.clear();
