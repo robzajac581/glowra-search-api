@@ -2,9 +2,11 @@
  * GLO-30: in-process rate limiting for authentication endpoints.
  *
  * Every attempt counts against two fixed-window budgets: one per client IP
- * and one per account (normalized email). A successful attempt (2xx) or a
- * server error (5xx) is refunded, so only failed attempts add up. When either budget is spent the
- * request gets 429 with a Retry-After header, before the handler runs.
+ * and one per account (normalized email). Only auth failures (400 or 401)
+ * are kept. Any other response (success, 5xx outage, etc.) refunds exactly
+ * this request's own count, so it never wipes failures made by other
+ * requests. When either budget is spent the request gets 429 with a
+ * Retry-After header, before the handler runs.
  *
  * Counters are counted up front (not on response) so a burst of parallel
  * requests cannot slip past the limit.
@@ -33,9 +35,45 @@ function defaultAccountKey(req) {
   return normalized || null;
 }
 
-function defaultIpKey(req) {
-  return req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+// Where the client IP sits in X-Forwarded-For, counted from the right.
+//
+// app.js sets `trust proxy` to true, so req.ip is the LEFT-most XFF value,
+// which the client controls. This limiter ignores req.ip and reads XFF from
+// the right instead, where only the proxies append.
+//
+// Render does not document its X-Forwarded-For handling (no mention in
+// render.com/docs as of 2026-11-26). What is known, from secondhand sources:
+//   - Render's proxy appends to an incoming XFF instead of replacing it
+//     (Render feedback board, "Send the correct X-Forwarded-For":
+//     https://feedback.render.com/features/p/send-the-correct-xforwardedfor).
+//   - Requests pass Client -> Cloudflare -> Render proxy -> app, and XFF
+//     arrives as "<client-supplied...>, <client IP>, <Cloudflare edge IP>"
+//     (https://rohitpaulk.com/articles/render-rails-remote-ip).
+// So the right-most entry is a Cloudflare edge, and the client IP that
+// Cloudflare appended is 2nd from the right.
+//
+// Confirmed in production 2026-11-27 (GLO-30 header probe, one admin login):
+// XFF was "<client IP>, <Cloudflare edge 172.70.x.x>", CF-Connecting-IP matched
+// the client IP, and the socket was a Render-internal 10.x address. If Render's
+// chain changes, set `ipHopsFromRight` accordingly.
+const DEFAULT_IP_HOPS_FROM_RIGHT = 2;
+
+function createIpKey(hopsFromRight = DEFAULT_IP_HOPS_FROM_RIGHT) {
+  return function ipKey(req) {
+    const header = req.headers && req.headers['x-forwarded-for'];
+    const raw = Array.isArray(header) ? header.join(',') : header;
+    if (typeof raw === 'string') {
+      const hops = raw.split(',').map((h) => h.trim()).filter(Boolean);
+      if (hops.length >= hopsFromRight) return hops[hops.length - hopsFromRight];
+      // Fewer hops than expected: nothing was prepended, so the left-most
+      // entry is the nearest real client we know of.
+      if (hops.length > 0) return hops[0];
+    }
+    return (req.socket && req.socket.remoteAddress) || 'unknown';
+  };
 }
+
+const defaultIpKey = createIpKey();
 
 class FixedWindowCounter {
   constructor({ windowMs, maxKeys, now }) {
@@ -82,10 +120,6 @@ class FixedWindowCounter {
     if (entry && entry.count > 0) entry.count -= 1;
   }
 
-  reset(key) {
-    this.entries.delete(key);
-  }
-
   sweep() {
     const t = this.now();
     for (const [key, entry] of this.entries) {
@@ -101,7 +135,8 @@ class FixedWindowCounter {
  * @param {number} [options.maxPerIp] - failed attempts per IP per window (default 20)
  * @param {number} [options.maxPerAccount] - failed attempts per account per window (default 5)
  * @param {(req) => string|null} [options.accountKey] - account identifier; default req.body.email
- * @param {(req) => string} [options.ipKey] - client identifier; default req.ip
+ * @param {(req) => string} [options.ipKey] - client identifier; default reads X-Forwarded-For from the right
+ * @param {number} [options.ipHopsFromRight] - client position in X-Forwarded-For, from the right (default 2)
  * @param {number} [options.maxKeys] - cap on tracked keys per map
  * @param {() => number} [options.now] - clock, for tests
  * @returns {import('express').RequestHandler & { reset: () => void, size: () => { ip: number, account: number } }}
@@ -113,7 +148,8 @@ function createAuthRateLimiter(options = {}) {
     maxPerIp = DEFAULT_MAX_PER_IP,
     maxPerAccount = DEFAULT_MAX_PER_ACCOUNT,
     accountKey = defaultAccountKey,
-    ipKey = defaultIpKey,
+    ipHopsFromRight,
+    ipKey = ipHopsFromRight ? createIpKey(ipHopsFromRight) : defaultIpKey,
     maxKeys = DEFAULT_MAX_KEYS,
     now = Date.now
   } = options;
@@ -149,15 +185,12 @@ function createAuthRateLimiter(options = {}) {
 
     res.on('finish', () => {
       const status = res.statusCode;
-      if (status >= 200 && status < 300) {
-        // Success: refund the IP and clear the account's failures.
-        byIp.decrement(ip);
-        if (account) byAccount.reset(account);
-      } else if (status >= 500) {
-        // Server error: not a failed guess, refund both.
-        byIp.decrement(ip);
-        if (account) byAccount.decrement(account);
-      }
+      if (status === 400 || status === 401) return; // auth failure: keep it
+      // Anything else (success, 5xx outage, ...) is not a failed guess.
+      // Undo only this request's own +1; failures made by other requests
+      // (e.g. an attacker on other IPs) stay counted.
+      byIp.decrement(ip);
+      if (account) byAccount.decrement(account);
     });
 
     next();
@@ -176,6 +209,8 @@ function createAuthRateLimiter(options = {}) {
 module.exports = {
   createAuthRateLimiter,
   defaultAccountKey,
+  defaultIpKey,
+  createIpKey,
   DEFAULT_WINDOW_MS,
   DEFAULT_MAX_PER_IP,
   DEFAULT_MAX_PER_ACCOUNT

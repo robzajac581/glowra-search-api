@@ -104,11 +104,70 @@ test('successful logins do not use up the budget', async () => {
     for (let i = 0; i < 10; i++) {
       assert.strictEqual((await login(base, { email: 'a@x.com', password: 'right' })).status, 200);
     }
-    // A success also clears earlier failures for that account.
-    await login(base, { email: 'a@x.com' });
-    await login(base, { email: 'a@x.com', password: 'right' });
-    assert.strictEqual((await login(base, { email: 'a@x.com' })).status, 401);
   });
+});
+
+test('a success does not wipe failures made by other requests', async () => {
+  const { app } = buildLimitedApp();
+  await quiet(() => withServer(app, async (base) => {
+    // Attacker fails once from another IP; the owner then logs in fine.
+    assert.strictEqual((await login(base, { email: 'a@x.com', ip: 'attacker' })).status, 401);
+    assert.strictEqual((await login(base, { email: 'a@x.com', password: 'right', ip: 'owner' })).status, 200);
+    // The attacker's failure still counts: one more failure locks the account.
+    assert.strictEqual((await login(base, { email: 'a@x.com', ip: 'attacker2' })).status, 401);
+    assert.strictEqual((await login(base, { email: 'a@x.com', password: 'right', ip: 'owner' })).status, 429);
+  }));
+});
+
+test('only 400/401 count; other 4xx are refunded', async () => {
+  const limiter = createAuthRateLimiter({
+    windowMs: 1000, maxPerIp: 4, maxPerAccount: 2,
+    ipKey: () => 'one-ip', now: () => 0
+  });
+  const app = express();
+  app.use(express.json());
+  app.post('/login', limiter, (req, res) => res.status(Number(req.body.status)).json({}));
+  await quiet(() => withServer(app, async (base) => {
+    const send = (status) => fetch(base + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'a@x.com', status })
+    });
+    for (const s of [403, 404, 429, 503, 403, 404]) assert.strictEqual((await send(s)).status, s);
+    assert.strictEqual((await send(400)).status, 400);
+    assert.strictEqual((await send(401)).status, 401);
+    assert.strictEqual((await send(401)).status, 429);
+  }));
+});
+
+test('default ipKey reads X-Forwarded-For from the right, ignoring spoofed prefixes', () => {
+  const { defaultIpKey, createIpKey } = require('../clinic-management/middleware/authRateLimit');
+  const req = (xff, remote = '10.0.0.1') => ({ headers: xff === undefined ? {} : { 'x-forwarded-for': xff }, socket: { remoteAddress: remote } });
+  // Render: "<client IP>, <Cloudflare edge>"
+  assert.strictEqual(defaultIpKey(req('203.0.113.7, 104.22.17.40')), '203.0.113.7');
+  // Client-supplied junk on the left does not change the key.
+  assert.strictEqual(defaultIpKey(req('1.1.1.1, 2.2.2.2, 203.0.113.7, 104.22.17.40')), '203.0.113.7');
+  // Fewer hops than expected: use what's there; no header: socket address.
+  assert.strictEqual(defaultIpKey(req('203.0.113.7')), '203.0.113.7');
+  assert.strictEqual(defaultIpKey(req(undefined)), '10.0.0.1');
+  assert.strictEqual(createIpKey(1)(req('1.1.1.1, 203.0.113.7')), '203.0.113.7');
+});
+
+test('per-IP limit cannot be dodged by rotating a spoofed X-Forwarded-For prefix', async () => {
+  const limiter = createAuthRateLimiter({ windowMs: 1000, maxPerIp: 3, maxPerAccount: 1000, now: () => 0 });
+  const app = express();
+  app.set('trust proxy', true); // same as app.js
+  app.use(express.json());
+  app.post('/login', limiter, (req, res) => res.status(401).json({}));
+  await quiet(() => withServer(app, async (base) => {
+    const attempt = (i) => fetch(base + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `9.9.9.${i}, 203.0.113.7, 104.22.17.40` },
+      body: JSON.stringify({ email: `u${i}@x.com` })
+    });
+    for (let i = 0; i < 3; i++) assert.strictEqual((await attempt(i)).status, 401);
+    assert.strictEqual((await attempt(99)).status, 429);
+  }));
 });
 
 test('parallel burst cannot slip past the account limit', async () => {
